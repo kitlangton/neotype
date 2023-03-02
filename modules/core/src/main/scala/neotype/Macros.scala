@@ -2,6 +2,7 @@ package neotype
 
 import scala.quoted.*
 import scala.util.{Failure, Success}
+import StringFormatting.*
 
 private[neotype] object Macros:
   def applyImpl[A: Type, T: Type, NT <: ValidatedWrapper[A] { type Type = T }: Type](
@@ -11,13 +12,37 @@ private[neotype] object Macros:
   )(using Quotes): Expr[T] =
     import quotes.reflect.*
 
-    val failureMessageValue = failureMessage match
-      case Expr(str: String) => str
-      case _                 => "Validation Failed"
-
-    val nt = TypeRepr.of[NT].widenTermRefByName match
+    lazy val nt = TypeRepr.of[NT].widenTermRefByName match
       case Refinement(t, _, _) => t
       case t                   => t
+
+    lazy val expressionSource: Option[String] =
+      validate.asTerm match
+        case Uninlined(Block(_, Lambda(_, Seal(Calc(calc))))) =>
+          Some(calc.render(using Map("_$1" -> "input".blue)))
+        case _ =>
+          None
+
+    lazy val treeSource = scala.util
+      .Try {
+        nt.typeSymbol
+          .methodMember("validate")
+          .headOption
+          .flatMap {
+            _.tree match
+              case body =>
+                body.pos.sourceCode
+              case _ =>
+                None
+          }
+      }
+      .toOption
+      .flatten
+
+    val isBodyInline = nt.typeSymbol
+      .methodMember("validate")
+      .headOption
+      .map(_.flags.is(Flags.Inline))
 
     a match
       case Calc[A](calc) =>
@@ -29,12 +54,6 @@ private[neotype] object Macros:
       case _ =>
         report.errorAndAbort(ErrorMessages.inputNotKnownAtCompileTime(a, nt))
 
-    def renderedValidate = Expr.betaReduce('{ $validate(INPUT_SENTINEL) }) match
-      case whole @ Calc(calc) =>
-        calc.render(using Map.empty)
-      case other =>
-        s"COULD NOT RENDER CALC: ${other.show}"
-
     val validateApplied = Expr.betaReduce('{ $validate($a) })
     validateApplied match
       case Calc(calc) =>
@@ -44,10 +63,12 @@ private[neotype] object Macros:
           case Success(true) =>
             a.asExprOf[T]
           case Success(false) =>
-            report.errorAndAbort(ErrorMessages.validationFailed(a, nt, renderedValidate, failureMessageValue))
-      case other =>
-        val expressionSource = nt.typeSymbol.methodMember("validate").headOption.flatMap(_.tree.pos.sourceCode)
-        report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(nt, expressionSource))
+            val failureMessageValue = failureMessage match
+              case Expr(str: String) => str
+              case _                 => "Validation Failed"
+            report.errorAndAbort(ErrorMessages.validationFailed(a, nt, expressionSource, failureMessageValue))
+      case _ =>
+        report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(a, nt, treeSource, isBodyInline))
 
   def applyAllImpl[A: Type, T: Type, NT <: Newtype[A] { type Type = T }: Type](
       as: Expr[Seq[A]],
@@ -68,5 +89,3 @@ private[neotype] object Macros:
         processArgs(args.asInstanceOf[Seq[Expr[A]]])
       case other =>
         report.errorAndAbort(s"Could not parse input at compile time: ${other.show}")
-
-private inline def INPUT_SENTINEL = ???

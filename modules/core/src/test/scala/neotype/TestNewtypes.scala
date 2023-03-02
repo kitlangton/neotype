@@ -27,7 +27,8 @@ given PositiveLongNewtype: Newtype[Long] with
 
 type NonEmptyStringNewtype = NonEmptyStringNewtype.Type
 given NonEmptyStringNewtype: Newtype[String] with
-  inline def validate(string: String): Boolean = string.length > 0
+  inline def validate(string: String): Boolean =
+    string.length > 0
 
 // Newtype for a custom case class
 final case class Person(name: String, age: Int)

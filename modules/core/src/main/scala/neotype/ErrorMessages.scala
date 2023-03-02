@@ -42,20 +42,38 @@ private[neotype] object ErrorMessages:
     */
   def validationFailed(using
       Quotes
-  )(input: Expr[Any], nt: quotes.reflect.TypeRepr, renderedCalc: String, failureMessage: String) =
+  )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], failureMessage: String) =
     import quotes.reflect.*
 
     val isDefaultFailureMessage = failureMessage == "Validation Failed"
     val renderedFailure         = if isDefaultFailureMessage then "" else s"\n  ${failureMessage.bold}"
+    val sourceExpr = source.fold("") { s =>
+      s"\n  ${"check:".dim} ${s}"
+    }
 
     val inputTpe          = input.asTerm.tpe.widenTermRefByName
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
     val valueExprString   = input.asTerm.pos.sourceCode.getOrElse(input.show).blue
     val inputTypeString   = inputTpe.typeSymbol.name.replaceAll("\\$$", "").yellow
     s"""  $header
-     |  $newTypeNameString was called with an ${"INVALID".red} input $inputTypeString.$renderedFailure
-     |  ${"input:".dim} ${valueExprString}
-     |  ${"check:".dim} ${renderedCalc}
+     |  $newTypeNameString was called with an ${"INVALID".red} $inputTypeString.$renderedFailure
+     |  ${"input:".dim} ${valueExprString}$sourceExpr
+     |  $footer
+     |""".stripMargin
+
+  def validateIsNotInline(using Quotes)(input: Expr[Any], nt: quotes.reflect.TypeRepr): String =
+    import quotes.reflect.*
+    val inputTpe          = input.asTerm.tpe.widenTermRefByName
+    val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
+    val inputTypeString   = inputTpe.typeSymbol.name.replaceAll("\\$$", "").yellow
+    s"""  $header
+     |  $newTypeNameString's ${"validate".green} method must be an ${"inline".magenta} def!
+     |
+     |  ${"Neotype".bold} works by parsing the AST of your ${"validate".green} method into an executable
+     |  expression at compile-time. In order to access the AST at compile-time, you
+     |  must add the ${"inline".magenta} keyword:
+     |
+     |  ${"inline".magenta.underlined} ${"def".magenta} ${s"validate(input: $inputTypeString".cyan}${"):".cyan} ${"Boolean".yellow} ${"=".cyan} ${"...".cyan}
      |  $footer
      |""".stripMargin
 
@@ -79,25 +97,37 @@ private[neotype] object ErrorMessages:
       }
       .mkString("\n")
 
-  def failedToParseValidateMethod(using Quotes)(nt: quotes.reflect.TypeRepr, source: Option[String]) =
+  def failedToParseValidateMethod(using
+      Quotes
+  )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], isBodyInline: Option[Boolean]): String =
+    import quotes.reflect.*
+    if isBodyInline.contains(false) then return validateIsNotInline(input, nt)
+
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
     val sourceExpr = source.fold("") { s =>
       s"\n\n${indent(s)}"
     }
+    val inputTpe        = input.asTerm.tpe.widenTermRefByName
+    val inputTypeString = inputTpe.typeSymbol.name.replaceAll("\\$$", "").yellow
+    val solutionMessage =
+      if isBodyInline.contains(true) then s"""
+          |  💁 If you want this expression to be supported, please open an issue at:
+          |     ${"https://github.com/kitlangton/neotype/issues".blue.underlined}""".stripMargin
+      else s"""
+        |  ${"Possible Solutions".bold}
+        |  ${"1.".dim} Make sure validate is an ${"inline".magenta} method.
+        |     ${"inline".magenta.underlined} ${"def".magenta} ${s"validate(input: $inputTypeString".blue}${"):".blue} ${"Boolean".yellow} ${"=".blue} ${"...".blue}
+        |  ${"2.".dim} If you want this expression to be supported, please open an issue at:
+        |     ${"https://github.com/kitlangton/neotype/issues".blue.underlined}""".stripMargin
     s"""  $header
-     |  I've ${"FAILED".red} to parse $newTypeNameString's ${"validate".green} method!$sourceExpr
-     |
-     |  ${"Neotype".bold} works by parsing the AST of your ${"validate".green} method into an executable
-     |  expression at compile-time. This means I cannot support every possible
-     |  Scala expression. However, I'll keeping adding as many as I can!
-     |
-     |  ${"Possible Solutions".bold}
-     |  ${"1.".dim} Make sure validate is an ${"inline".magenta} method.
-     |     ${"override inline def validate:".blue} ${"Boolean".yellow} ${"=".blue} ${"n > 0".green}
-     |  ${"2.".dim} If you want this expression to be supported, please open an issue at:
-     |     ${"https://github.com/kitlangton/neotype/issues".blue.underlined}
-     |  $footer
-     |""".stripMargin
+       |  I've ${"FAILED".red} to parse $newTypeNameString's ${"validate".green} method!$sourceExpr
+       |
+       |  ${"Neotype".bold} works by parsing the AST of your ${"validate".green} method into an executable
+       |  expression at compile-time. This means I cannot support every possible
+       |  Scala expression. However, I'll keeping adding as many as I can!
+       |  $solutionMessage
+       |  $footer
+       |""".stripMargin
 
   // Create a map from various input types to examples of the given type of statically known inputs
   def examples(using Quotes)(tpe: quotes.reflect.TypeRepr) =

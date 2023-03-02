@@ -19,9 +19,9 @@ val zioVersion = "2.0.9"
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
     "-deprecation",
-    //      "-explain"
+//    "-explain",
     "-Xcheck-macros"
-    //      "-Ycheck:all"
+//    "-Ycheck:all"
   ),
   libraryDependencies ++= Seq(
     "dev.zio" %% "zio-test"     % zioVersion % Test,
@@ -36,7 +36,8 @@ lazy val root = (project in file("."))
   .aggregate(
     core,
     zioJson,
-    zioQuill
+    zioQuill,
+    examples
   )
 
 lazy val core = (project in file("modules/core"))
@@ -66,3 +67,11 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     )
   )
   .dependsOn(core)
+
+lazy val examples = (project in file("examples"))
+  .settings(
+    name := "neotype-examples",
+    sharedSettings,
+    publish / skip := true
+  )
+  .dependsOn(core, zioJson, zioQuill)
