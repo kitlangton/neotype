@@ -261,7 +261,7 @@ object Calc:
 
       // Fixing
       case other =>
-        report.errorAndAbort(s"Calc unapply failed to parse: ${other.show}\n${other.asTerm.underlyingArgument}")
+//        report.errorAndAbort(s"Calc unapply failed to parse: ${other.show}\n${other.asTerm.underlyingArgument}")
         None
 
 case class CalcDef[A](name: String, calc: Calc[A])

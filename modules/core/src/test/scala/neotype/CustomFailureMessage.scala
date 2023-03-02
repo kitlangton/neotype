@@ -15,7 +15,7 @@ given BadCustomFailureNewtype: Newtype[String] with
 
 given AnotherCustomFailureNewtype: Newtype[String] with
   inline def validate(value: String): Boolean =
-    value(5) == 's'
+    value.trim.length > 10
 
   override inline def failureMessage: String = "Must be the secret string!"
 
