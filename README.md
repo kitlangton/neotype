@@ -14,6 +14,37 @@ A friendly newtype library for Scala 3.
 "io.github.kitlangton" %% "neotype" % "0.0.1"
 ```
 
-## Overview
+## Features
 
-_Coming Very Soon..._
+- Compile-time Checked Values
+- Write validations as **plain, old Scala expressions**
+- Very Helpful Error Messages (_see below_)
+- No Runtime Allocations (Thanks to `inline` and `opaque type`)
+- Ability to integrate with other libraries (e.g. `zio-json`, `circe`, etc.)
+
+### Example
+
+```scala
+import neotype.*
+
+// Define a newtype:
+given NonEmptyString: Newtype[String] with
+  // Hey, a plain old Scala expression!
+  inline def validate(input: String): Boolean =
+    input.nonEmpty
+
+// Wrap values, which checked at compile-time:
+NonEmptyString("Hello") // OK
+NonEmptyString("")      // Compile Error
+```
+
+```scala
+Error: /Users/kit/code/neotype/examples/src/main/scala/neotype/examples/Main.scala:9:16 
+  NonEmptyString("")                  
+  ^^^^^^^^^^^^^^^^^^
+  —— Newtype Error ——————————————————————————————————————————————————————————
+  NonEmptyString was called with an INVALID String.
+  input: ""
+  check: input.nonEmpty
+  ———————————————————————————————————————————————————————————————————————————
+```

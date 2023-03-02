@@ -13,7 +13,7 @@ trait Wrapper[A]:
 
 trait ValidatedWrapper[A] extends Wrapper[A]:
   self =>
-  def validate(value: A): Boolean
+  def validate(input: A): Boolean
 
   def failureMessage: String = "Validation Failed"
 
@@ -36,18 +36,18 @@ abstract class Newtype[A](using fromExpr: FromExpr[A]) extends ValidatedWrapper[
   self =>
   opaque type Type = A
 
-  inline def apply(inline value: A): Type =
-    ${ Macros.applyImpl[A, Type, self.type]('value, '{ validate(_) }, 'failureMessage) }
+  inline def apply(inline input: A): Type =
+    ${ Macros.applyImpl[A, Type, self.type]('input, '{ validate(_) }, 'failureMessage) }
 
   inline def applyAll(inline values: A*): List[Type] =
     ${ Macros.applyAllImpl[A, Type, self.type]('values, 'self) }
 
-  def make(value: A): Either[String, Type] =
-    if validate(value) then Right(value)
+  def make(input: A): Either[String, Type] =
+    if validate(input) then Right(input)
     else Left(failureMessage)
 
-  extension (inline value: Type) //
-    inline def unwrap: A = value
+  extension (inline input: Type) //
+    inline def unwrap: A = input
 
 object Newtype:
   type WithType[A, B] = Newtype[A] { type Type = B }
@@ -55,11 +55,11 @@ object Newtype:
   trait Simple[A] extends Wrapper[A]:
     opaque type Type = A
 
-    inline def apply(inline value: A): Type = value
-    extension (inline value: Type) //
-      inline def unwrap: A = value
+    inline def apply(inline input: A): Type = input
+    extension (inline input: Type) //
+      inline def unwrap: A = input
 
-    inline def applyF[F[_]](inline value: F[A]): F[Type] = value
+    inline def applyF[F[_]](inline input: F[A]): F[Type] = input
 
   object Simple:
     type WithType[A, B] = Newtype.Simple[A] { type Type = B }
@@ -68,15 +68,15 @@ abstract class Subtype[A](using fromExpr: FromExpr[A]) extends ValidatedWrapper[
   self =>
   opaque type Type <: A = A
 
-  inline def apply(inline value: A): Type =
-    ${ Macros.applyImpl[A, Type, self.type]('value, '{ validate(_) }, 'failureMessage) }
+  inline def apply(inline input: A): Type =
+    ${ Macros.applyImpl[A, Type, self.type]('input, '{ validate(_) }, 'failureMessage) }
 
-  def make(value: A): Either[String, Type] =
-    if validate(value) then Right(value)
+  def make(input: A): Either[String, Type] =
+    if validate(input) then Right(input)
     else Left(failureMessage)
 
-  inline def cast(inline value: Type): A              = value
-  inline def castF[F[_]](inline value: F[Type]): F[A] = value
+  inline def cast(inline input: Type): A              = input
+  inline def castF[F[_]](inline input: F[Type]): F[A] = input
 
 object Subtype:
   type WithType[A, B <: A] = Subtype[A] { type Type = B }
@@ -84,14 +84,14 @@ object Subtype:
   trait Simple[A] extends Wrapper[A]:
     opaque type Type <: A = A
 
-    inline def apply(inline value: A): Type = value
+    inline def apply(inline input: A): Type = input
 
-    extension (inline value: Type) //
-      inline def unwrap: A = value
+    extension (inline input: Type) //
+      inline def unwrap: A = input
 
-    inline def applyF[F[_]](inline value: F[A]): F[Type] = value
-    inline def cast(inline value: A): Type               = value
-    inline def castF[F[_]](inline value: F[A]): F[Type]  = value
+    inline def applyF[F[_]](inline input: F[A]): F[Type] = input
+    inline def cast(inline input: A): Type               = input
+    inline def castF[F[_]](inline input: F[A]): F[Type]  = input
 
   object Simple:
     type WithType[A, B <: A] = Subtype.Simple[A] { type Type = B }

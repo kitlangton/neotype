@@ -15,5 +15,5 @@ given FiveElements: Newtype[String] with
   inline def validate(value: String): Boolean =
     value match
       case "Metal" | "Water" | "Wood" | "Fire" | "Earth" => true
-      case string if string.length > 2                   => true
+      case string if string.length > 10                  => true
       case _                                             => false
