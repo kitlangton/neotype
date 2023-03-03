@@ -24,6 +24,13 @@ given SimpleNewtype: Newtype.Simple[Int] with {}
 type SimpleSubtype = SimpleSubtype.Type
 given SimpleSubtype: Subtype.Simple[String] with {}
 
+object LayerTest:
+  import zio.*
+  given [A, B](using newType: Newtype.WithType[A, B], tag: Tag[A]): Tag[B] =
+    newType.unsafeWrapF(tag)
+
+  val layer = ZLayer.succeed(NonEmptyString("Hello"))
+
 object ZioJsonSpec extends ZIOSpecDefault:
   def spec = suite("ZioJsonSpec")(
     suite("NonEmptyString")(

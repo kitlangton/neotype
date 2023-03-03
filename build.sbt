@@ -68,6 +68,16 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
   )
   .dependsOn(core)
 
+lazy val zio = (project in file("modules/neotype-zio"))
+  .settings(
+    name := "neotype-zio",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "dev.zio" %% "zio" % zioVersion
+    )
+  )
+  .dependsOn(core)
+
 lazy val examples = (project in file("examples"))
   .settings(
     name := "neotype-examples",

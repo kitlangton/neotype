@@ -4,97 +4,44 @@ import scala.annotation.tailrec
 import StringFormatting.*
 import scala.quoted.*
 import scala.util.matching.Regex
+import CustomFromExpr.given
 
 enum Calc[A]:
   case Constant(value: A)
 
   // Comparisons
-  case BinaryOp[A, B](lhs: Calc[A], rhs: Calc[B], op: (A, B) => Boolean, name: String) extends Calc[Boolean]
-
-  // Boolean Algebra
-  case And(lhs: Calc[Boolean], rhs: Calc[Boolean]) extends Calc[Boolean]
-  case Or(lhs: Calc[Boolean], rhs: Calc[Boolean])  extends Calc[Boolean]
-  case Not(calc: Calc[Boolean])                    extends Calc[Boolean]
-
-  // Numeric Operations
-  case Add[Num](lhs: Calc[Num], rhs: Calc[Num])(using val numeric: Numeric[Num]) extends Calc[Num]
-  case ToDouble[Num](num: Calc[Num])(using val numeric: Numeric[Num])            extends Calc[Double]
-
-  // String Operations
-  case Length(str: Calc[String])                                      extends Calc[Int]
-  case Substring(str: Calc[String], start: Calc[Int], end: Calc[Int]) extends Calc[String]
-  case ToUpper(str: Calc[String])                                     extends Calc[String]
-  case ToLower(str: Calc[String])                                     extends Calc[String]
-  case StartsWith(str: Calc[String], prefix: Calc[String])            extends Calc[Boolean]
-  case EndsWith(str: Calc[String], suffix: Calc[String])              extends Calc[Boolean]
-  case Contains(str: Calc[String], substr: Calc[String])              extends Calc[Boolean]
-  case MatchesRegex(str: Calc[String], regex: Calc[String])           extends Calc[Boolean]
-  case RegexMatches(regex: Calc[Regex], str: Calc[String])            extends Calc[Boolean]
-  case StringNonEmpty(str: Calc[String])                              extends Calc[Boolean]
-  case StringIsEmpty(str: Calc[String])                               extends Calc[Boolean]
-  case StringApply(str: Calc[String], index: Calc[Int])               extends Calc[Char]
-  case StringTrim(str: Calc[String])                                  extends Calc[String]
-
-  //  Set Operations
-  case SetContains[A](set: Calc[Set[A]], elem: Calc[A]) extends Calc[Boolean]
+  case BinaryOp[A, B, C](lhs: Calc[A], rhs: Calc[B], op: (A, B) => C, render: (String, String) => String)
+      extends Calc[C]
+  case UnaryOp[A, B](calc: Calc[A], op: A => B, render: String => String) extends Calc[B]
+  case TernaryOp[A, B, C, D](
+      cond: Calc[A],
+      lhs: Calc[B],
+      rhs: Calc[C],
+      op: (A, B, C) => D,
+      render: (String, String, String) => String
+  ) extends Calc[D]
 
   // Custom
-  case WithMessage(calc: Calc[A], message: String)  extends Calc[A]
-  case Block(defs: List[CalcDef[?]], calc: Calc[A]) extends Calc[A]
-  case Reference[A](name: String)                   extends Calc[A]
+  case Block(defs: List[CalcValDef[?]], calc: Calc[A]) extends Calc[A]
+  case Reference[A](name: String)                      extends Calc[A]
 
   case MatchExpr[A](expr: Calc[A], cases: List[CalcMatchCase[A]]) extends Calc[A]
 
-  def renderConstant(value: Any): String =
-    value match
-      case s: String => s""""$s"""".green
-      case c: Char   => s"'$c'".green
-      case set: Set[?] =>
-        val elems = set.map(renderConstant).mkString(", ".reset)
-        s"Set(".reset + elems + ")".reset
-      case regex: Regex =>
-        s"""${renderConstant(regex.toString)}.r"""
-      case _ => value.toString.cyan
-
   def render(using ctx: Map[String, String]): String =
     this match
-      case Constant(value) => renderConstant(value)
+      case Constant(value) => Calc.renderConstant(value)
 
       // Comparisons
-      case BinaryOp(lhs, rhs, _, name) => s"${lhs.render} $name ${rhs.render}"
+      case UnaryOp(calc, _, show)             => show(calc.render)
+      case BinaryOp(lhs, rhs, _, show)        => show(lhs.render, rhs.render)
+      case TernaryOp(cond, lhs, rhs, _, show) => show(cond.render, lhs.render, rhs.render)
 
-      // Boolean Operations
-      case And(lhs, rhs) => s"${lhs.render} && ${rhs.render}"
-      case Or(lhs, rhs)  => s"${lhs.render} || ${rhs.render}"
-      case Not(calc)     => s"!${calc.render}"
-
-      case Add(lhs, rhs) => s"${lhs.render} + ${rhs.render}"
-      case ToDouble(num) => s"toDouble(${num.render})"
-
-      // String Operations
-      case Length(str)                => s"${str.render}.length"
-      case Substring(str, start, end) => s"${str.render}.substring(${start.render}, ${end.render})"
-      case ToUpper(str)               => s"${str.render}.toUpperCase"
-      case ToLower(str)               => s"${str.render}.toLowerCase"
-      case MatchesRegex(str, regex)   => s"${str.render}.matches(${regex.render})"
-      case StartsWith(str, prefix)    => s"${str.render}.startsWith(${prefix.render})"
-      case EndsWith(str, suffix)      => s"${str.render}.endsWith(${suffix.render})"
-      case Contains(str, substr)      => s"${str.render}.contains(${substr.render})"
-      case RegexMatches(regex, str)   => s"${regex.render}.matches(${str.render})"
-      case StringNonEmpty(str)        => s"${str.render}.nonEmpty"
-      case StringIsEmpty(str)         => s"${str.render}.isEmpty"
-      case StringApply(str, index)    => s"${str.render}(${index.render})"
-      case StringTrim(str)            => s"${str.render}.trim"
-
-      // Set Operations
-      case SetContains(set, elem) => s"${set.render}.contains(${elem.render})"
-
-      case WithMessage(calc, message) => s"${calc.render} // $message"
       case Block(defs, calc) =>
         val newCtx = defs.foldLeft(ctx) { (ctx, defn) =>
           ctx + (defn.name -> defn.calc.render(using ctx))
         }
         calc.render(using newCtx)
+
       case Reference(name) => ctx(name)
 
       case MatchExpr(expr, cases) =>
@@ -107,42 +54,11 @@ enum Calc[A]:
 
   def result(using context: Map[String, Any], q: Quotes): A =
     this match
-      case Constant(value) => value
-
-      // Comparisons
-      case BinaryOp(lhs, rhs, op, name) =>
-        val cool = op(lhs.result, rhs.result).asInstanceOf[A]
-        cool
-
-      // Boolean Operations
-      case And(lhs, rhs) => (lhs.result && rhs.result).asInstanceOf[A]
-      case Or(lhs, rhs)  => (lhs.result || rhs.result).asInstanceOf[A]
-      case Not(calc)     => (!calc.result).asInstanceOf[A]
-
-      case add @ Add(lhs, rhs): Add[num] =>
-        import add.numeric
-        summon[Numeric[num]].plus(lhs.result, rhs.result).asInstanceOf[A]
-      case calc @ ToDouble(num): ToDouble[num] =>
-        import calc.numeric
-        summon[Numeric[num]].toDouble(num.result).asInstanceOf[A]
-
-      // String Operations
-      case Length(str)                => str.result.length
-      case Substring(str, start, end) => str.result.substring(start.result, end.result)
-      case ToUpper(str)               => str.result.toUpperCase
-      case ToLower(str)               => str.result.toLowerCase
-      case MatchesRegex(str, regex)   => str.result.matches(regex.result)
-      case StartsWith(str, prefix)    => str.result.startsWith(prefix.result)
-      case EndsWith(str, suffix)      => str.result.endsWith(suffix.result)
-      case Contains(str, substr)      => str.result.contains(substr.result)
-      case RegexMatches(regex, str)   => regex.result.matches(str.result)
-      case StringNonEmpty(str)        => str.result.nonEmpty
-      case StringIsEmpty(str)         => str.result.isEmpty
-      case StringApply(str, index)    => str.result(index.result)
-      case StringTrim(str)            => str.result.trim
-
-      // Set Operations
-      case SetContains(set, elem) => set.result.contains(elem.result)
+      case Constant(value)           => value
+      case Reference(name)           => context(name).asInstanceOf[A]
+      case UnaryOp(calc, op, _)      => op(calc.result).asInstanceOf[A]
+      case BinaryOp(lhs, rhs, op, _) => op(lhs.result, rhs.result).asInstanceOf[A]
+      case TernaryOp(a, b, c, op, _) => op(a.result, b.result, c.result).asInstanceOf[A]
 
       case MatchExpr(expr, cases) =>
         val exprResult = expr.result
@@ -156,15 +72,13 @@ enum Calc[A]:
             q.reflect.report.errorAndAbort(s"CalcMatchCase not found for $exprResult")
             throw MatchError(exprResult)
 
-      case WithMessage(calc, _) =>
-        calc.result
       case Block(defs, calc) =>
         val newContext = defs.foldLeft(context) { (ctx, defn) =>
-          ctx + (defn.name -> defn.calc.result)
+          ctx + (defn.name -> defn.calc.result(using ctx))
         }
         calc.result(using newContext)
-      case Reference(name) =>
-        context(name).asInstanceOf[A]
+  end result
+end Calc
 
 case class BinaryOpMatch(name: String):
   def unapply(using Quotes)(expr: Expr[Any]): Option[(Calc[Any], Calc[Any])] =
@@ -172,164 +86,160 @@ case class BinaryOpMatch(name: String):
     expr.asTerm match
       case Apply(Select(lhs, `name`), List(rhs)) =>
         (lhs.asExpr, rhs.asExpr) match
-          case (Calc(lhs), Calc(rhs)) =>
+          case (Calc[Any](lhs), Calc[Any](rhs)) =>
             Some((lhs, rhs))
-      case _ => None
+      case _ =>
+        None
 
-val MatchBinEq  = BinaryOpMatch("==")
-val MatchBinLt  = BinaryOpMatch("<")
-val MatchBinGt  = BinaryOpMatch(">")
-val MatchBinLte = BinaryOpMatch("<=")
-val MatchBinGte = BinaryOpMatch(">=")
+val MatchBinEq     = BinaryOpMatch("==")
+val MatchBinLt     = BinaryOpMatch("<")
+val MatchBinGt     = BinaryOpMatch(">")
+val MatchBinLte    = BinaryOpMatch("<=")
+val MatchBinGte    = BinaryOpMatch(">=")
+val MatchBinMinus  = BinaryOpMatch("-")
+val MatchBinPlus   = BinaryOpMatch("+")
+val MatchBinTimes  = BinaryOpMatch("*")
+val MatchBinDivide = BinaryOpMatch("/")
+val MatchBinMod    = BinaryOpMatch("%")
 
 object Calc:
-  def unapply[A: Type](expr: Expr[A])(using Quotes): Option[Calc[A]] =
+  def renderConstant(value: Any): String =
+    value match
+      case s: String => s""""$s"""".green
+      case c: Char   => s"'$c'".green
+      case set: Set[?] =>
+        val elems = set.map(renderConstant).mkString(", ".reset)
+        s"Set(".reset + elems + ")".reset
+      case list: List[?] =>
+        val elems = list.map(renderConstant).mkString(", ".reset)
+        s"List(".reset + elems + ")".reset
+      case regex: Regex =>
+        s"""${renderConstant(regex.toString)}.r"""
+      case long: Long => s"${long}L".cyan
+      case _          => value.toString.cyan
+
+  def infix(op: String)   = (a: String, b: String) => s"$a $op $b"
+  def call(op: String)    = (a: String, b: String) => s"$a.$op($b)"
+  def call2(op: String)   = (a: String, b: String, c: String) => s"$a.$op($b, $c)"
+  def nullary(op: String) = (a: String) => s"$a.$op"
+  def prefix(op: String)  = (a: String) => s"$op$a"
+
+  def unapply[A](expr: Expr[Any])(using Quotes): Option[Calc[A]] =
     import quotes.reflect.*
-    expr match
-      case '{ ${ Expr(int) }: Int }                   => Some(Calc.Constant(int).asInstanceOf[Calc[A]])
-      case '{ ${ Expr(string) }: String }             => Some(Calc.Constant(string).asInstanceOf[Calc[A]])
-      case '{ ${ Expr(bool) }: Boolean }              => Some(Calc.Constant(bool).asInstanceOf[Calc[A]])
-      case '{ ${ Expr(long) }: Long }                 => Some(Calc.Constant(long).asInstanceOf[Calc[A]])
-      case '{ ${ Expr(double) }: Double }             => Some(Calc.Constant(double).asInstanceOf[Calc[A]])
-      case '{ ${ Expr(float) }: Float }               => Some(Calc.Constant(float).asInstanceOf[Calc[A]])
-      case '{ ${ Expr(char) }: Char }                 => Some(Calc.Constant(char).asInstanceOf[Calc[A]])
-      case '{ ${ Expr(byte) }: Byte }                 => Some(Calc.Constant(byte).asInstanceOf[Calc[A]])
-      case '{ ${ Expr(short) }: Short }               => Some(Calc.Constant(short).asInstanceOf[Calc[A]])
-      case '{ () }                                    => Some(Calc.Constant(()).asInstanceOf[Calc[A]])
-      case '{ BigInt(${ Expr(string) }: String) }     => Some(Calc.Constant(BigInt(string)).asInstanceOf[Calc[A]])
-      case '{ BigDecimal(${ Expr(string) }: String) } => Some(Calc.Constant(BigDecimal(string)).asInstanceOf[Calc[A]])
-      case '{ (${ Expr(string) }: String).r }         => Some(Calc.Constant(string.r).asInstanceOf[Calc[A]])
-      // Set
-      case '{ ${ Expr[Set[String]](set) }: Set[String] } => Some(Calc.Constant(set).asInstanceOf[Calc[A]])
-      case Unseal(Ident(name))                           => Some(Calc.Reference(name).asInstanceOf[Calc[A]])
+    import quotes.reflect as r
+    val result: Option[Calc[?]] = expr match
+      // BASIC TYPES
+      case Unseal(r.Literal(constant))                => Some(Calc.Constant(constant.value))
+      case '{ BigInt(${ Expr(string) }: String) }     => Some(Calc.Constant(BigInt(string)))
+      case '{ BigDecimal(${ Expr(string) }: String) } => Some(Calc.Constant(BigDecimal(string)))
+      case '{ (${ Expr(string) }: String).r }         => Some(Calc.Constant(string.r))
+
+      // CONTAINER TYPES
+      case '{ type a; ${ Expr[Set[`a`]](set) }: Set[`a`] }    => Some(Calc.Constant(set))
+      case '{ type a; ${ Expr[List[`a`]](list) }: List[`a`] } => Some(Calc.Constant(list))
+
+      case Unseal(Ident(name)) => Some(Calc.Reference(name))
 
       // Boolean Operations
-      case '{ (${ Calc(lhs) }: Boolean) && (${ Calc(rhs) }: Boolean) } =>
-        Some(Calc.And(lhs, rhs).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(lhs) }: Boolean) || (${ Calc(rhs) }: Boolean) } =>
-        Some(Calc.Or(lhs, rhs).asInstanceOf[Calc[A]])
-      case '{ !(${ Calc(calc) }: Boolean) } =>
-        Some(Calc.Not(calc).asInstanceOf[Calc[A]])
+      case '{ (${ Calc[Boolean](lhs) }: Boolean) && (${ Calc[Boolean](rhs) }: Boolean) } =>
+        Some(Calc.BinaryOp(lhs, rhs, _ && _, infix("&&")))
+      case '{ (${ Calc[Boolean](lhs) }: Boolean) || (${ Calc[Boolean](rhs) }: Boolean) } =>
+        Some(Calc.BinaryOp(lhs, rhs, _ || _, infix("||")))
+      case '{ !(${ Calc[Boolean](calc) }: Boolean) } =>
+        Some(Calc.UnaryOp(calc, !_, prefix("!")))
 
       // Numeric Operations
-      case '{ (${ Calc(lhs) }: Int) + (${ Calc(rhs) }: Int) } =>
-        Some(Calc.Add(lhs, rhs).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(num) }: Int).toDouble } =>
-        Some(Calc.ToDouble(num).asInstanceOf[Calc[A]])
+      case '{ (${ Calc[Int](num) }: Int).toDouble } =>
+        Some(Calc.UnaryOp(num, _.toDouble, nullary("toDouble")))
 
       // String Operations
-      case '{ (${ Calc(string) }: String).length } =>
-        Some(Calc.Length(string).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(string) }: String).length() } =>
-        Some(Calc.Length(string).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(string) }: String).substring(${ Calc(start) }: Int, ${ Calc(end) }: Int) } =>
-        Some(Calc.Substring(string, start, end).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(string) }: String).toUpperCase } =>
-        Some(Calc.ToUpper(string).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(string) }: String).toLowerCase } =>
-        Some(Calc.ToLower(string).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(str) }: String).startsWith(${ Calc(prefix) }: String) } =>
-        Some(Calc.StartsWith(str, prefix).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(str) }: String).endsWith(${ Calc(suffix) }: String) } =>
-        Some(Calc.EndsWith(str, suffix).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(str) }: String).contains(${ Calc(substr) }: String) } =>
-        Some(Calc.Contains(str, substr).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(str) }: String).matches(${ Calc(regex) }: String) } =>
-        Some(Calc.MatchesRegex(str, regex).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(regex) }: Regex).matches(${ Calc(str) }: String) } =>
-        Some(Calc.RegexMatches(regex, str).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(str) }: String).nonEmpty } =>
-        Some(Calc.StringNonEmpty(str).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(str) }: String).isEmpty } =>
-        Some(Calc.StringIsEmpty(str).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(str) }: String).apply(${ Calc(index) }: Int) } =>
-        Some(Calc.StringApply(str, index).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(str) }: String)(${ Calc(index) }: Int) } =>
-        Some(Calc.StringApply(str, index).asInstanceOf[Calc[A]])
-      case '{ (${ Calc(str) }: String).trim } =>
-        Some(Calc.StringTrim(str).asInstanceOf[Calc[A]])
-
-      // Set Operations
-      case '{ (${ Calc(set) }: Set[String]).contains(${ Calc(elem) }: String) } =>
-        Some(Calc.SetContains(set, elem).asInstanceOf[Calc[A]])
-
-      case Unseal(quotes.reflect.Block(stats, Seal(Calc(expr)))) =>
-        val defs = stats.collect { case ValDef(name, _, Some(Seal(Calc(calc)))) =>
-          CalcDef(name, calc)
-        }
-//        report.errorAndAbort(s"Defs: ${defs} stats: ${stats} expr: ${expr}")
-        Some(Calc.Block(defs, expr).asInstanceOf[Calc[A]])
-
+      case '{ (${ Calc[String](string) }: String).length } =>
+        Some(Calc.UnaryOp(string, _.length, nullary("length")))
+      case '{ (${ Calc[String](string) }: String).substring(${ Calc[Int](start) }: Int, ${ Calc[Int](end) }: Int) } =>
+        Some(Calc.TernaryOp(string, start, end, _.substring(_, _), call2("substring")))
+      case '{ (${ Calc[String](string) }: String).toUpperCase } =>
+        Some(Calc.UnaryOp(string, _.toUpperCase, nullary("toUpperCase")))
+      case '{ (${ Calc[String](string) }: String).toLowerCase } =>
+        Some(Calc.UnaryOp(string, _.toLowerCase, nullary("toLowerCase")))
+      case '{ (${ Calc[String](str) }: String).startsWith(${ Calc[String](prefix) }: String) } =>
+        Some(Calc.BinaryOp(str, prefix, _.startsWith(_), call("startsWith")))
+      case '{ (${ Calc[String](str) }: String).endsWith(${ Calc[String](suffix) }: String) } =>
+        Some(Calc.BinaryOp(str, suffix, _.endsWith(_), call("endsWith")))
+      case '{ (${ Calc[String](str) }: String).contains(${ Calc[String](substr) }: String) } =>
+        Some(Calc.BinaryOp(str, substr, _.contains(_), call("contains")))
+      case '{ (${ Calc[String](str) }: String).matches(${ Calc[String](regex) }: String) } =>
+        Some(Calc.BinaryOp(str, regex, _.matches(_), call("matches")))
+      case '{ (${ Calc[Regex](regex) }: Regex).matches(${ Calc[String](str) }: String) } =>
+        Some(Calc.BinaryOp(regex, str, _.matches(_), call("matches")))
+      case '{ (${ Calc[String](str) }: String).nonEmpty } =>
+        Some(Calc.UnaryOp(str, _.nonEmpty, nullary("nonEmpty")))
+      case '{ (${ Calc[String](str) }: String).isEmpty } =>
+        Some(Calc.UnaryOp(str, _.isEmpty, nullary("isEmpty")))
+      case '{ (${ Calc[String](str) }: String)(${ Calc[Int](index) }: Int) } =>
+        Some(Calc.BinaryOp(str, index, _.apply(_), (l, r) => s"$l($r)"))
+      case '{ (${ Calc[String](str) }: String).trim } =>
+        Some(Calc.UnaryOp(str, _.trim, nullary("trim")))
+      case '{ scala.Predef.identity[a](${ Calc[Any](calc) }) } =>
+        Some(calc)
       case MatchBinEq(lhs, rhs) =>
-        Some(Calc.BinaryOp(lhs, rhs, _ == _, "==").asInstanceOf[Calc[A]])
+        Some(Calc.BinaryOp(lhs, rhs, _ == _, infix("==")))
       case MatchBinLt(lhs, rhs) =>
-        Some(Calc.BinaryOp(lhs, rhs, Operations.lessThan, "<").asInstanceOf[Calc[A]])
+        Some(Calc.BinaryOp(lhs, rhs, Operations.lessThan, infix("<")))
       case MatchBinGt(lhs, rhs) =>
-        Some(Calc.BinaryOp(lhs, rhs, Operations.greaterThan, ">").asInstanceOf[Calc[A]])
+        Some(Calc.BinaryOp(lhs, rhs, Operations.greaterThan, infix(">")))
       case MatchBinLte(lhs, rhs) =>
-        Some(Calc.BinaryOp(lhs, rhs, Operations.lessThanOrEqual, "<=").asInstanceOf[Calc[A]])
+        Some(Calc.BinaryOp(lhs, rhs, Operations.lessThanOrEqual, infix("<=")))
       case MatchBinGte(lhs, rhs) =>
-        Some(Calc.BinaryOp(lhs, rhs, Operations.greaterThanOrEqual, ">=").asInstanceOf[Calc[A]])
+        Some(Calc.BinaryOp(lhs, rhs, Operations.greaterThanOrEqual, infix(">=")))
+      case MatchBinMinus(lhs, rhs) =>
+        Some(Calc.BinaryOp(lhs, rhs, Operations.minus, infix("-")))
+      case MatchBinPlus(lhs, rhs) =>
+        Some(Calc.BinaryOp(lhs, rhs, Operations.plus, infix("+")))
+      case MatchBinDivide(lhs, rhs) =>
+        Some(Calc.BinaryOp(lhs, rhs, Operations.divide, infix("/")))
+      case MatchBinMod(lhs, rhs) =>
+        Some(Calc.BinaryOp(lhs, rhs, Operations.mod, infix("%")))
+      case MatchBinTimes(lhs, rhs) =>
+        Some(Calc.BinaryOp(lhs, rhs, Operations.times, infix("*")))
+
+      case Unseal(quotes.reflect.Block(stats, Seal(Calc[Any](expr)))) =>
+        val defs = stats.collect { case ValDef(name, _, Some(Seal(Calc[Any](calc)))) =>
+          CalcValDef(name, calc)
+        }
+        Some(Calc.Block(defs, expr))
 
       // parse match expression
-      case Unseal(Match(Seal(Calc(expr)), caseDefs)) =>
+      case Unseal(Match(Seal(Calc[Any](expr)), caseDefs)) =>
         val calcCaseDefs = caseDefs.map(CalcMatchCase.parse)
-//        report.errorAndAbort(s"Match: ${calcCaseDefs}")
-        Some(MatchExpr(expr, calcCaseDefs).asInstanceOf[Calc[A]])
+        Some(MatchExpr(expr, calcCaseDefs))
 
       case Unseal(Typed(t, _)) =>
-        unapply(t.asExprOf[A])
-      case Unseal(
-            Apply(Apply(Apply(Ident("??"), List(_)), List(Seal(Calc(body)))), List(Literal(StringConstant(msg))))
-          ) =>
-        Some(Calc.WithMessage(body, msg).asInstanceOf[Calc[A]])
+        unapply(t.asExpr)
+
+      case Unseal(Uninlined(t)) =>
+        unapply(t.asExpr)
+
+      // Set Operations
+      case '{ type a; (${ Calc[Set[`a`]](set) }: Set[`a`]).contains(${ Calc[`a`](elem) }: `a`) } =>
+        Some(Calc.BinaryOp(set, elem, _.contains(_), call("contains")))
+
+      // List Operations
+      case '{ type a; (${ Calc[List[`a`]](list) }: List[`a`]).:+(${ Calc[`a`](elem) }: `a`) } =>
+        Some(Calc.BinaryOp(list, elem, _ :+ _, infix(":+")))
+      case '{ type a; (${ Calc[List[`a`]](list) }: List[`a`]).::[`a`](${ Calc[`a`](elem) }: `a`) } =>
+        Some(Calc.BinaryOp(elem, list, _ :: _, infix("::")))
 
       // Fixing
       case other =>
-//        report.errorAndAbort(s"Calc unapply failed to parse: ${other.show}\n${other.asTerm.underlyingArgument}")
+//        report.errorAndAbort(
+//          s"CALC PARSE FAIL: ${other.show}\n${other.asTerm.tpe.show}\n${other.asTerm.underlyingArgument}"
+//        )
         None
 
-object Operations:
-  // define an any that works for any combination of
-  // Int < Int
-  // Long < Long
-  // Int < Long
-  // Long < Int
-  // etc
-  def lessThan(lhs: Any, rhs: Any): Boolean =
-    compare(lhs, rhs) < 0
+    result.asInstanceOf[Option[Calc[A]]]
 
-  def greaterThan(lhs: Any, rhs: Any): Boolean =
-    compare(lhs, rhs) > 0
+case class CalcValDef[A](name: String, calc: Calc[A])
 
-  def greaterThanOrEqual(lhs: Any, rhs: Any): Boolean =
-    compare(lhs, rhs) >= 0
-
-  def lessThanOrEqual(lhs: Any, rhs: Any): Boolean =
-    compare(lhs, rhs) <= 0
-
-  def compare(lhs: Any, rhs: Any): Int =
-    (lhs, rhs) match
-      case (lhs: String, rhs: String) => lhs.compare(rhs)
-      case _ =>
-        val ln = numericFor(lhs).asInstanceOf[Numeric[Any]]
-        val rn = numericFor(rhs).asInstanceOf[Numeric[Any]]
-        ln.toDouble(lhs).compare(rn.toDouble(rhs))
-
-  def numericFor(any: Any): Numeric[?] =
-    any match
-      case _: Int        => summon[Numeric[Int]]
-      case _: Long       => summon[Numeric[Long]]
-      case _: Short      => summon[Numeric[Short]]
-      case _: Char       => summon[Numeric[Char]]
-      case _: Byte       => summon[Numeric[Byte]]
-      case _: Double     => summon[Numeric[Double]]
-      case _: Float      => summon[Numeric[Float]]
-      case _: BigInt     => summon[Numeric[BigInt]]
-      case _: BigDecimal => summon[Numeric[BigDecimal]]
-      case _             => throw new IllegalArgumentException(s"Cannot find numeric for ${any}")
-
-case class CalcDef[A](name: String, calc: Calc[A])
 case class CalcMatchCase[A](pattern: CalcPattern[A], guard: Option[Calc[Boolean]], calc: Calc[A]):
   def render(using Map[String, String]): String =
     s"${pattern.render} => ${calc.render}"
@@ -348,7 +258,7 @@ object CalcMatchCase:
   def parse(using Quotes)(caseDef: quotes.reflect.CaseDef): CalcMatchCase[Any] =
     import quotes.reflect.*
     caseDef match
-      case CaseDef(pattern, guard, Seal(Calc(calc))) =>
+      case CaseDef(pattern, guard, Seal(Calc[Any](calc))) =>
         val guardCalc = guard.map { case Seal(Calc[Boolean](guardCalc)) => guardCalc }
         CalcMatchCase(CalcPattern.parse(pattern), guardCalc, calc)
       case other =>
@@ -391,20 +301,20 @@ object CalcPattern:
     term match
       case r.Wildcard()               => CalcPattern.Wildcard()
       case r.Bind(name, r.Wildcard()) => CalcPattern.Variable(name)
-      case Seal(Calc(constant))       => CalcPattern.Constant(constant)
+      case Seal(Calc[Any](constant))  => CalcPattern.Constant(constant)
       case r.Alternatives(patterns)   => CalcPattern.Alternative(patterns.map(parse))
 
 object Unseal:
   def unapply(expr: Expr[?])(using Quotes): Option[quotes.reflect.Term] =
     import quotes.reflect.*
-    Uninlined.unapply(expr.asTerm.underlyingArgument)
+    Some(expr.asTerm)
 
 object Uninlined:
   def unapply(using Quotes)(term: quotes.reflect.Term): Option[quotes.reflect.Term] =
     import quotes.reflect.*
     term match
       case Inlined(_, bindings, t) => Some(quotes.reflect.Block(bindings, t))
-      case t                       => Some(t)
+      case t                       => None
 
 object Seal:
   // turn term into expr

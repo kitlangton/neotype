@@ -4,8 +4,6 @@ import scala.quoted.*
 import StringFormatting.*
 
 private[neotype] object ErrorMessages:
-  // contiguous ASCII dash symbol: U+2015 looks like: —
-
   val header =
     "—— Newtype Error ——————————————————————————————————————————————————————————".red
   val footer =
@@ -13,11 +11,11 @@ private[neotype] object ErrorMessages:
 
   /** An error message for when the input to a Newtype's apply method is not known at compile time.
     */
-  def inputNotKnownAtCompileTime(using Quotes)(input: Expr[Any], nt: quotes.reflect.TypeRepr) =
+  def inputParseFailureMessage(using Quotes)(input: Expr[Any], nt: quotes.reflect.TypeRepr): String =
     import quotes.reflect.*
 
     val inputTpe = input.asTerm.tpe.widenTermRefByName
-    val example  = examples(inputTpe)
+    val example  = Calc.renderConstant(examples(input))
 
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
     val valueExprString   = input.asTerm.pos.sourceCode.getOrElse(input.show).blue
@@ -28,7 +26,7 @@ private[neotype] object ErrorMessages:
      |
      |  🤠 ${"Possible Solutions".bold}
      |  ${"1.".dim} Try passing a literal $inputTypeString:
-     |     $newTypeNameString(${example.show.green})
+     |     $newTypeNameString(${example})
      |  ${"2.".dim} Call the ${"make".green} method, which returns a runtime-validated ${"Either".yellow}:
      |     $newTypeNameString.${"make".green}(${valueExprString})
      |  ${"3.".dim} If you are sure the input is valid, use the ${"unsafe".green} method:
@@ -40,9 +38,9 @@ private[neotype] object ErrorMessages:
 
   /** An error message for when the compile-time validation of a Newtype's apply method fails.
     */
-  def validationFailed(using
+  def compileTimeValidationFailureMessage(using
       Quotes
-  )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], failureMessage: String) =
+  )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], failureMessage: String): String =
     import quotes.reflect.*
 
     val isDefaultFailureMessage = failureMessage == "Validation Failed"
@@ -61,7 +59,7 @@ private[neotype] object ErrorMessages:
      |  $footer
      |""".stripMargin
 
-  def validateIsNotInline(using Quotes)(input: Expr[Any], nt: quotes.reflect.TypeRepr): String =
+  def validateIsNotInlineMessage(using Quotes)(input: Expr[Any], nt: quotes.reflect.TypeRepr): String =
     import quotes.reflect.*
     val inputTpe          = input.asTerm.tpe.widenTermRefByName
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
@@ -77,7 +75,7 @@ private[neotype] object ErrorMessages:
      |  $footer
      |""".stripMargin
 
-  def failedToParseCustomErrorMessage(using Quotes)(nt: quotes.reflect.TypeRepr) =
+  def failedToParseCustomErrorMessage(using Quotes)(nt: quotes.reflect.TypeRepr): String =
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
     s"""  $header
      |  😭 I've ${"FAILED".red} to parse $newTypeNameString's ${"failureMessage".green}!
@@ -90,18 +88,11 @@ private[neotype] object ErrorMessages:
      |  $footer
      |""".stripMargin
 
-  def indent(str: String) =
-    str.linesIterator
-      .map { line =>
-        s"  $line".blue
-      }
-      .mkString("\n")
-
   def failedToParseValidateMethod(using
       Quotes
   )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], isBodyInline: Option[Boolean]): String =
     import quotes.reflect.*
-    if isBodyInline.contains(false) then return validateIsNotInline(input, nt)
+    if isBodyInline.contains(false) then return validateIsNotInlineMessage(input, nt)
 
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
     val sourceExpr = source.fold("") { s =>
@@ -129,16 +120,27 @@ private[neotype] object ErrorMessages:
        |  $footer
        |""".stripMargin
 
+  private def indent(str: String) =
+    str.linesIterator
+      .map { line =>
+        s"  $line".blue
+      }
+      .mkString("\n")
+
   // Create a map from various input types to examples of the given type of statically known inputs
-  def examples(using Quotes)(tpe: quotes.reflect.TypeRepr) =
+  def examples(using Quotes)(input: Expr[Any]): Any =
     import quotes.reflect.*
 
-    val examples = Map(
-      TypeRepr.of[String] -> '{ "foo" },
-      TypeRepr.of[Int]    -> '{ 1 },
-      TypeRepr.of[Long]   -> '{ 1L },
-      TypeRepr.of[Float]  -> '{ 1.0f },
-      TypeRepr.of[Double] -> '{ 1.0 }
-    )
-
-    examples.find { case (k, _) => k <:< tpe }.get._2
+    input match
+      case '{ ($_): String }  => "foo"
+      case '{ ($_): Int }     => 1
+      case '{ ($_): Long }    => 1L
+      case '{ ($_): Float }   => 1.0f
+      case '{ ($_): Double }  => 1.0
+      case '{ ($_): Boolean } => true
+      case '{ ($_): Char }    => 'a'
+      case '{ ($_): Byte }    => 1.toByte
+      case '{ ($_): Short }   => 1.toShort
+      case '{ ($_): Unit }    => ()
+      case '{ ($_): Null }    => null
+      case _                  => "input"

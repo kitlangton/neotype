@@ -49,6 +49,8 @@ abstract class Newtype[A](using fromExpr: FromExpr[A]) extends ValidatedWrapper[
   extension (inline input: Type) //
     inline def unwrap: A = input
 
+  inline def unsafeWrapF[F[_]](inline input: F[A]): F[Type] = input
+
 object Newtype:
   type WithType[A, B] = Newtype[A] { type Type = B }
 
@@ -60,6 +62,8 @@ object Newtype:
       inline def unwrap: A = input
 
     inline def applyF[F[_]](inline input: F[A]): F[Type] = input
+
+    inline def unsafeWrapF[F[_]](inline input: F[A]): F[Type] = input
 
   object Simple:
     type WithType[A, B] = Newtype.Simple[A] { type Type = B }
@@ -78,6 +82,9 @@ abstract class Subtype[A](using fromExpr: FromExpr[A]) extends ValidatedWrapper[
   inline def cast(inline input: Type): A              = input
   inline def castF[F[_]](inline input: F[Type]): F[A] = input
 
+  inline def unsafeWrap(inline input: A): Type              = input
+  inline def unsafeWrapF[F[_]](inline input: F[A]): F[Type] = input
+
 object Subtype:
   type WithType[A, B <: A] = Subtype[A] { type Type = B }
 
@@ -92,6 +99,9 @@ object Subtype:
     inline def applyF[F[_]](inline input: F[A]): F[Type] = input
     inline def cast(inline input: A): Type               = input
     inline def castF[F[_]](inline input: F[A]): F[Type]  = input
+
+    inline def unsafeWrap(inline input: A): Type              = input
+    inline def unsafeWrapF[F[_]](inline input: F[A]): F[Type] = input
 
   object Simple:
     type WithType[A, B <: A] = Subtype.Simple[A] { type Type = B }

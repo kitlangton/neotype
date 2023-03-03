@@ -2,15 +2,23 @@ package neotype.examples
 
 import neotype.*
 
+type NonEmptyString = NonEmptyString.Type
 given NonEmptyString: Newtype[String] with
   inline def validate(value: String): Boolean =
-    value.nonEmpty
+    value.reverse.nonEmpty
 
+type Email = Email.Type
+given Email: Newtype[String] with
+  inline def validate(value: String): Boolean =
+    value.contains("@") && value.contains(".")
+
+type FourSeasons = FourSeasons.Type
 given FourSeasons: Newtype[String] with
   inline def validate(value: String): Boolean =
     val seasons = Set("Spring", "Summer", "Autumn", "Winter")
     seasons.contains(value)
 
+type FiveElements = FiveElements.Type
 given FiveElements: Newtype[String] with
   inline def validate(value: String): Boolean =
     value match
