@@ -13,34 +13,45 @@ object EvalSpec extends ZIOSpecDefault:
       }
     )
 
+inline def wrap[A](a: A): A = a
+
 /** Tests various ways of evaluating various expressions
   */
 val evalTests =
   List(
     // numeric expressions
     // int
-    eval(identity(3) * 2)  -> 6,
-    eval(identity(1) + 1)  -> 2,
-    eval(identity(10) - 5) -> 5,
-    eval(identity(10) / 2) -> 5,
-    eval(identity(20) % 3) -> 2,
+    eval(wrap(3) * 2)           -> 6,
+    eval(wrap(1) + 1)           -> 2,
+    eval(wrap(10) - 5)          -> 5,
+    eval(wrap(10) / 2)          -> 5,
+    eval(wrap(20) % 3)          -> 2,
+    eval(wrap(20) > 3)          -> true,
+    eval(wrap(20 < 3))          -> false,
+    eval(wrap(20) >= 3)         -> true,
+    eval(wrap(20 <= (3: Byte))) -> false,
+    eval(10.0 + (5: Char))      -> 15,
 
     // long
-    eval(identity(3L) * 2L)  -> 6L,
-    eval(identity(1L) + 1L)  -> 2L,
-    eval(identity(10L) - 5L) -> 5L,
-    eval(identity(10L) / 2L) -> 5L,
-    eval(identity(20L) % 3L) -> 2L,
+    eval(wrap(3L) * 2L)   -> 6L,
+    eval(wrap(1L) + 1L)   -> 2L,
+    eval(wrap(10L) - 5L)  -> 5L,
+    eval(wrap(10L) / 2L)  -> 5L,
+    eval(wrap(20L) % 3L)  -> 2L,
+    eval(wrap(20L) > 3)   -> true,
+    eval(wrap(20 < 3L))   -> false,
+    eval(wrap(20) >= 3)   -> true,
+    eval(wrap(20.0 <= 3)) -> false,
 
     // double
-    eval(identity(3.0) * 2.0)  -> 6.0,
-    eval(identity(1.5) + 1.5)  -> 3.0,
-    eval(identity(10.0) - 5.5) -> 4.5,
-    eval(identity(10.0) / 2.0) -> 5.0,
-//    eval(identity(20.0) % 3.0) -> 2.0,
+    eval(wrap(3.0) * 2.0)  -> 6.0,
+    eval(wrap(1.5) + 1.5)  -> 3.0,
+    eval(wrap(10.0) - 5.5) -> 4.5,
+    eval(wrap(10.0) / 2.0) -> 5.0,
+//    eval(wrap(20.0) % 3.0) -> 2.0,
 
     // string expressions
-    eval(identity("Hello, ") + "world!")              -> "Hello, world!",
+    eval(wrap("Hello, ") + "world!")                  -> "Hello, world!",
     eval("Scala is good".toUpperCase)                 -> "SCALA IS GOOD",
     eval("SCALA IS GOOD".toLowerCase)                 -> "scala is good",
     eval("Scala is good".toUpperCase())               -> "SCALA IS GOOD",
@@ -48,11 +59,11 @@ val evalTests =
     eval("myemail@gmail.com".matches(".*@gmail.com")) -> true,
 
     // boolean expressions
-    eval(identity(true) && false) -> false,
-    eval(identity(true) || false) -> true,
-    eval(!identity(true))         -> false,
-    eval(!identity(false))        -> true,
-    eval(identity(true) == false) -> false,
+    eval(wrap(true) && false) -> false,
+    eval(wrap(true) || false) -> true,
+    eval(!wrap(true))         -> false,
+    eval(!wrap(false))        -> true,
+    eval(wrap(true) == false) -> false,
 
     // set expressions
     eval(Set(1, 2, 3))             -> Set(1, 2, 3),

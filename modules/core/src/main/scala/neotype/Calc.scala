@@ -131,7 +131,12 @@ object Calc:
       // BASIC TYPES
       case Unseal(r.Literal(constant))                => Some(Calc.Constant(constant.value))
       case '{ BigInt(${ Expr(string) }: String) }     => Some(Calc.Constant(BigInt(string)))
+      case '{ BigInt(${ Expr(int) }: Int) }           => Some(Calc.Constant(BigInt(int)))
+      case '{ BigInt(${ Expr(long) }: Long) }         => Some(Calc.Constant(BigInt(long)))
       case '{ BigDecimal(${ Expr(string) }: String) } => Some(Calc.Constant(BigDecimal(string)))
+      case '{ BigDecimal(${ Expr(int) }: Int) }       => Some(Calc.Constant(BigDecimal(int)))
+      case '{ BigDecimal(${ Expr(long) }: Long) }     => Some(Calc.Constant(BigDecimal(long)))
+      case '{ BigDecimal(${ Expr(double) }: Double) } => Some(Calc.Constant(BigDecimal(double)))
       case '{ (${ Expr(string) }: String).r }         => Some(Calc.Constant(string.r))
 
       // CONTAINER TYPES
