@@ -19,10 +19,10 @@ given MySubtype: Subtype[String] with
   override inline def failureMessage = "String must be longer than 10 characters"
 
 type SimpleNewtype = SimpleNewtype.Type
-given SimpleNewtype: Newtype.Simple[Int] with {}
+given SimpleNewtype: Newtype.Simple[Int]()
 
 type SimpleSubtype = SimpleSubtype.Type
-given SimpleSubtype: Subtype.Simple[String] with {}
+given SimpleSubtype: Subtype.Simple[String]()
 
 final case class SomeService(
     myNewtype: MyNewtype,

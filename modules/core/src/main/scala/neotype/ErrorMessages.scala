@@ -15,7 +15,7 @@ private[neotype] object ErrorMessages:
     import quotes.reflect.*
 
     val inputTpe = input.asTerm.tpe.widenTermRefByName
-    val example  = Calc.renderConstant(examples(input))
+    val example  = Calc.renderValue(examples(input))
 
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
     val valueExprString   = input.asTerm.pos.sourceCode.getOrElse(input.show).blue

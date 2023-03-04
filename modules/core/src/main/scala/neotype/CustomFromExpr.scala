@@ -3,7 +3,7 @@ package neotype
 import scala.quoted.*
 
 object CustomFromExpr:
-  given [A]: FromExpr[Set[A]] with
+  given fromExprSet[A]: FromExpr[Set[A]] with
     def unapply(x: Expr[Set[A]])(using Quotes) =
       import quotes.reflect.*
       val aType         = x.asTerm.tpe.widen.typeArgs.head.asType
@@ -18,7 +18,7 @@ object CustomFromExpr:
 //          report.warning(s"Cannot unapply Set from ${x}\n${x.asTerm}")
           None
 
-  given [A]: FromExpr[List[A]] with
+  given fromExprList[A]: FromExpr[List[A]] with
     def unapply(x: Expr[List[A]])(using Quotes) =
       import quotes.reflect.*
       val aType         = x.asTerm.tpe.widen.typeArgs.head.asType

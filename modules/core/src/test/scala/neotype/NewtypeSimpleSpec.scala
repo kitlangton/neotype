@@ -7,7 +7,7 @@ import scala.compiletime.testing.*
 import scala.quoted.*
 
 type NameWrapper = NameWrapper.Type
-given NameWrapper: Newtype.Simple[String] with {}
+given NameWrapper: Newtype.Simple[String]()
 
 object NewtypeSimpleSpec extends ZIOSpecDefault:
   val spec = suite("NewtypeSpec")(
