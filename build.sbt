@@ -37,7 +37,8 @@ lazy val root = (project in file("."))
     core,
     zioJson,
     zioQuill,
-    examples
+    examples,
+    tapir
   )
 
 lazy val core = (project in file("modules/core"))
@@ -74,6 +75,16 @@ lazy val zio = (project in file("modules/neotype-zio"))
     sharedSettings,
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio" % zioVersion
+    )
+  )
+  .dependsOn(core)
+
+lazy val tapir = (project in file("modules/tapir"))
+  .settings(
+    name := "neotypes-tapir",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.2.9",
     )
   )
   .dependsOn(core)
