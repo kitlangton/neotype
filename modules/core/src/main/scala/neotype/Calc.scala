@@ -347,9 +347,6 @@ object Calc:
       case '{ type a; type b; (${ Calc(list) }: List[`a`]).map(${ Calc(f) }: `a` => `b`) } =>
         Some(Calc.Apply1(list, f, _.map(_), call("map")))
 
-//      case Unseal(Closure(term, body)) =>
-//        report.errorAndAbort(s"Found Closure: ${term}")
-
       case Unseal(Closure(Ident(name), _)) =>
         Some(Calc.Reference(name))
 
@@ -359,15 +356,11 @@ object Calc:
       case '{ type a; type b; (${ Calc(f) }: `a` => `b`)(${ Calc(a) }: `a`) } =>
         Some(Calc.CalcApply(f, List(a)))
 
-      case Unseal(cs: Closure) =>
-        report.errorAndAbort(s"Closure not supported in Calc ${cs}")
-        ???
-
       case other =>
         // DEV MODE
-        report.errorAndAbort(
-          s"CALC PARSE FAIL: ${other.show}\n${other.asTerm.tpe.show}\n${other.asTerm.underlyingArgument}"
-        )
+//        report.errorAndAbort(
+//          s"CALC PARSE FAIL: ${other.show}\n${other.asTerm.tpe.show}\n${other.asTerm.underlyingArgument}"
+//        )
         None
 
     calc.asInstanceOf[Option[Calc[A]]]
