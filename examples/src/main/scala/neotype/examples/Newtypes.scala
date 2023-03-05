@@ -25,3 +25,8 @@ given FiveElements: Newtype[String] with
       case "Metal" | "Water" | "Wood" | "Fire" | "Earth" => true
       case string if string.length > 10                  => true
       case _                                             => false
+
+type PositiveIntList = PositiveIntList.Type
+given PositiveIntList: Newtype[List[Int]] with
+  inline def validate(value: List[Int]): Boolean =
+    value.filter(_ < 0).isEmpty

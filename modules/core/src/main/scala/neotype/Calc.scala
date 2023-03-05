@@ -35,14 +35,17 @@ enum Calc[A]:
   case IfThenElse(cond: Calc[Boolean], thenCalc: Calc[A], elseCalc: Calc[A])   extends Calc[A]
   case CalcClosure(ctx: Map[String, Any], params: List[String], body: Calc[A]) extends Calc[A]
 
-  def render(using ctx: Map[String, String]): String =
+  def render(using ctx: Map[String, String])(using Quotes): String =
+    import quotes.reflect.*
     this match
       case Value(value)    => Calc.renderValue(value)
-      case Reference(name) => ctx(name)
+      case Reference(name) => ctx.getOrElse(name, "_")
 
       // Comparisons
-      case Apply0(calc, _, show)     => show(calc.render)
-      case Apply1(lhs, rhs, _, show) => show(lhs.render, rhs.render)
+      case Apply0(calc, _, show) => show(calc.render)
+      case Apply1(lhs, rhs, _, show) =>
+        report.info(s"Rendering Apply1: $lhs, $rhs")
+        show(lhs.render, rhs.render)
 
       case Apply2(cond, lhs, rhs, _, show) => show(cond.render, lhs.render, rhs.render)
 
@@ -52,7 +55,9 @@ enum Calc[A]:
             case CalcDef.CalcValDef(name, calc) =>
               ctx + (name -> calc.render(using ctx))
             case CalcDef.CalcDefDef(name, args, calc) =>
-              ctx + (name -> calc.render(using ctx))
+              ctx + (name -> calc.render(using
+                ctx ++ args.map(a => if a.startsWith("_") then (a, "_") else (a, a))
+              ))
         }
         calc.render(using newCtx)
 
@@ -370,7 +375,7 @@ enum CalcDef[A]:
   case CalcDefDef(name: String, params: List[String], calc: Calc[A])
 
 case class CalcMatchCase[A](pattern: CalcPattern[A], guard: Option[Calc[Boolean]], calc: Calc[A]):
-  def render(using Map[String, String]): String =
+  def render(using Map[String, String])(using Quotes): String =
     s"${pattern.render} => ${calc.render}"
 
   def matches(using ctx: Map[String, Any], q: Quotes)(value: Any): Boolean =
@@ -408,7 +413,7 @@ enum CalcPattern[A]:
       case Alternative(patterns) =>
         patterns.flatMap(_.bindings)
 
-  def render(using Map[String, String]): String =
+  def render(using Map[String, String])(using Quotes): String =
     this match
       case Value(value)   => value.render
       case Variable(name) => name

@@ -32,12 +32,12 @@ private inline def isURLRegex  = "^(http|https)://.*$".r
 private inline def isEmailRegex =
   """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r
 
-abstract class Newtype[A](using fromExpr: FromExpr[A]) extends ValidatedWrapper[A]:
+abstract class Newtype[A] extends ValidatedWrapper[A]:
   self =>
   opaque type Type = A
 
   inline def apply(inline input: A): Type =
-    ${ Macros.applyImpl[A, Type, self.type]('input, '{ validate(_) }, 'failureMessage) }
+    ${ Macros.applyImpl[A, Type, self.type]('input, '{ INPUT => validate(INPUT) }, 'failureMessage) }
 
   inline def applyAll(inline values: A*): List[Type] =
     ${ Macros.applyAllImpl[A, Type, self.type]('values, 'self) }
@@ -68,7 +68,7 @@ object Newtype:
   object Simple:
     type WithType[A, B] = Newtype.Simple[A] { type Type = B }
 
-abstract class Subtype[A](using fromExpr: FromExpr[A]) extends ValidatedWrapper[A]:
+abstract class Subtype[A] extends ValidatedWrapper[A]:
   self =>
   opaque type Type <: A = A
 

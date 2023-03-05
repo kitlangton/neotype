@@ -19,7 +19,7 @@ private[neotype] object Macros:
     lazy val expressionSource: Option[String] =
       validate.asTerm match
         case Uninlined(Block(_, Lambda(_, Seal(Calc(calc))))) =>
-          Some(calc.render(using Map("_$1" -> "input".blue)))
+          Some(calc.render(using Map("INPUT" -> "input".blue)))
         case _ =>
           None
 
