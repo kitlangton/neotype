@@ -4,3 +4,8 @@ project/target
 target
 .DS_Store
 .DS_Store
+.vscode
+.bloop
+project/project
+.metals
+metals.sbt
