@@ -1,11 +1,14 @@
 package neotype
 
 import BinOpMatch.*
+
 import scala.annotation.tailrec
 import StringFormatting.*
+
 import scala.quoted.*
 import scala.util.matching.Regex
 import CustomFromExpr.given
+import neotype.Calc.closureToFunction
 
 enum Calc[A]:
   case Value(value: A)
@@ -24,10 +27,13 @@ enum Calc[A]:
       show: (String, String, String) => String
   ) extends Calc[D]
 
-  case Block(defs: List[CalcValDef[?]], calc: Calc[A])                       extends Calc[A]
-  case Reference(name: String)                                               extends Calc[A]
-  case MatchExpr(expr: Calc[A], cases: List[CalcMatchCase[A]])               extends Calc[A]
-  case IfThenElse(cond: Calc[Boolean], thenCalc: Calc[A], elseCalc: Calc[A]) extends Calc[A]
+  case CalcApply(calc: Calc[A], args: List[Calc[?]]) extends Calc[Any]
+
+  case CalcBlock(defs: List[CalcDef[?]], calc: Calc[A])                        extends Calc[A]
+  case Reference(name: String)                                                 extends Calc[A]
+  case MatchExpr(expr: Calc[A], cases: List[CalcMatchCase[A]])                 extends Calc[A]
+  case IfThenElse(cond: Calc[Boolean], thenCalc: Calc[A], elseCalc: Calc[A])   extends Calc[A]
+  case CalcClosure(ctx: Map[String, Any], params: List[String], body: Calc[A]) extends Calc[A]
 
   def render(using ctx: Map[String, String]): String =
     this match
@@ -40,9 +46,13 @@ enum Calc[A]:
 
       case Apply2(cond, lhs, rhs, _, show) => show(cond.render, lhs.render, rhs.render)
 
-      case Block(defs, calc) =>
+      case CalcBlock(defs, calc) =>
         val newCtx = defs.foldLeft(ctx) { (ctx, defn) =>
-          ctx + (defn.name -> defn.calc.render(using ctx))
+          defn match
+            case CalcDef.CalcValDef(name, calc) =>
+              ctx + (name -> calc.render(using ctx))
+            case CalcDef.CalcDefDef(name, args, calc) =>
+              ctx + (name -> calc.render(using ctx))
         }
         calc.render(using newCtx)
 
@@ -62,11 +72,20 @@ enum Calc[A]:
     str.linesIterator.map("  " + _).mkString("\n")
 
   def result(using context: Map[String, Any], q: Quotes): A =
+    import q.reflect.*
     this match
-      case Value(value)                    => value
-      case Reference(name)                 => context(name).asInstanceOf[A]
-      case Apply0(calc, op, _)             => op(calc.result).asInstanceOf[A]
-      case Apply1(calc, arg, op, _)        => op(calc.result, arg.result).asInstanceOf[A]
+      case Value(value)        => value
+      case Reference(name)     => context(name).asInstanceOf[A]
+      case Apply0(calc, op, _) => op(calc.result).asInstanceOf[A]
+
+      case Apply1(calc, arg, op, _) =>
+        arg.result match
+          case closure: CalcClosure[?] =>
+            val f = closureToFunction(closure)
+            op.asInstanceOf[(Any, Any) => Any](calc.result, f).asInstanceOf[A]
+          case result =>
+            op(calc.result, result).asInstanceOf[A]
+
       case Apply2(calc, arg1, arg2, op, _) => op(calc.result, arg1.result, arg2.result).asInstanceOf[A]
 
       case MatchExpr(expr, cases) =>
@@ -81,14 +100,32 @@ enum Calc[A]:
             q.reflect.report.errorAndAbort(s"CalcMatchCase not found for $exprResult")
             throw MatchError(exprResult)
 
-      case Block(defs, calc) =>
+      case CalcBlock(defs, calc) =>
         val newContext = defs.foldLeft(context) { (ctx, defn) =>
-          ctx + (defn.name -> defn.calc.result(using ctx))
+          defn match
+            case CalcDef.CalcValDef(name, calc) =>
+              ctx + (name -> calc.result(using ctx))
+            case CalcDef.CalcDefDef(name, args, calc) =>
+              val closure = CalcClosure(ctx, args, calc)
+              ctx + (name -> closure)
         }
         calc.result(using newContext)
 
       case IfThenElse(cond, thenCalc, elseCalc) =>
         if cond.result then thenCalc.result else elseCalc.result
+
+      case CalcApply(calc, args) =>
+        val calcResult = calc.result
+        calcResult match
+          case CalcClosure(cctx, params, body) =>
+            val newCtx = params.zip(args.map(_.result)).foldLeft(cctx) { (ctx, arg) =>
+              ctx + arg
+            }
+            report.info(s"Applying closure $calcResult with args $args")
+            body.result(using newCtx)
+          case _ =>
+            q.reflect.report.errorAndAbort(s"Cannot apply $calcResult")
+            throw MatchError(calcResult)
   end result
 
 end Calc
@@ -114,6 +151,18 @@ object Calc:
   def call2(op: String)   = (a: String, b: String, c: String) => s"$a.$op($b, $c)"
   def nullary(op: String) = (a: String) => s"$a.$op"
   def prefix(op: String)  = (a: String) => s"$op$a"
+
+  def closureToFunction[A](closure: CalcClosure[A])(using Quotes): Any =
+    import quotes.reflect.*
+    closure match
+      case CalcClosure(ctx, List(p), body) =>
+        (a: Any) => body.result(using ctx ++ Map(p -> a))
+      case CalcClosure(ctx, List(p1, p2), body) =>
+        (a: Any, b: Any) => body.result(using ctx ++ Map(p1 -> a, p2 -> b))
+      case CalcClosure(ctx, List(p1, p2, p3), body) =>
+        (a: Any, b: Any, c: Any) => body.result(using ctx ++ Map(p1 -> a, p2 -> b, p3 -> c))
+      case _ =>
+        report.errorAndAbort(s"Closure to function for arity ${closure.params.size} not implemented")
 
   def unapply[A](expr: Expr[A])(using Quotes): Option[Calc[A]] =
     import quotes.reflect.*
@@ -222,10 +271,14 @@ object Calc:
         Some(Calc.Apply1(lhs, rhs, Operations.times, infix("*")))
 
       case Unseal(quotes.reflect.Block(stats, Seal(Calc(expr)))) =>
-        val defs = stats.collect { case ValDef(name, _, Some(Seal(Calc(calc)))) =>
-          CalcValDef(name, calc)
+        val defs = stats.collect {
+          case ValDef(name, _, Some(Seal(Calc(calc)))) =>
+            CalcDef.CalcValDef(name, calc)
+          case DefDef(name, valDefs, _, Some(Seal(Calc(rhs)))) =>
+            val params = valDefs.flatMap(_.params).collect { case ValDef(name, _, _) => name }
+            CalcDef.CalcDefDef(name, params, rhs)
         }
-        Some(Calc.Block(defs, expr))
+        Some(Calc.CalcBlock(defs, expr))
 
       // Match Expressions
       case Unseal(Match(Seal(Calc(expr)), caseDefs)) =>
@@ -289,17 +342,39 @@ object Calc:
         Some(Calc.Apply1(list, elem, _.contains(_), call("contains")))
       case '{ type a; (${ Calc(list) }: List[`a`]).apply(${ Calc(index) }: Int) } =>
         Some(Calc.Apply1(list, index, _.apply(_), infix("apply")))
+      case '{ type a; (${ Calc(list) }: List[`a`]).filter(${ Calc(predicate) }: `a` => Boolean) } =>
+        Some(Calc.Apply1(list, predicate, _.filter(_), call("filter")))
+      case '{ type a; type b; (${ Calc(list) }: List[`a`]).map(${ Calc(f) }: `a` => `b`) } =>
+        Some(Calc.Apply1(list, f, _.map(_), call("map")))
+
+//      case Unseal(Closure(term, body)) =>
+//        report.errorAndAbort(s"Found Closure: ${term}")
+
+      case Unseal(Closure(Ident(name), _)) =>
+        Some(Calc.Reference(name))
+
+      case Unseal(Apply(Ident(name), List(Seal(Calc(arg))))) =>
+        Some(Calc.CalcApply(Calc.Reference(name), List(arg)))
+
+      case '{ type a; type b; (${ Calc(f) }: `a` => `b`)(${ Calc(a) }: `a`) } =>
+        Some(Calc.CalcApply(f, List(a)))
+
+      case Unseal(cs: Closure) =>
+        report.errorAndAbort(s"Closure not supported in Calc ${cs}")
+        ???
 
       case other =>
         // DEV MODE
-//        report.errorAndAbort(
-//          s"CALC PARSE FAIL: ${other.show}\n${other.asTerm.tpe.show}\n${other.asTerm.underlyingArgument}"
-//        )
+        report.errorAndAbort(
+          s"CALC PARSE FAIL: ${other.show}\n${other.asTerm.tpe.show}\n${other.asTerm.underlyingArgument}"
+        )
         None
 
     calc.asInstanceOf[Option[Calc[A]]]
 
-case class CalcValDef[A](name: String, calc: Calc[A])
+enum CalcDef[A]:
+  case CalcValDef(name: String, calc: Calc[A])
+  case CalcDefDef(name: String, params: List[String], calc: Calc[A])
 
 case class CalcMatchCase[A](pattern: CalcPattern[A], guard: Option[Calc[Boolean]], calc: Calc[A]):
   def render(using Map[String, String]): String =

@@ -19,8 +19,8 @@ inline def wrap[A](a: A): A = a
   */
 val evalTests =
   List(
-    // numeric expressions
-    // int
+    // Numeric Expressions
+    // Int
     eval(wrap(3) == 3)          -> true,
     eval(wrap(3) eq 3)          -> true,
     eval(wrap(3) != 3)          -> false,
@@ -87,11 +87,23 @@ val evalTests =
     eval(5 :: List(1, 2, 3)) -> List(5, 1, 2, 3),
     eval(List(1, 2, 3).head) -> 1,
 
-    // asInstanceOf/isInstanceOf
+    // isInstanceOf + asInstanceOf
     eval(List(1).isInstanceOf[List[Int]]) -> true,
     eval(List(1).asInstanceOf[List[Int]]) -> List(1),
     eval {
       val x = 10
       if x > 5 then x else "hello"
-    } -> 10
+    } -> 10,
+
+    //    TODO: lambdas
+    eval {
+      def f(x: Int) = x + 1
+      f(10)
+    } -> 11,
+    eval {
+      List(0, 1, 2, 3).map(_ * 2)
+    } -> List(0, 2, 4, 6),
+    eval {
+      List(0, 1, 2, 3).filter(a => a > 1)
+    } -> List(2, 3)
   )

@@ -25,4 +25,3 @@ given FiveElements: Newtype[String] with
       case "Metal" | "Water" | "Wood" | "Fire" | "Earth" => true
       case string if string.length > 10                  => true
       case _                                             => false
-
