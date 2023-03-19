@@ -2,7 +2,6 @@ package neotype.ziojson
 
 import neotype.*
 import zio.json.*
-import zio.json.internal.RetractReader
 
 // Newtype
 given [A, B](using newType: Newtype.WithType[A, B], decoder: JsonDecoder[A]): JsonDecoder[B] =

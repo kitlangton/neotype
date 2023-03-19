@@ -57,6 +57,17 @@ lazy val zioJson = (project in file("modules/neotype-zio-json"))
   )
   .dependsOn(core)
 
+lazy val circe = (project in file("modules/neotype-circe"))
+  .settings(
+    name := "neotype-circe",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "io.circe" %% "circe-core"   % "0.14.5",
+      "io.circe" %% "circe-parser" % "0.14.5"
+    )
+  )
+  .dependsOn(core)
+
 lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
   .settings(
     name := "neotype-zio-quill",
@@ -84,7 +95,7 @@ lazy val tapir = (project in file("modules/tapir"))
     name := "neotypes-tapir",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.2.9",
+      "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.2.9"
     )
   )
   .dependsOn(core)
