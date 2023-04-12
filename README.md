@@ -48,3 +48,37 @@ Error: /Users/kit/code/neotype/examples/src/main/scala/neotype/examples/Main.sca
   check: input.nonEmpty
   ———————————————————————————————————————————————————————————————————————————
 ```
+
+## Integrations
+
+Neotype integrates with the following libraries.
+
+- zio-json
+- zio-config
+- tapir
+- quill
+- circe
+
+### ZIO Json Example
+
+```scala
+import neotype.*
+import neotype.ziojson.*
+import zio.json.*
+
+type NonEmptyString = NonEmptyString.Type
+given NonEmptyString: Newtype[String] with
+  inline def validate(value: String): Boolean = value.nonEmpty
+  override inline def failureMessage = "String must not be empty"
+
+case class Person(name: NonEmptyString, age: Int) derives JsonCodec
+
+val parsed = """{"name": "Kit", "age": 30}""".fromJson[Person]
+// Right(Person(NonEmptyString("Kit"), 30))
+
+val failed = """{"name": "", "age": 30}""".fromJson[Person]
+// Left(".name(String must not be empty)")
+```
+
+By importing `neotype.ziojson.*`, we automatically generate a `JsonCodec` for `NonEmptyString`. Custom
+failure messages are also supported (by overriding `def failureMessage` in the Newtype definition).

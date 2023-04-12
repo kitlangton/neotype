@@ -35,6 +35,7 @@ lazy val root = (project in file("."))
   )
   .aggregate(
     core,
+    circe,
     zio,
     zioJson,
     zioConfig,

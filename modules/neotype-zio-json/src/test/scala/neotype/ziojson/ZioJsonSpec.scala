@@ -24,6 +24,8 @@ given SimpleNewtype: Newtype.Simple[Int]()
 type SimpleSubtype = SimpleSubtype.Type
 given SimpleSubtype: Subtype.Simple[String]()
 
+final case class Person(name: NonEmptyString, age: Int, address: SubtypeLongString) derives JsonCodec
+
 object ZioJsonSpec extends ZIOSpecDefault:
   def spec = suite("ZioJsonSpec")(
     suite("NonEmptyString")(
@@ -72,6 +74,18 @@ object ZioJsonSpec extends ZIOSpecDefault:
         val json   = """ 123 """
         val parsed = json.fromJson[SimpleSubtype]
         assertTrue(parsed.isLeft)
+      }
+    ),
+    suite("Person")(
+      test("parse success") {
+        val json   = """ { "name": "hello", "age": 123, "address": "hello world" } """
+        val parsed = json.fromJson[Person]
+        assertTrue(parsed == Right(Person(NonEmptyString("hello"), 123, SubtypeLongString("hello world"))))
+      },
+      test("parse failure") {
+        val json   = """ { "name": "", "age": 123, "address": "hello world" } """
+        val parsed = json.fromJson[Person]
+        assertTrue(parsed == Left(".name(String must not be empty)"))
       }
     )
   )
