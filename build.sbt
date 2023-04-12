@@ -14,7 +14,7 @@ inThisBuild(
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val zioVersion = "2.0.9"
+val zioVersion = "2.0.10"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
@@ -35,7 +35,9 @@ lazy val root = (project in file("."))
   )
   .aggregate(
     core,
+    zio,
     zioJson,
+    zioConfig,
     zioQuill,
     examples,
     tapir
@@ -90,12 +92,23 @@ lazy val zio = (project in file("modules/neotype-zio"))
   )
   .dependsOn(core)
 
-lazy val tapir = (project in file("modules/tapir"))
+lazy val zioConfig = (project in file("modules/neotype-zio-config"))
   .settings(
-    name := "neotypes-tapir",
+    name := "neotype-zio-config",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.2.9"
+      "dev.zio" %% "zio-config"          % "3.0.7",
+      "dev.zio" %% "zio-config-magnolia" % "3.0.7"
+    )
+  )
+  .dependsOn(core)
+
+lazy val tapir = (project in file("modules/neotype-tapir"))
+  .settings(
+    name := "neotype-tapir",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.2.10"
     )
   )
   .dependsOn(core)
