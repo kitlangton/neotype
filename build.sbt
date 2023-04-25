@@ -40,6 +40,7 @@ lazy val root = (project in file("."))
     zioJson,
     zioConfig,
     zioQuill,
+    zioSchema,
     examples,
     tapir
   )
@@ -100,6 +101,18 @@ lazy val zioConfig = (project in file("modules/neotype-zio-config"))
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio-config"          % "3.0.7",
       "dev.zio" %% "zio-config-magnolia" % "3.0.7"
+    )
+  )
+  .dependsOn(core)
+
+lazy val zioSchema = (project in file("modules/neotype-zio-schema"))
+  .settings(
+    name := "neotype-zio-schema",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "dev.zio" %% "zio-schema"      % "0.4.10",
+      "dev.zio" %% "zio-json"        % "0.4.2"  % "test",
+      "dev.zio" %% "zio-schema-json" % "0.4.10" % "test"
     )
   )
   .dependsOn(core)
