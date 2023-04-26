@@ -1,17 +1,17 @@
 package neotype.zioschema
 
 import neotype.{Newtype, Subtype}
-import zio.json.JsonDecoder.JsonError
-import zio.json.{DeriveJsonEncoder, JsonEncoder}
+import zio.*
 import zio.schema.codec.DecodeError.ReadError
 import zio.schema.codec.JsonCodec.JsonDecoder
-import zio.schema.codec.JsonCodec.JsonEncoder.CHARSET
+import zio.schema.codec.JsonCodec.JsonEncoder.charSequenceToByteChunk
 import zio.schema.codec.{DecodeError, JsonCodec}
 import zio.schema.{DeriveSchema, Schema}
 import zio.stream.ZStream
 import zio.test.*
 import zio.test.Assertion.*
-import zio.{Cause, Chunk, ZIO}
+import zio.json.{DeriveJsonEncoder, JsonEncoder}
+import zio.json.*
 
 import java.nio.CharBuffer
 import java.nio.charset.StandardCharsets
@@ -37,42 +37,52 @@ type SimpleSubtype = SimpleSubtype.Type
 given SimpleSubtype: Subtype.Simple[String]()
 
 final case class Person(name: NonEmptyString, age: Int, address: SubtypeLongString)
+final case class Person2NoTypeChecking(name: String, age: Int, address: String)
+
+object Person2NoTypeChecking:
+  val encoder: JsonEncoder[Person2NoTypeChecking] = DeriveJsonEncoder.gen
 
 object ZioSchemaSpec extends ZIOSpecDefault:
   def spec = suite("zioSchemaSpec")(
     suite("NonEmptyString")(
       test("parse success") {
-        assertZIO(decode(Schema[NonEmptyString], "hello"))(equalTo(NonEmptyString("hello")))
+        val json = JsonEncoder.string.encodeJson("hello", None)
+        assertZIO(decode(Schema[NonEmptyString], json))(equalTo(NonEmptyString("hello")))
       },
       test("parse failure") {
-        assertZIO(decode(Schema[NonEmptyString], "").exit)(
+        val json = JsonEncoder.string.encodeJson("", None)
+        assertZIO(decode(Schema[NonEmptyString], json).exit)(
           fails(equalTo(readError("(String must not be empty)")))
         )
       }
     ),
     suite("SubtypeLongString")(
       test("parse success") {
-        assertZIO(decode(Schema[SubtypeLongString], "hello world"))(equalTo(SubtypeLongString("hello world")))
+        val json = JsonEncoder.string.encodeJson("hello world", None)
+        assertZIO(decode(Schema[SubtypeLongString], json))(equalTo(SubtypeLongString("hello world")))
       },
       test("parse failure") {
-        assertZIO(decode(Schema[SubtypeLongString], "hello").exit)(
+        val json = JsonEncoder.string.encodeJson("hello", None)
+        assertZIO(decode(Schema[SubtypeLongString], json).exit)(
           fails(equalTo(readError("(String must be longer than 10 characters)")))
         )
       }
     ),
     suite("SimpleNewType")(
       test("parse success") {
-        assertZIO(decode(Schema[SimpleNewtype], "123"))(equalTo(SimpleNewtype(123)))
+        val json = JsonEncoder.string.encodeJson("123", None)
+        assertZIO(decode(Schema[SimpleNewtype], json))(equalTo(SimpleNewtype(123)))
       },
       test("parse failure") {
-        assertZIO(decode(Schema[SimpleNewtype], "hello").exit)(
+        val json: CharSequence = JsonEncoder.string.encodeJson("hello", None)
+        assertZIO(decode(Schema[SimpleNewtype], json).exit)(
           fails(equalTo(readError("(expected a number, got h)")))
         )
       }
     ),
     suite("Person")(
       test("parse success") {
-        val json   = """{"name":"hello","age":123,"address":"hello world"}"""
+        val json   = Person2NoTypeChecking.encoder.encodeJson(Person2NoTypeChecking("hello", 123, "hello world"), None)
         val person = Person(NonEmptyString("hello"), 123, SubtypeLongString("hello world"))
 
         assertZIO(decode(DeriveSchema.gen[Person], json))(
@@ -80,25 +90,25 @@ object ZioSchemaSpec extends ZIOSpecDefault:
         )
       },
       test("parse failure") {
-        val json = """{"name":"","age":10,"address":"hello"}"""
-        assertZIO(decode(Schema[SimpleNewtype], json).exit)(
+        val json = Person2NoTypeChecking.encoder.encodeJson(Person2NoTypeChecking("", 123, "hello world"), None)
+
+        assertZIO(decode(DeriveSchema.gen[Person], json).exit)(
           fails(equalTo(readError(".name(String must not be empty)")))
         )
       }
     )
   )
+
 private def readError(message: String) = ReadError(Cause.Empty, message)
 
-private def decode[A](schema: Schema[A], json: String): ZIO[Any, DecodeError, A] =
-  val encoded = JsonEncoder.string.encodeJson(json, None)
-  val bytes   = StandardCharsets.UTF_8.newEncoder().encode(CharBuffer.wrap(encoded))
-  val chunk   = Chunk.fromByteBuffer(bytes)
+private def decode[A](schema: Schema[A], json: CharSequence): ZIO[Any, DecodeError, A] =
+  val bytes = StandardCharsets.UTF_8.newEncoder().encode(CharBuffer.wrap(json))
 
   ZIO.absolve {
     ZStream
-      .fromChunk(chunk)
+      .fromChunk(Chunk.fromByteBuffer(bytes))
       .runCollect
-      .map { (bytes: Chunk[Byte]) =>
-        JsonCodec.schemaBasedBinaryCodec[A](schema).decode(bytes)
+      .map { b =>
+        JsonCodec.schemaBasedBinaryCodec[A](schema).decode(b)
       }
   }
