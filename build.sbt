@@ -111,7 +111,6 @@ lazy val zioSchema = (project in file("modules/neotype-zio-schema"))
     sharedSettings,
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio-schema"      % "0.4.10",
-      "dev.zio" %% "zio-json"        % "0.4.2"  % "test",
       "dev.zio" %% "zio-schema-json" % "0.4.10" % "test"
     )
   )
