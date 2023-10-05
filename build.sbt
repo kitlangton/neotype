@@ -14,7 +14,7 @@ inThisBuild(
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val zioVersion = "2.0.15"
+val zioVersion = "2.0.18"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
@@ -56,7 +56,7 @@ lazy val zioJson = (project in file("modules/neotype-zio-json"))
     name := "neotype-zio-json",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "dev.zio" %% "zio-json" % "0.6.0"
+      "dev.zio" %% "zio-json" % "0.6.2"
     )
   )
   .dependsOn(core)
@@ -66,8 +66,8 @@ lazy val circe = (project in file("modules/neotype-circe"))
     name := "neotype-circe",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "io.circe" %% "circe-core"   % "0.14.5",
-      "io.circe" %% "circe-parser" % "0.14.5"
+      "io.circe" %% "circe-core"   % "0.14.6",
+      "io.circe" %% "circe-parser" % "0.14.6"
     )
   )
   .dependsOn(core)
@@ -77,7 +77,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     name := "neotype-zio-quill",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "io.getquill"   %% "quill-jdbc-zio" % "4.6.0.1",
+      "io.getquill"   %% "quill-jdbc-zio" % "4.8.0",
       "org.postgresql" % "postgresql"     % "42.5.4"  % Test,
       "com.h2database" % "h2"             % "2.1.214" % Test
     )
@@ -110,9 +110,9 @@ lazy val zioSchema = (project in file("modules/neotype-zio-schema"))
     name := "neotype-zio-schema",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "dev.zio" %% "zio-schema"      % "0.4.13",
-      "dev.zio" %% "zio-json"        % "0.6.0"  % Test,
-      "dev.zio" %% "zio-schema-json" % "0.4.13" % Test
+      "dev.zio" %% "zio-schema"      % "0.4.14",
+      "dev.zio" %% "zio-json"        % "0.6.2"  % Test,
+      "dev.zio" %% "zio-schema-json" % "0.4.14" % Test
     )
   )
   .dependsOn(core)
@@ -122,7 +122,7 @@ lazy val tapir = (project in file("modules/neotype-tapir"))
     name := "neotype-tapir",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.6.2"
+      "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.7.6"
     )
   )
   .dependsOn(core)
