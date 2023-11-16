@@ -3,7 +3,7 @@ inThisBuild(
     name           := "neotype",
     normalizedName := "neotype",
     organization   := "io.github.kitlangton",
-    scalaVersion   := "3.3.0",
+    scalaVersion   := "3.3.1",
     homepage       := Some(url("https://github.com/kitlangton/neotype")),
     licenses       := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
     developers := List(
@@ -14,7 +14,7 @@ inThisBuild(
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val zioVersion = "2.0.18"
+val zioVersion = "2.0.19"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
@@ -110,9 +110,9 @@ lazy val zioSchema = (project in file("modules/neotype-zio-schema"))
     name := "neotype-zio-schema",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "dev.zio" %% "zio-schema"      % "0.4.14",
+      "dev.zio" %% "zio-schema"      % "0.4.15",
       "dev.zio" %% "zio-json"        % "0.6.2"  % Test,
-      "dev.zio" %% "zio-schema-json" % "0.4.14" % Test
+      "dev.zio" %% "zio-schema-json" % "0.4.15" % Test
     )
   )
   .dependsOn(core)
@@ -122,7 +122,7 @@ lazy val tapir = (project in file("modules/neotype-tapir"))
     name := "neotype-tapir",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.7.6"
+      "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.9.0"
     )
   )
   .dependsOn(core)
