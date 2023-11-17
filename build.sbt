@@ -117,12 +117,14 @@ lazy val zioSchema = (project in file("modules/neotype-zio-schema"))
   )
   .dependsOn(core)
 
+val tapirVersion = "1.9.0"
 lazy val tapir = (project in file("modules/neotype-tapir"))
   .settings(
     name := "neotype-tapir",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.tapir" %% "tapir-core" % "1.9.0"
+      "com.softwaremill.sttp.tapir" %% "tapir-core"         % tapirVersion,
+      "com.softwaremill.sttp.tapir" %% "tapir-json-pickler" % tapirVersion
     )
   )
   .dependsOn(core)
@@ -134,3 +136,5 @@ lazy val examples = (project in file("examples"))
     publish / skip := true
   )
   .dependsOn(core, zioJson, zioQuill)
+
+addCommandAlias("fmt", "scalafmtAll")
