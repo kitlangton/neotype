@@ -10,37 +10,40 @@ import sttp.tapir.CodecFormat
 import sttp.tapir.json.pickler.*
 
 // Newtype
-given [A, B](using newType: Newtype.WithType[A, B], schema: Schema[A]): Schema[B] =
+given newTypeWithTypeSchema[A, B](using newType: Newtype.WithType[A, B], schema: Schema[A]): Schema[B] =
   schema
     .validate(
       Validator.custom(b => ValidationResult.validWhen(newType.validate(b)), Some(newType.failureMessage))
     )
     .map(newType.make(_).toOption)(_.unwrap)
 
-given [L, A, B, CF <: CodecFormat](using newType: Newtype.WithType[A, B], codec: Codec[L, A, CF]): Codec[L, B, CF] =
+given newTypeWithTypeCodec[L, A, B, CF <: CodecFormat](using
+    newType: Newtype.WithType[A, B],
+    codec: Codec[L, A, CF]
+): Codec[L, B, CF] =
   codec
     .validate(Validator.custom(b => ValidationResult.validWhen(newType.validate(b)), Some(newType.failureMessage)))
     .mapDecode(a => DecodeResult.fromEitherString(a.toString, newType.make(a)))(_.unwrap)
 
 // Newtype.Simple
-given [A, B](using newType: Newtype.Simple.WithType[A, B], schema: Schema[A]): Schema[B] =
+given newTypeSimpleSchema[A, B](using newType: Newtype.Simple.WithType[A, B], schema: Schema[A]): Schema[B] =
   schema.map(a => Some(newType(a)))(_.unwrap)
 
-given [L, A, B, CF <: CodecFormat](using
+given newTypeSimpleCodec[L, A, B, CF <: CodecFormat](using
     newType: Newtype.Simple.WithType[A, B],
     codec: Codec[L, A, CF]
 ): Codec[L, B, CF] =
   codec.map(newType(_))(_.unwrap)
 
 // Subtype
-given [A, B <: A](using subType: Subtype.WithType[A, B], schema: Schema[A]): Schema[B] =
+given subtypeWithTypeSchema[A, B <: A](using subType: Subtype.WithType[A, B], schema: Schema[A]): Schema[B] =
   schema
     .validate(
       Validator.custom(b => ValidationResult.validWhen(subType.validate(b)), Some(subType.failureMessage))
     )
     .map(subType.make(_).toOption)(identity)
 
-given [L, A, B <: A, CF <: CodecFormat](using
+given subtypeWithTypeCodec[L, A, B <: A, CF <: CodecFormat](using
     subType: Subtype.WithType[A, B],
     codec: Codec[L, A, CF]
 ): Codec[L, B, CF] =
@@ -49,17 +52,17 @@ given [L, A, B <: A, CF <: CodecFormat](using
     .mapDecode(a => DecodeResult.fromEitherString(a.toString, subType.make(a)))(identity)
 
 // Subtype.Simple
-given [A, B <: A](using subType: Subtype.Simple.WithType[A, B], schema: Schema[A]): Schema[B] =
+given subtypeSimpleSchema[A, B <: A](using subType: Subtype.Simple.WithType[A, B], schema: Schema[A]): Schema[B] =
   schema.map(a => Some(subType(a)))(identity)
 
-given [L, A, B <: A, CF <: CodecFormat](using
+given subtypeSimpleCodec[L, A, B <: A, CF <: CodecFormat](using
     subType: Subtype.Simple.WithType[A, B],
     codec: Codec[L, A, CF]
 ): Codec[L, B, CF] =
   codec.map(subType(_))(identity)
 
 // Newtype.WithType
-given [A, B](using newType: Newtype.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
+given newTypeWithTypePickler[A, B](using newType: Newtype.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
   Pickler(
     new TapirPickle[B]:
       override lazy val writer: Writer[B] =
@@ -80,7 +83,7 @@ given [A, B](using newType: Newtype.WithType[A, B], pickler: Pickler[A]): Pickle
   )
 
 // Newtype.Simple.WithType
-given [A, B](using newType: Newtype.Simple.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
+given newTypeSimplePickler[A, B](using newType: Newtype.Simple.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
   Pickler(
     new TapirPickle[B]:
       override lazy val writer: Writer[B] =
@@ -93,7 +96,7 @@ given [A, B](using newType: Newtype.Simple.WithType[A, B], pickler: Pickler[A]):
   )
 
 // Subtype.WithType
-given [A, B <: A](using subType: Subtype.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
+given subtypeWithTypePickler[A, B <: A](using subType: Subtype.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
   Pickler(
     new TapirPickle[B]:
       override lazy val writer: Writer[B] =
@@ -114,7 +117,7 @@ given [A, B <: A](using subType: Subtype.WithType[A, B], pickler: Pickler[A]): P
   )
 
 // Subtype.Simple.WithType
-given [A, B <: A](using subType: Subtype.Simple.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
+given subTypeSimplePickler[A, B <: A](using subType: Subtype.Simple.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
   Pickler(
     new TapirPickle[B]:
       override lazy val writer: Writer[B] =
