@@ -42,8 +42,7 @@ lazy val root = (project in file("."))
     zio.jvm,
     zioJson.js,
     zioJson.jvm,
-    zioConfig.js,
-    zioConfig.jvm,
+    zioConfig,
     zioQuill,
     zioSchema.js,
     zioSchema.jvm,
@@ -96,12 +95,12 @@ lazy val zio = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-z
     name := "neotype-zio",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "dev.zio" %% "zio" % zioVersion
+      "dev.zio" %%% "zio" % zioVersion
     )
   )
   .dependsOn(core)
 
-lazy val zioConfig = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio-config"))
+lazy val zioConfig = (project in file("modules/neotype-zio-config"))
   .settings(
     name := "neotype-zio-config",
     sharedSettings,
@@ -110,16 +109,16 @@ lazy val zioConfig = (crossProject(JSPlatform, JVMPlatform) in file("modules/neo
       "dev.zio" %% "zio-config-magnolia" % "3.0.7"
     )
   )
-  .dependsOn(core)
+  .dependsOn(core.jvm)
 
 lazy val zioSchema = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio-schema"))
   .settings(
     name := "neotype-zio-schema",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "dev.zio" %% "zio-schema"      % "0.4.15",
-      "dev.zio" %% "zio-json"        % "0.6.2"  % Test,
-      "dev.zio" %% "zio-schema-json" % "0.4.15" % Test
+      "dev.zio" %%% "zio-schema"      % "0.4.15",
+      "dev.zio" %%% "zio-json"        % "0.6.2"  % Test,
+      "dev.zio" %%% "zio-schema-json" % "0.4.15" % Test
     )
   )
   .dependsOn(core)
@@ -130,8 +129,9 @@ lazy val tapir = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
     name := "neotype-tapir",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.tapir" %% "tapir-core"         % tapirVersion,
-      "com.softwaremill.sttp.tapir" %% "tapir-json-pickler" % tapirVersion
+      // TODO Does this make sense?
+      "com.softwaremill.sttp.tapir" %%% "tapir-core"         % tapirVersion,
+      "com.softwaremill.sttp.tapir" %%% "tapir-json-pickler" % tapirVersion
     )
   )
   .dependsOn(core)
