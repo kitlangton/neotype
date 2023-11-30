@@ -19,9 +19,9 @@ val zioVersion = "2.0.19"
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
     "-deprecation",
-//    "-explain",
+    //    "-explain",
     "-Xcheck-macros"
-//    "-Ycheck:all"
+    //    "-Ycheck:all"
   ),
   libraryDependencies ++= Seq(
     "dev.zio" %%% "zio-test"     % zioVersion % Test,
@@ -40,13 +40,13 @@ lazy val root = (project in file("."))
     circe.jvm,
     zio.js,
     zio.jvm,
-    zioJson.js,
-    zioJson.jvm,
-    zioConfig,
-    zioQuill,
+    zio.js,
+    zio.jvm,
+    zioConfig.jvm,
+    zioQuill.jvm,
     zioSchema.js,
     zioSchema.jvm,
-    examples,
+    examples.jvm,
     tapir.js,
     tapir.jvm
   )
@@ -78,7 +78,7 @@ lazy val circe = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
   )
   .dependsOn(core)
 
-lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
+lazy val zioQuill = (crossProject(JVMPlatform) in file("modules/neotype-zio-quill"))
   .settings(
     name := "neotype-zio-quill",
     sharedSettings,
@@ -88,7 +88,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
       "com.h2database" % "h2"             % "2.1.214" % Test
     )
   )
-  .dependsOn(core.jvm)
+  .dependsOn(core)
 
 lazy val zio = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio"))
   .settings(
@@ -100,7 +100,7 @@ lazy val zio = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-z
   )
   .dependsOn(core)
 
-lazy val zioConfig = (project in file("modules/neotype-zio-config"))
+lazy val zioConfig = (crossProject(JVMPlatform) in file("modules/neotype-zio-config"))
   .settings(
     name := "neotype-zio-config",
     sharedSettings,
@@ -109,7 +109,7 @@ lazy val zioConfig = (project in file("modules/neotype-zio-config"))
       "dev.zio" %% "zio-config-magnolia" % "3.0.7"
     )
   )
-  .dependsOn(core.jvm)
+  .dependsOn(core)
 
 lazy val zioSchema = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio-schema"))
   .settings(
@@ -136,12 +136,12 @@ lazy val tapir = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
   )
   .dependsOn(core)
 
-lazy val examples = (project in file("examples"))
+lazy val examples = (crossProject(JVMPlatform) in file("examples"))
   .settings(
     name := "neotype-examples",
     sharedSettings,
     publish / skip := true
   )
-  .dependsOn(core.jvm, zioJson.jvm, zioQuill)
+  .dependsOn(core, zioJson, zioQuill)
 
 addCommandAlias("fmt", "scalafmtAll")
