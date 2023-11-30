@@ -42,11 +42,11 @@ lazy val root = (project in file("."))
     zio.jvm,
     zio.js,
     zio.jvm,
-    zioConfig.jvm,
-    zioQuill.jvm,
+    zioConfig,
+    zioQuill,
     zioSchema.js,
     zioSchema.jvm,
-    examples.jvm,
+    examples,
     tapir.js,
     tapir.jvm
   )
@@ -78,7 +78,7 @@ lazy val circe = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
   )
   .dependsOn(core)
 
-lazy val zioQuill = (crossProject(JVMPlatform) in file("modules/neotype-zio-quill"))
+lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
   .settings(
     name := "neotype-zio-quill",
     sharedSettings,
@@ -88,7 +88,7 @@ lazy val zioQuill = (crossProject(JVMPlatform) in file("modules/neotype-zio-quil
       "com.h2database" % "h2"             % "2.1.214" % Test
     )
   )
-  .dependsOn(core)
+  .dependsOn(core.jvm)
 
 lazy val zio = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio"))
   .settings(
@@ -100,7 +100,7 @@ lazy val zio = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-z
   )
   .dependsOn(core)
 
-lazy val zioConfig = (crossProject(JVMPlatform) in file("modules/neotype-zio-config"))
+lazy val zioConfig = (project in file("modules/neotype-zio-config"))
   .settings(
     name := "neotype-zio-config",
     sharedSettings,
@@ -109,7 +109,7 @@ lazy val zioConfig = (crossProject(JVMPlatform) in file("modules/neotype-zio-con
       "dev.zio" %% "zio-config-magnolia" % "3.0.7"
     )
   )
-  .dependsOn(core)
+  .dependsOn(core.jvm)
 
 lazy val zioSchema = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio-schema"))
   .settings(
@@ -136,12 +136,12 @@ lazy val tapir = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
   )
   .dependsOn(core)
 
-lazy val examples = (crossProject(JVMPlatform) in file("examples"))
+lazy val examples = (project in file("examples"))
   .settings(
     name := "neotype-examples",
     sharedSettings,
     publish / skip := true
   )
-  .dependsOn(core, zioJson, zioQuill)
+  .dependsOn(core.jvm, zioJson.jvm, zioQuill)
 
 addCommandAlias("fmt", "scalafmtAll")
