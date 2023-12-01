@@ -86,5 +86,28 @@ object NewtypeSpec extends ZIOSpecDefault:
         val res = PositiveIntNewtype.make(-1)
         assertTrue(res.map(PositiveIntNewtype.unwrap(_)) == Left("Validation Failed"))
       }
+    ),
+    suite("unsafe")(
+      test("success"){
+        val res = 
+          PositiveIntNewtype
+            .unsafe:
+              1
+            .unwrap
+        assertTrue:
+          res == 1
+      },
+      test("failure")(
+        try
+          PositiveIntNewtype
+            .unsafe:
+              -1
+            .unwrap
+          assertNever:
+            "Should blow up on negative value"
+        catch
+          case _ =>
+            assertCompletes
+      ),
     )
   )
