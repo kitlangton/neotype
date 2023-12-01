@@ -50,6 +50,12 @@ abstract class Newtype[A] extends ValidatedWrapper[A]:
     inline def unwrap: A = input
 
   inline def unsafeWrapF[F[_]](inline input: F[A]): F[Type] = input
+  inline def unsafe(inline input: A): Type =
+    make:
+      input
+    .getOrElse:
+      throw IllegalArgumentException:
+        failureMessage
 
 object Newtype:
   type WithType[A, B] = Newtype[A] { type Type = B }
@@ -58,6 +64,7 @@ object Newtype:
     opaque type Type = A
 
     inline def apply(inline input: A): Type = input
+
     extension (inline input: Type) //
       inline def unwrap: A = input
 
@@ -84,6 +91,13 @@ abstract class Subtype[A] extends ValidatedWrapper[A]:
 
   inline def unsafeWrap(inline input: A): Type              = input
   inline def unsafeWrapF[F[_]](inline input: F[A]): F[Type] = input
+
+  inline def unsafe(inline input: A): Type =
+    make:
+      input
+    .getOrElse:
+      throw IllegalArgumentException:
+        failureMessage
 
 object Subtype:
   type WithType[A, B <: A] = Subtype[A] { type Type = B }
