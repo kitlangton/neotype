@@ -4,6 +4,7 @@ import neotype.{Newtype, Subtype}
 import zio.test.*
 import zio.config.*
 import zio.config.magnolia.*
+import zio.ConfigProvider
 
 type NonEmptyString = NonEmptyString.Type
 given NonEmptyString: Newtype[String] with
@@ -42,7 +43,7 @@ object ZioJsonSpec extends ZIOSpecDefault:
         SimpleSubtype("hello world")
       )
 
-      val source = ConfigSource.fromMap(
+      val source = ConfigProvider.fromMap(
         Map(
           "nonEmptyString"    -> "hello",
           "subtypeLongString" -> "hello world",
@@ -51,11 +52,11 @@ object ZioJsonSpec extends ZIOSpecDefault:
         )
       )
 
-      for actualConfig <- read(descriptor[MyConfig] from source)
+      for actualConfig <- read(deriveConfig[MyConfig] from source)
       yield assertTrue(actualConfig == expectedConfig)
     },
     test("fails to read config") {
-      val source = ConfigSource.fromMap(
+      val source = ConfigProvider.fromMap(
         Map(
           "nonEmptyString"    -> "",
           "subtypeLongString" -> "hello",
@@ -64,7 +65,7 @@ object ZioJsonSpec extends ZIOSpecDefault:
         )
       )
 
-      for actualConfig <- read(descriptor[MyConfig] from source).either
+      for actualConfig <- read(deriveConfig[MyConfig] from source).either
       yield assertTrue(
         actualConfig.is(_.left).getMessage.contains("String must not be empty"),
         actualConfig.is(_.left).getMessage.contains("String must be longer than 10 characters")

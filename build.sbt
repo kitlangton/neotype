@@ -14,7 +14,7 @@ inThisBuild(
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val zioVersion = "2.0.19"
+val zioVersion = "2.0.21"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
@@ -83,7 +83,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     name := "neotype-zio-quill",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "io.getquill"   %% "quill-jdbc-zio" % "4.8.0",
+      "io.getquill"   %% "quill-jdbc-zio" % "4.8.1",
       "org.postgresql" % "postgresql"     % "42.5.4"  % Test,
       "com.h2database" % "h2"             % "2.1.214" % Test
     )
@@ -105,8 +105,8 @@ lazy val zioConfig = (project in file("modules/neotype-zio-config"))
     name := "neotype-zio-config",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "dev.zio" %% "zio-config"          % "3.0.7",
-      "dev.zio" %% "zio-config-magnolia" % "3.0.7"
+      "dev.zio" %% "zio-config"          % "4.0.1",
+      "dev.zio" %% "zio-config-magnolia" % "4.0.1"
     )
   )
   .dependsOn(core.jvm)
@@ -116,14 +116,14 @@ lazy val zioSchema = (crossProject(JSPlatform, JVMPlatform) in file("modules/neo
     name := "neotype-zio-schema",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "dev.zio" %%% "zio-schema"      % "0.4.15",
+      "dev.zio" %%% "zio-schema"      % "1.0.1",
       "dev.zio" %%% "zio-json"        % "0.6.2"  % Test,
-      "dev.zio" %%% "zio-schema-json" % "0.4.15" % Test
+      "dev.zio" %%% "zio-schema-json" % "1.0.1" % Test
     )
   )
   .dependsOn(core)
 
-val tapirVersion = "1.9.0"
+val tapirVersion = "1.9.10"
 lazy val tapir = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-tapir"))
   .settings(
     name := "neotype-tapir",
