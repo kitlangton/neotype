@@ -307,6 +307,8 @@ object Calc:
       // Set Operations (+ and - are handled by the MatchBinPlus and MatchBinMinus cases)
       case '{ type a; (${ Calc(set) }: Set[`a`]).contains(${ Calc(elem) }: `a`) } =>
         Some(Calc.Apply1(set, elem, _.contains(_), call("contains")))
+      case '{ type a; (${ Calc(set) }: Set[`a`]).exists(${ Calc(predicate) }: `a` => Boolean) } =>
+        Some(Calc.Apply1(set, predicate, _.exists(_), call("exists")))
       case '{ type a; (${ Calc(set) }: Set[`a`]).intersect(${ Calc(other) }: Set[`a`]) } =>
         Some(Calc.Apply1(set, other, _.intersect(_), call("intersect")))
       case '{ type a; (${ Calc(set) }: Set[`a`]).union(${ Calc(other) }: Set[`a`]) } =>
@@ -345,6 +347,8 @@ object Calc:
         Some(Calc.Apply0(list, _.length, nullary("length")))
       case '{ type a; (${ Calc(list) }: List[`a`]).contains(${ Calc(elem) }: `a`) } =>
         Some(Calc.Apply1(list, elem, _.contains(_), call("contains")))
+      case '{ type a; (${ Calc(list) }: List[`a`]).exists(${ Calc(predicate) }: `a` => Boolean) } =>
+        Some(Calc.Apply1(list, predicate, _.exists(_), call("exists")))
       case '{ type a; (${ Calc(list) }: List[`a`]).apply(${ Calc(index) }: Int) } =>
         Some(Calc.Apply1(list, index, _.apply(_), infix("apply")))
       case '{ type a; (${ Calc(list) }: List[`a`]).filter(${ Calc(predicate) }: `a` => Boolean) } =>

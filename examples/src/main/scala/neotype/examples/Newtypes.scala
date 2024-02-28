@@ -30,4 +30,4 @@ given FiveElements: Newtype[String] with
 type PositiveIntList = PositiveIntList.Type
 given PositiveIntList: Newtype[List[Int]] with
   inline def validate(value: List[Int]): Boolean =
-    value.filter(_ < 0).isEmpty
+    !value.exists(_ < 0)

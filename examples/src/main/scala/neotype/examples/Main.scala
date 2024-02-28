@@ -10,9 +10,9 @@ object Main extends App:
   NonEmptyString("Good")       // OK
   PositiveIntList(List(5, 10)) // OK
 
-  // Uncomment out the following lines one at a time to see some fun compile errors.
-  // Email("kitgmail.com")        // BAD
-  // FourSeasons("Splinter")      // BAD
-  // FiveElements("Cheese")       // BAD
-  // NonEmptyString("")           // BAD
-  // PositiveIntList(List(5, -5)) // BAD
+// Uncomment out the following lines one at a time to see some fun compile errors.
+// Email("kitgmail.com")        // BAD
+// FourSeasons("Splinter")      // BAD
+// FiveElements("Cheese")       // BAD
+// NonEmptyString("")           // BAD
+// PositiveIntList(List(5, -5)) // BAD
