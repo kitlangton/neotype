@@ -29,7 +29,8 @@ import neotype.*
 
 // Define a newtype:
 given NonEmptyString: Newtype[String] with
-  // Hey, a plain old Scala expression!
+
+  // Define a validation that will can at compile-time OR run-time.
   inline def validate(input: String): Boolean =
     input.nonEmpty
 
@@ -53,11 +54,14 @@ Error: /Users/kit/code/neotype/examples/src/main/scala/neotype/examples/Main.sca
 
 Neotype integrates with the following libraries.
 
+- zio `Tag`
+- zio-test `DeriveGen`
 - zio-json
 - zio-config
 - tapir
 - quill
 - circe
+- jsoniter
 
 ### ZIO Json Example
 
