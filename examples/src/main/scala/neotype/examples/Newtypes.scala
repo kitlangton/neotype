@@ -9,6 +9,7 @@ given NonEmptyString: Newtype[String] with
 
 type Email = Email.Type
 given Email: Newtype[String] with
+
   inline def validate(value: String): Boolean =
     value.contains("@") && value.contains(".")
 

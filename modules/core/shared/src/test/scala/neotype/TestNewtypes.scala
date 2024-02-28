@@ -52,7 +52,7 @@ given VariousStringNewtype: Newtype[String] with
   inline def validate(string: String): Boolean =
     string.startsWith("a") && string.endsWith("z") &&
       string.length > 0 && string.contains("b") &&
-      string.isUUID && string.isURL
+      string.isUUID && string.isURL && string.isEmail
 
 type IsUUID = IsUUID.Type
 given IsUUID: Newtype[String] with

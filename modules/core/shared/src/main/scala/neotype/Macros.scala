@@ -53,7 +53,6 @@ private[neotype] object Macros:
       case Calc[A](calc) =>
         scala.util.Try(calc.result(using Map.empty)) match
           case Failure(exception) =>
-//            report.errorAndAbort(s"Failed to execute parsed validation: $exception")
             report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(a, nt, treeSource, isBodyInline))
           case Success(true) =>
             a.asExprOf[T]
@@ -67,7 +66,7 @@ private[neotype] object Macros:
       case _ =>
         report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(a, nt, treeSource, isBodyInline))
 
-  def applyAllImpl[A: Type, T: Type, NT <: Newtype[A] { type Type = T }: Type](
+  def applyAllImpl[A: Type, T: Type, NT <: ValidatedWrapper[A] { type Type = T }: Type](
       as: Expr[Seq[A]],
       self: Expr[NT]
   )(using Quotes): Expr[List[T]] =

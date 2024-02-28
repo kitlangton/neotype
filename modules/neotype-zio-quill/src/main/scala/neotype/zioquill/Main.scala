@@ -36,7 +36,7 @@ given [A, B <: A](using newType: Subtype.WithType[A, B]): MappedEncoding[A, B] =
 
 given [A, B <: A](using newType: Subtype.WithType[A, B]): MappedEncoding[B, A] =
   MappedEncoding { (b: B) =>
-    newType.cast(b)
+    b
   }
 
 // Subtype.Simple
@@ -48,5 +48,5 @@ given [A, B <: A](using newType: Subtype.Simple.WithType[A, B]): MappedEncoding[
 
 given [A, B <: A](using newType: Subtype.Simple.WithType[A, B]): MappedEncoding[B, A] =
   MappedEncoding { (b: B) =>
-    newType.cast(b)
+    b
   }

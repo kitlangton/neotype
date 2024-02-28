@@ -14,12 +14,12 @@ inThisBuild(
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val zioVersion = "2.0.21"
+val tapirVersion = "1.9.10"
+val zioVersion   = "2.0.21"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
     "-deprecation",
-    //    "-explain",
     "-Xcheck-macros"
     //    "-Ycheck:all"
   ),
@@ -34,21 +34,23 @@ lazy val root = (project in file("."))
     name := "neotype"
   )
   .aggregate(
-    core.js,
-    core.jvm,
     circe.js,
     circe.jvm,
+    core.js,
+    core.jvm,
+    examples,
+    tapir.js,
+    tapir.jvm,
     zio.js,
     zio.jvm,
+    zioConfig,
     zioJson.js,
     zioJson.jvm,
-    zioConfig,
     zioQuill,
     zioSchema.js,
     zioSchema.jvm,
-    examples,
-    tapir.js,
-    tapir.jvm
+    zioTest.js,
+    zioTest.jvm
   )
 
 lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
@@ -56,16 +58,6 @@ lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
     name := "neotype",
     sharedSettings
   )
-
-lazy val zioJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio-json"))
-  .settings(
-    name := "neotype-zio-json",
-    sharedSettings,
-    libraryDependencies ++= Seq(
-      "dev.zio" %%% "zio-json" % "0.6.2"
-    )
-  )
-  .dependsOn(core)
 
 lazy val circe = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-circe"))
   .settings(
@@ -78,17 +70,27 @@ lazy val circe = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
   )
   .dependsOn(core)
 
-lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
+lazy val jsoniter = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-jsoniter"))
   .settings(
-    name := "neotype-zio-quill",
+    name := "neotype-jsoniter",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "io.getquill"   %% "quill-jdbc-zio" % "4.8.1",
-      "org.postgresql" % "postgresql"     % "42.5.4"  % Test,
-      "com.h2database" % "h2"             % "2.1.214" % Test
+      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core"   % "2.28.2",
+      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-macros" % "2.28.2"
     )
   )
-  .dependsOn(core.jvm)
+  .dependsOn(core)
+
+lazy val tapir = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-tapir"))
+  .settings(
+    name := "neotype-tapir",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "com.softwaremill.sttp.tapir" %%% "tapir-core"         % tapirVersion,
+      "com.softwaremill.sttp.tapir" %%% "tapir-json-pickler" % tapirVersion
+    )
+  )
+  .dependsOn(core)
 
 lazy val zio = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio"))
   .settings(
@@ -117,21 +119,41 @@ lazy val zioSchema = (crossProject(JSPlatform, JVMPlatform) in file("modules/neo
     sharedSettings,
     libraryDependencies ++= Seq(
       "dev.zio" %%% "zio-schema"      % "1.0.1",
-      "dev.zio" %%% "zio-json"        % "0.6.2"  % Test,
+      "dev.zio" %%% "zio-json"        % "0.6.2" % Test,
       "dev.zio" %%% "zio-schema-json" % "1.0.1" % Test
     )
   )
   .dependsOn(core)
 
-val tapirVersion = "1.9.10"
-lazy val tapir = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-tapir"))
+lazy val zioJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio-json"))
   .settings(
-    name := "neotype-tapir",
+    name := "neotype-zio-json",
     sharedSettings,
     libraryDependencies ++= Seq(
-      // TODO Does this make sense?
-      "com.softwaremill.sttp.tapir" %%% "tapir-core"         % tapirVersion,
-      "com.softwaremill.sttp.tapir" %%% "tapir-json-pickler" % tapirVersion
+      "dev.zio" %%% "zio-json" % "0.6.2"
+    )
+  )
+  .dependsOn(core)
+
+lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
+  .settings(
+    name := "neotype-zio-quill",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "io.getquill"   %% "quill-jdbc-zio" % "4.8.1",
+      "org.postgresql" % "postgresql"     % "42.5.4"  % Test,
+      "com.h2database" % "h2"             % "2.1.214" % Test
+    )
+  )
+  .dependsOn(core.jvm)
+
+lazy val zioTest = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio-test"))
+  .settings(
+    name := "neotype-zio-test",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "dev.zio" %%% "zio-test"          % zioVersion,
+      "dev.zio" %%% "zio-test-magnolia" % zioVersion
     )
   )
   .dependsOn(core)

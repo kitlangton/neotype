@@ -423,9 +423,10 @@ enum CalcPattern[A]:
 
   def matches(value: Any)(using Map[String, Any], Quotes): Boolean =
     this match
-      case Value(value) => value.result == value
-      case Variable(_)  => true
-      case Wildcard()   => true
+      case Value(patternValue) =>
+        patternValue.result == value
+      case Variable(_) => true
+      case Wildcard()  => true
       case Alternative(patterns) =>
         patterns.exists(_.matches(value))
 
@@ -437,6 +438,7 @@ object CalcPattern:
       case r.Bind(name, r.Wildcard()) => CalcPattern.Variable(name)
       case Seal(Calc(value))          => CalcPattern.Value(value)
       case r.Alternatives(patterns)   => CalcPattern.Alternative(patterns.map(parse))
+      case other                      => r.report.errorAndAbort(s"CalcPattern parse failed to parse: ${other}")
 
 object Unseal:
   def unapply(expr: Expr[?])(using Quotes): Option[quotes.reflect.Term] =
