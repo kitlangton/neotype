@@ -30,7 +30,7 @@ import neotype.*
 // Define a newtype:
 given NonEmptyString: Newtype[String] with
 
-  // Define a validation that will can at compile-time OR run-time.
+  // Define a validation that can at compile-time OR run-time.
   inline def validate(input: String): Boolean =
     input.nonEmpty
 
