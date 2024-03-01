@@ -58,7 +58,6 @@ Error: /src/main/scala/examples/Main.scala:9:16
 
 Neotype integrates with the following libraries.
 
-- zio `Tag`
 - zio-test `DeriveGen`
 - zio-json
 - zio-config

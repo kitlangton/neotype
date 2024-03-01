@@ -9,69 +9,38 @@ import sttp.tapir.DecodeResult
 import sttp.tapir.DecodeResult.Error.JsonDecodeException
 import sttp.tapir.json.pickler.Pickler
 import zio.test.Assertion.*
-
-type NonEmptyString = NonEmptyString.Type
-object NonEmptyString extends Newtype[String]:
-  override inline def validate(value: String): Boolean =
-    value.nonEmpty
-
-  override inline def failureMessage = "String must not be empty"
-
-type SubtypeLongString = SubtypeLongString.Type
-object SubtypeLongString extends Subtype[String]:
-  override inline def validate(value: String): Boolean =
-    value.length > 10
-
-  override inline def failureMessage = "String must be longer than 10 characters"
-
-type SimpleNewtype = SimpleNewtype.Type
-object SimpleNewtype extends Newtype[Int]()
-
-type SimpleSubtype = SimpleSubtype.Type
-object SimpleSubtype extends Subtype[Int]()
-
-type NestedNonEmptyString = NestedNonEmptyString.Type
-object NestedNonEmptyString extends Newtype[NonEmptyString]()
+import neotype.test.definitions.*
 
 object TapirSpec extends ZIOSpecDefault:
 
-  final case class Composite(
-      nonEmptyString: NonEmptyString,
-      subtypeLongString: SubtypeLongString,
-      simpleNewtype: SimpleNewtype,
-      simpleSubtype: SimpleSubtype,
-      nestedNonEmptyString: NestedNonEmptyString
-  )
-
-  object Composite:
-    val pickler = Pickler.derived[Composite]
+  given Pickler[Composite] = Pickler.derived
 
   def spec =
     suite("TapirSpec")(
-      suite("NonEmptyString")(
+      suite("ValidatedNewtype")(
         test("pickler validation success") {
-          val v         = NonEmptyString("hello")
-          val pickler   = summon[Pickler[NonEmptyString]]
+          val v         = ValidatedNewtype("hello")
+          val pickler   = summon[Pickler[ValidatedNewtype]]
           val validated = pickler.schema.validator(v)
           val codec     = pickler.toCodec
           val decoded   = codec.decode("\"hello\"")
           assertTrue(
             validated == Nil,
-            decoded == DecodeResult.Value(NonEmptyString("hello"))
+            decoded == DecodeResult.Value(ValidatedNewtype("hello"))
           )
         },
         test("schema validation success") {
-          val v         = NonEmptyString("hello")
-          val validated = summon[Schema[NonEmptyString]].validator(v)
+          val v         = ValidatedNewtype("hello")
+          val validated = summon[Schema[ValidatedNewtype]].validator(v)
           assertTrue(validated == Nil)
         },
         test("codec parse success") {
-          val decoded = summon[Codec.PlainCodec[NonEmptyString]].decode("hello")
-          assertTrue(decoded == DecodeResult.Value(NonEmptyString("hello")))
+          val decoded = summon[Codec.PlainCodec[ValidatedNewtype]].decode("hello")
+          assertTrue(decoded == DecodeResult.Value(ValidatedNewtype("hello")))
         },
         test("pickler validation failure") {
-          val v         = NonEmptyString.unsafeMake("")
-          val pickler   = summon[Pickler[NonEmptyString]]
+          val v         = ValidatedNewtype.unsafeMake("")
+          val pickler   = summon[Pickler[ValidatedNewtype]]
           val validated = pickler.schema.validator(v)
           val codec     = pickler.toCodec
           val decoded   = codec.decode("\"\"")
@@ -90,8 +59,8 @@ object TapirSpec extends ZIOSpecDefault:
           )
         },
         test("schema validation failure") {
-          val v         = NonEmptyString.unsafeMake("")
-          val validated = summon[Schema[NonEmptyString]].validator(v)
+          val v         = ValidatedNewtype.unsafeMake("")
+          val validated = summon[Schema[ValidatedNewtype]].validator(v)
           assertTrue(
             validated.exists(e =>
               e.validator.show == Some("String must not be empty") &&
@@ -100,7 +69,7 @@ object TapirSpec extends ZIOSpecDefault:
           )
         },
         test("codec parse failure") {
-          val decoded = summon[Codec.PlainCodec[NonEmptyString]].decode("")
+          val decoded = summon[Codec.PlainCodec[ValidatedNewtype]].decode("")
           assert(decoded)(
             isSubtype[DecodeResult.Error](hasField("message", _.error.getMessage, equalTo("String must not be empty")))
           )
@@ -109,45 +78,42 @@ object TapirSpec extends ZIOSpecDefault:
       suite("Composite")(
         test("schema validation success") {
           val v = Composite(
-            NonEmptyString("hello"),
-            SubtypeLongString("hello world"),
+            ValidatedNewtype("hello"),
             SimpleNewtype(1),
-            SimpleSubtype(1),
-            NestedNonEmptyString(NonEmptyString("hello"))
+            ValidatedSubtype("hello world"),
+            SimpleSubtype(1)
           )
-          val validated = Composite.pickler.schema.validator(v)
+          val validated = summon[Pickler[Composite]].schema.validator(v)
           assertTrue(validated == Nil)
         },
         test("pickler validation success") {
           val v = Composite(
-            NonEmptyString("hello"),
-            SubtypeLongString("hello world"),
+            ValidatedNewtype("hello"),
             SimpleNewtype(1),
-            SimpleSubtype(1),
-            NestedNonEmptyString(NonEmptyString("hello"))
+            ValidatedSubtype("hello world"),
+            SimpleSubtype(1)
           )
-          val pickler   = Composite.pickler
+          val pickler   = summon[Pickler[Composite]]
           val validated = pickler.schema.validator(v)
           val codec     = pickler.toCodec
           val decoded = codec.decode(
-            """{"nonEmptyString":"hello","subtypeLongString":"hello world","simpleNewtype":1,"simpleSubtype":1,"nestedNonEmptyString":"hello"}"""
+            """{"newtype":"hello","subtype":"hello world","simpleNewtype":1,"simpleSubtype":1}"""
           )
           assertTrue(
             validated == Nil,
             decoded == DecodeResult.Value(
               Composite(
-                NonEmptyString("hello"),
-                SubtypeLongString("hello world"),
+                ValidatedNewtype("hello"),
                 SimpleNewtype(1),
-                SimpleSubtype(1),
-                NestedNonEmptyString(NonEmptyString("hello"))
+                ValidatedSubtype("hello world"),
+                SimpleSubtype(1)
               )
             )
           )
         },
         test("codec parse failure") {
-          val decoded = Composite.pickler.toCodec.decode(
-            """{"nonEmptyString":"","subtypeLongString":"short","simpleNewtype":1,"simpleSubtype":1,"nestedNonEmptyString":""}"""
+          val decoded = summon[Pickler[Composite]].toCodec.decode(
+            """{"newtype":"","subtype":"short","simpleNewtype":1,"simpleSubtype":1}"""
           )
           assertTrue(
             decoded
@@ -159,19 +125,19 @@ object TapirSpec extends ZIOSpecDefault:
           )
         }
       ),
-      suite("SubtypeLongString")(
+      suite("ValidatedSubtype")(
         test("schema validation success") {
-          val v         = SubtypeLongString("hello world")
-          val validated = summon[Schema[SubtypeLongString]].validator(v)
+          val v         = ValidatedSubtype("hello world")
+          val validated = summon[Schema[ValidatedSubtype]].validator(v)
           assertTrue(validated == Nil)
         },
         test("codec parse success") {
-          val decoded = summon[Codec.PlainCodec[SubtypeLongString]].decode("hello world")
-          assertTrue(decoded == DecodeResult.Value(NonEmptyString("hello world")))
+          val decoded = summon[Codec.PlainCodec[ValidatedSubtype]].decode("hello world")
+          assertTrue(decoded == DecodeResult.Value(ValidatedNewtype("hello world")))
         },
         test("schema validation failure") {
-          val v         = SubtypeLongString.unsafeMake("short")
-          val validated = summon[Schema[SubtypeLongString]].validator(v)
+          val v         = ValidatedSubtype.unsafeMake("short")
+          val validated = summon[Schema[ValidatedSubtype]].validator(v)
           assertTrue(
             validated.exists(e =>
               e.validator.show == Some("String must be longer than 10 characters") &&
@@ -180,7 +146,7 @@ object TapirSpec extends ZIOSpecDefault:
           )
         },
         test("codec parse failure") {
-          val decoded = summon[Codec.PlainCodec[SubtypeLongString]].decode("short")
+          val decoded = summon[Codec.PlainCodec[ValidatedSubtype]].decode("short")
           assert(decoded)(
             isSubtype[DecodeResult.Error](
               hasField("message", _.error.getMessage, equalTo("String must be longer than 10 characters"))

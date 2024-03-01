@@ -42,8 +42,6 @@ lazy val root = (project in file("."))
     examples,
     tapir.js,
     tapir.jvm,
-    zio.js,
-    zio.jvm,
     zioConfig,
     zioJson.js,
     zioJson.jvm,
@@ -89,16 +87,6 @@ lazy val tapir = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.tapir" %%% "tapir-core"         % tapirVersion,
       "com.softwaremill.sttp.tapir" %%% "tapir-json-pickler" % tapirVersion
-    )
-  )
-  .dependsOn(core % "compile->compile;test->test")
-
-lazy val zio = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio"))
-  .settings(
-    name := "neotype-zio",
-    sharedSettings,
-    libraryDependencies ++= Seq(
-      "dev.zio" %%% "zio" % zioVersion
     )
   )
   .dependsOn(core % "compile->compile;test->test")

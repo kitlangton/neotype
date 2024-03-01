@@ -8,78 +8,51 @@ import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import neotype.jsoniter.given
 
 import scala.util.Try
-
-type NonEmptyString = NonEmptyString.Type
-given NonEmptyString: Newtype[String] with
-  override inline def validate(value: String): Boolean =
-    value.nonEmpty
-
-  override inline def failureMessage = "String must not be empty"
-
-type SubtypeLongString = SubtypeLongString.Type
-given SubtypeLongString: Subtype[String] with
-  override inline def validate(value: String): Boolean =
-    value.length > 10
-
-  override inline def failureMessage = "String must be longer than 10 characters"
-
-type SimpleNewtype = SimpleNewtype.Type
-given SimpleNewtype: Newtype[Int]()
-
-type SimpleSubtype = SimpleSubtype.Type
-given SimpleSubtype: Subtype[String]()
+import neotype.test.definitions.*
 
 object JsoniterSpec extends ZIOSpecDefault:
-  final case class Composed(
-      nonEmptyString: NonEmptyString,
-      subtypeLongString: SubtypeLongString,
-      simpleNewtype: SimpleNewtype,
-      simpleSubtype: SimpleSubtype
-  )
 
-  object Composed:
-    given JsonValueCodec[Composed] =
-      JsonCodecMaker.make[Composed]
+  given JsonValueCodec[Composite] = JsonCodecMaker.make
 
   def spec = suite("Jsoniter Support")(
     test("parse success") {
       val json =
         """{
-          |  "nonEmptyString": "a",
-          |  "subtypeLongString": "12345678901",
+          |  "newtype": "hello",
           |  "simpleNewtype": 1,
-          |  "simpleSubtype": "simple"
+          |  "subtype": "hello world",
+          |  "simpleSubtype": 1
           |}""".stripMargin
-      val result = readFromString[Composed](json)
+      val result = readFromString[Composite](json)
       assertTrue(
-        result == Composed(
-          NonEmptyString("a"),
-          SubtypeLongString("12345678901"),
+        result == Composite(
+          ValidatedNewtype("hello"),
           SimpleNewtype(1),
-          SimpleSubtype("simple")
+          ValidatedSubtype("hello world"),
+          SimpleSubtype(1)
         )
       )
     },
     test("failure on nonEmptyString") {
       val json =
         """{
-          |  "nonEmptyString": "",
-          |  "subtypeLongString": "01234567890",
+          |  "newtype": "",
           |  "simpleNewtype": 1,
-          |  "simpleSubtype": "simple"
+          |  "subtype": "hello world",
+          |  "simpleSubtype": 1
           |}""".stripMargin
-      val result = Try(readFromString[Composed](json))
+      val result = Try(readFromString[Composite](json))
       assertTrue(result.toEither.is(_.left).getMessage contains "String must not be empty")
     },
     test("failure on subtypeLongString") {
       val json =
         """{
-          |  "nonEmptyString": "a",
-          |  "subtypeLongString": "0123456789",
+          |  "newtype": "a",
           |  "simpleNewtype": 1,
-          |  "simpleSubtype": "simple"
+          |  "subtype": "hello-",
+          |  "simpleSubtype": 1
           |}""".stripMargin
-      val result = Try(readFromString[Composed](json))
+      val result = Try(readFromString[Composite](json))
       assertTrue(result.toEither.is(_.left).getMessage contains "String must be longer than 10 characters")
     }
   )

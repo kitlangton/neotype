@@ -1,19 +1,21 @@
 package neotype
 
 import scala.quoted.FromExpr
+import scala.util.matching.Regex
 
 given NewtypeWithoutValidation: Newtype[String] with
   override inline def validate(string: String): Boolean = true
 
+type RegexNewtype = RegexNewtype.Type
 given RegexNewtype: Newtype[String] with
   override inline def validate(string: String): Boolean =
     string.matches("^[a-zA-Z0-9]*$")
 
-  given Show[Type] with
-    def show(id: Type): String = unwrap(id)
+  given Show[RegexNewtype] with
+    def show(value: RegexNewtype): String = unwrap(value)
 
-  extension (id: Type) //
-    def length: Int = unwrap(id).length
+  extension (value: RegexNewtype) //
+    def length: Int = unwrap(value).length
 
 type PositiveIntNewtype = PositiveIntNewtype.Type
 given PositiveIntNewtype: Newtype[Int] with
