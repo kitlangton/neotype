@@ -5,9 +5,10 @@ import scala.util.{Failure, Success}
 import StringFormatting.*
 
 private[neotype] object Macros:
-  def applyImpl[A: Type, T: Type, NT <: ValidatedWrapper[A] { type Type = T }: Type](
-      a: Expr[A],
-      validate: Expr[A => Boolean],
+
+  def applyImpl[Input: Type, T: Type, NT <: ValidatedWrapper[Input] { type Type = T }: Type](
+      inputExpr: Expr[Input],
+      validate: Expr[Input => Boolean],
       failureMessage: Expr[String]
   )(using Quotes): Expr[T] =
     import quotes.reflect.*
@@ -15,6 +16,10 @@ private[neotype] object Macros:
     lazy val nt = TypeRepr.of[NT].widenTermRefByName match
       case Refinement(t, _, _) => t
       case t                   => t
+
+    val validateMethod = nt.typeSymbol.declaredMethods.find(_.name == "validate") match
+      case None        => return inputExpr.asExprOf[T]
+      case Some(value) => value
 
     lazy val expressionSource: Option[String] =
       validate.asTerm match
@@ -24,47 +29,41 @@ private[neotype] object Macros:
           None
 
     lazy val treeSource =
-      try
-        nt.typeSymbol
-          .methodMember("validate")
-          .headOption
-          .flatMap {
-            _.tree.pos.sourceCode
-          }
+      try validateMethod.tree.pos.sourceCode
       catch case _: Throwable => None
 
-    val isBodyInline = nt.typeSymbol
-      .methodMember("validate")
-      .headOption
-      .map(_.flags.is(Flags.Inline))
+    // TODO: Warn if failureMessage is not an inlined method
+    lazy val message = failureMessage match
+      case Expr(str: String) => str
+      case _                 => "Validation Failed"
 
-    a match
-      case Calc[A](calc) =>
+    lazy val isBodyInline = validateMethod.flags.is(Flags.Inline)
+
+    inputExpr match
+      case Calc[Input](calc) =>
         scala.util.Try(calc.result(using Map.empty)) match
           case Failure(_) =>
-            report.errorAndAbort(ErrorMessages.inputParseFailureMessage(a, nt))
+            report.errorAndAbort(ErrorMessages.inputParseFailureMessage(inputExpr, nt))
           case Success(_) =>
             ()
       case _ =>
-        report.errorAndAbort(ErrorMessages.inputParseFailureMessage(a, nt))
+        report.errorAndAbort(ErrorMessages.inputParseFailureMessage(inputExpr, nt))
 
-    val validateApplied = Expr.betaReduce('{ $validate($a) })
+    val validateApplied = Expr.betaReduce('{ $validate($inputExpr) })
     validateApplied match
-      case Calc[A](calc) =>
+      case Calc[Input](calc) =>
         scala.util.Try(calc.result(using Map.empty)) match
           case Failure(exception) =>
-            report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(a, nt, treeSource, isBodyInline))
+            report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, isBodyInline))
           case Success(true) =>
-            a.asExprOf[T]
+            inputExpr.asExprOf[T]
           case Success(false) =>
-            val failureMessageValue = failureMessage match
-              case Expr(str: String) => str
-              case _                 => "Validation Failed"
             report.errorAndAbort(
-              ErrorMessages.compileTimeValidationFailureMessage(a, nt, expressionSource, failureMessageValue)
+              ErrorMessages.compileTimeValidationFailureMessage(inputExpr, nt, expressionSource, message)
             )
+          case _ => report.errorAndAbort("IMPOSSIBLE!!! The result of evaluating valiadte should always be a Boolean.")
       case _ =>
-        report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(a, nt, treeSource, isBodyInline))
+        report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, isBodyInline))
 
   def applyAllImpl[A: Type, T: Type, NT <: ValidatedWrapper[A] { type Type = T }: Type](
       as: Expr[Seq[A]],

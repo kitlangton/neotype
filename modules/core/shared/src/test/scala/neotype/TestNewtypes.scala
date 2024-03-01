@@ -3,11 +3,11 @@ package neotype
 import scala.quoted.FromExpr
 
 given NewtypeWithoutValidation: Newtype[String] with
-  inline def validate(string: String): Boolean = true
+  override inline def validate(string: String): Boolean = true
 
 given RegexNewtype: Newtype[String] with
   // check if matches regex
-  inline def validate(string: String): Boolean =
+  override inline def validate(string: String): Boolean =
     string.matches("^[a-zA-Z0-9]*$")
 
   given Show[Type] with
@@ -18,16 +18,16 @@ given RegexNewtype: Newtype[String] with
 
 type PositiveIntNewtype = PositiveIntNewtype.Type
 given PositiveIntNewtype: Newtype[Int] with
-  inline def validate(int: Int): Boolean =
+  override inline def validate(int: Int): Boolean =
     int > 0
 
 type PositiveLongNewtype = PositiveLongNewtype.Type
 given PositiveLongNewtype: Newtype[Long] with
-  inline def validate(long: Long): Boolean = long > 0
+  override inline def validate(long: Long): Boolean = long > 0
 
 type NonEmptyStringNewtype = NonEmptyStringNewtype.Type
 given NonEmptyStringNewtype: Newtype[String] with
-  inline def validate(string: String): Boolean =
+  override inline def validate(string: String): Boolean =
     string.length > 0
 
 // Newtype for a custom case class
@@ -45,21 +45,21 @@ object Person:
         case _ => None
 
 given PersonNewtype: Newtype[Person] with
-  inline def validate(person: Person): Boolean =
+  override inline def validate(person: Person): Boolean =
     person.name.length > 0 && person.age > 0
 
 given VariousStringNewtype: Newtype[String] with
-  inline def validate(string: String): Boolean =
+  override inline def validate(string: String): Boolean =
     string.startsWith("a") && string.endsWith("z") &&
       string.length > 0 && string.contains("b") &&
       string.isUUID && string.isURL && string.isEmail
 
 type IsUUID = IsUUID.Type
 given IsUUID: Newtype[String] with
-  inline def validate(string: String): Boolean =
+  override inline def validate(string: String): Boolean =
     string.isUUID ?? "MUST "
 
 type IsURL = IsURL.Type
 given IsURL: Newtype[String] with
-  inline def validate(string: String): Boolean =
+  override inline def validate(string: String): Boolean =
     string.isURL

@@ -1,28 +1,28 @@
 package neotype.ziojson
 
-import neotype.{Newtype, Subtype}
+import neotype.*
 import zio.test.*
 import zio.json.*
 
 type NonEmptyString = NonEmptyString.Type
-given NonEmptyString: Newtype[String] with
-  inline def validate(value: String): Boolean =
+object NonEmptyString extends Newtype[String]:
+  override inline def validate(value: String): Boolean =
     value.nonEmpty
 
   override inline def failureMessage = "String must not be empty"
 
 type SubtypeLongString = SubtypeLongString.Type
-given SubtypeLongString: Subtype[String] with
-  inline def validate(value: String): Boolean =
+object SubtypeLongString extends Subtype[String]:
+  override inline def validate(value: String): Boolean =
     value.length > 10
 
   override inline def failureMessage = "String must be longer than 10 characters"
 
 type SimpleNewtype = SimpleNewtype.Type
-given SimpleNewtype: Newtype.Simple[Int]()
+object SimpleNewtype extends Newtype.Simple[Int]
 
 type SimpleSubtype = SimpleSubtype.Type
-given SimpleSubtype: Subtype.Simple[String]()
+object SimpleSubtype extends Subtype.Simple[String]
 
 final case class Person(name: NonEmptyString, age: Int, address: SubtypeLongString) derives JsonCodec
 

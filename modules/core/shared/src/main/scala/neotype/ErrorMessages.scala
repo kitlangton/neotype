@@ -90,9 +90,9 @@ private[neotype] object ErrorMessages:
 
   def failedToParseValidateMethod(using
       Quotes
-  )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], isBodyInline: Option[Boolean]): String =
+  )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], isBodyInline: Boolean): String =
     import quotes.reflect.*
-    if isBodyInline.contains(false) then return validateIsNotInlineMessage(input, nt)
+    if !isBodyInline then return validateIsNotInlineMessage(input, nt)
 
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
     val sourceExpr = source.fold("") { s =>
@@ -101,7 +101,8 @@ private[neotype] object ErrorMessages:
     val inputTpe        = input.asTerm.tpe.widenTermRefByName
     val inputTypeString = inputTpe.typeSymbol.name.replaceAll("\\$$", "").yellow
     val solutionMessage =
-      if isBodyInline.contains(true) then s"""
+      // TODO: Eliminate the duplication here. Can remove else case?
+      if isBodyInline then s"""
           |  💁 If you want this expression to be supported, please open an issue at:
           |     ${"https://github.com/kitlangton/neotype/issues".blue.underlined}""".stripMargin
       else s"""

@@ -40,8 +40,8 @@ NonEmptyString("")      // Compile Error
 ```
 
 ```scala
-Error: /Users/kit/code/neotype/examples/src/main/scala/neotype/examples/Main.scala:9:16 
-  NonEmptyString("")                  
+Error: /Users/kit/code/neotype/examples/src/main/scala/neotype/examples/Main.scala:9:16
+  NonEmptyString("")
   ^^^^^^^^^^^^^^^^^^
   —— Newtype Error ——————————————————————————————————————————————————————————
   NonEmptyString was called with an INVALID String.
@@ -73,7 +73,7 @@ import zio.json.*
 type NonEmptyString = NonEmptyString.Type
 given NonEmptyString: Newtype[String] with
   inline def validate(value: String): Boolean = value.nonEmpty
-  override inline def failureMessage = "String must not be empty"
+  // override inline def failureMessage = "String must not be empty"
 
 case class Person(name: NonEmptyString, age: Int) derives JsonCodec
 

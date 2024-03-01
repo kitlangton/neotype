@@ -1,30 +1,35 @@
 package neotype.zioconfig
 
-import neotype.{Newtype, Subtype}
+import neotype.*
 import zio.test.*
 import zio.config.*
 import zio.config.magnolia.*
 import zio.ConfigProvider
 
+type Name = Name.Type
+object Name extends Newtype[String]
+
 type NonEmptyString = NonEmptyString.Type
-given NonEmptyString: Newtype[String] with
-  inline def validate(value: String): Boolean =
+object NonEmptyString extends Newtype[String]:
+
+  override inline def validate(value: String): Boolean =
     value.nonEmpty
 
   override inline def failureMessage = "String must not be empty"
 
 type SubtypeLongString = SubtypeLongString.Type
-given SubtypeLongString: Subtype[String] with
-  inline def validate(value: String): Boolean =
+object SubtypeLongString extends Subtype[String]:
+
+  override inline def validate(value: String): Boolean =
     value.length > 10
 
   override inline def failureMessage = "String must be longer than 10 characters"
 
 type SimpleNewtype = SimpleNewtype.Type
-given SimpleNewtype: Newtype.Simple[Int]()
+object SimpleNewtype extends Newtype.Simple[Int]
 
 type SimpleSubtype = SimpleSubtype.Type
-given SimpleSubtype: Subtype.Simple[String]()
+object SimpleSubtype extends Subtype.Simple[String]
 
 final case class MyConfig(
     nonEmptyString: NonEmptyString,
@@ -33,8 +38,8 @@ final case class MyConfig(
     simpleSubtype: SimpleSubtype
 )
 
-object ZioJsonSpec extends ZIOSpecDefault:
-  def spec = suite("ZioConfigSpec")(
+object ZioConfigSpec extends ZIOSpecDefault:
+  def spec = suite("zio-config")(
     test("successfully read config") {
       val expectedConfig = MyConfig(
         NonEmptyString("hello"),
@@ -59,7 +64,7 @@ object ZioJsonSpec extends ZIOSpecDefault:
       val source = ConfigProvider.fromMap(
         Map(
           "nonEmptyString"    -> "",
-          "subtypeLongString" -> "hello",
+          "subtypeLongString" -> "short",
           "simpleNewtype"     -> "1",
           "simpleSubtype"     -> "hello world"
         )
@@ -67,7 +72,10 @@ object ZioJsonSpec extends ZIOSpecDefault:
 
       for actualConfig <- read(deriveConfig[MyConfig] from source).either
       yield assertTrue(
-        actualConfig.is(_.left).getMessage.contains("String must not be empty"),
+        actualConfig
+          .is(_.left)
+          .getMessage
+          .contains("String must not be empty"),
         actualConfig.is(_.left).getMessage.contains("String must be longer than 10 characters")
       )
     }

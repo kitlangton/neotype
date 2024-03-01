@@ -2,6 +2,7 @@ package neotype
 
 import scala.compiletime.summonInline
 import scala.quoted.*
+import scala.quoted.runtime.StopMacroExpansion
 
 trait Wrapper[A]:
   type Type
@@ -9,12 +10,11 @@ trait Wrapper[A]:
 trait ValidatedWrapper[A] extends Wrapper[A]:
   self =>
 
-  def validate(input: A): Boolean
-
-  def failureMessage: String = "Validation Failed"
+  def validate(input: A): Boolean = true
+  def failureMessage: String      = "Validation Failed"
 
   inline def apply(inline input: A): Type =
-    ${ Macros.applyImpl[A, Type, self.type]('input, '{ INPUT => validate(INPUT) }, 'failureMessage) }
+    ${ Macros.applyImpl[A, Type, self.type]('input, 'validate, 'failureMessage) }
 
   inline def applyAll(inline values: A*): List[Type] =
     ${ Macros.applyAllImpl[A, Type, self.type]('values, 'self) }
@@ -38,6 +38,8 @@ abstract class Newtype[A] extends ValidatedWrapper[A]:
   self =>
   opaque type Type = A
 
+  transparent inline given instance: Newtype.WithType[A, Type] = this
+
   def make(input: A): Either[String, Type] =
     if validate(input) then Right(input)
     else Left(failureMessage)
@@ -54,6 +56,8 @@ object Newtype:
   trait Simple[A] extends Wrapper[A]:
     opaque type Type = A
 
+    given Newtype.Simple.WithType[A, Type] = this
+
     inline def apply(inline input: A): Type = input
 
     extension (inline input: Type) //
@@ -68,12 +72,11 @@ abstract class Subtype[A] extends ValidatedWrapper[A]:
   self =>
   opaque type Type <: A = A
 
+  given Subtype.WithType[A, Type] = this
+
   def make(input: A): Either[String, Type] =
     if validate(input) then Right(input)
     else Left(failureMessage)
-
-//  inline def cast(inline input: Type): A              = input
-  inline def castF[F[_]](inline input: F[Type]): F[A] = input
 
   inline def unsafeWrap(inline input: A): Type              = input
   inline def unsafeWrapF[F[_]](inline input: F[A]): F[Type] = input
@@ -90,6 +93,7 @@ object Subtype:
 
   trait Simple[A] extends Wrapper[A]:
     opaque type Type <: A = A
+    given Subtype.Simple.WithType[A, Type] = this
 
     inline def apply(inline input: A): Type = input
 

@@ -20,6 +20,7 @@ val zioVersion   = "2.0.21"
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
     "-deprecation",
+//    "-explain",
     "-Xcheck-macros"
     //    "-Ycheck:all"
   ),
@@ -68,7 +69,7 @@ lazy val circe = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
       "io.circe" %%% "circe-parser" % "0.14.6"
     )
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val jsoniter = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-jsoniter"))
   .settings(
@@ -79,7 +80,7 @@ lazy val jsoniter = (crossProject(JSPlatform, JVMPlatform) in file("modules/neot
       "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-macros" % "2.28.2"
     )
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val tapir = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-tapir"))
   .settings(
@@ -90,7 +91,7 @@ lazy val tapir = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
       "com.softwaremill.sttp.tapir" %%% "tapir-json-pickler" % tapirVersion
     )
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val zio = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio"))
   .settings(
@@ -100,7 +101,7 @@ lazy val zio = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-z
       "dev.zio" %%% "zio" % zioVersion
     )
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val zioConfig = (project in file("modules/neotype-zio-config"))
   .settings(
@@ -123,7 +124,7 @@ lazy val zioSchema = (crossProject(JSPlatform, JVMPlatform) in file("modules/neo
       "dev.zio" %%% "zio-schema-json" % "1.0.1" % Test
     )
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val zioJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio-json"))
   .settings(
@@ -133,7 +134,7 @@ lazy val zioJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neoty
       "dev.zio" %%% "zio-json" % "0.6.2"
     )
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
   .settings(
@@ -156,7 +157,7 @@ lazy val zioTest = (crossProject(JSPlatform, JVMPlatform) in file("modules/neoty
       "dev.zio" %%% "zio-test-magnolia" % zioVersion
     )
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val examples = (project in file("examples"))
   .settings(

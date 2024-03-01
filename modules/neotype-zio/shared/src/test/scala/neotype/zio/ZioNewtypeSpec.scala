@@ -6,14 +6,14 @@ import zio.*
 
 type MyNewtype = MyNewtype.Type
 given MyNewtype: Newtype[String] with
-  inline def validate(value: String): Boolean =
+  override inline def validate(value: String): Boolean =
     value.nonEmpty
 
   override inline def failureMessage = "String must not be empty"
 
 type MySubtype = MySubtype.Type
 given MySubtype: Subtype[String] with
-  inline def validate(value: String): Boolean =
+  override inline def validate(value: String): Boolean =
     value.length > 10
 
   override inline def failureMessage = "String must be longer than 10 characters"

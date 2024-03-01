@@ -1,6 +1,6 @@
 package neotype.jsoniter
 
-import neotype.{Newtype, Subtype}
+import neotype.*
 import zio.test.*
 import zio.*
 import com.github.plokhotnyuk.jsoniter_scala.core.{JsonCodec, JsonValueCodec, readFromString}
@@ -11,14 +11,14 @@ import scala.util.Try
 
 type NonEmptyString = NonEmptyString.Type
 given NonEmptyString: Newtype[String] with
-  inline def validate(value: String): Boolean =
+  override inline def validate(value: String): Boolean =
     value.nonEmpty
 
   override inline def failureMessage = "String must not be empty"
 
 type SubtypeLongString = SubtypeLongString.Type
 given SubtypeLongString: Subtype[String] with
-  inline def validate(value: String): Boolean =
+  override inline def validate(value: String): Boolean =
     value.length > 10
 
   override inline def failureMessage = "String must be longer than 10 characters"

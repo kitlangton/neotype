@@ -42,10 +42,8 @@ enum Calc[A]:
       case Reference(name) => ctx.getOrElse(name, "_")
 
       // Comparisons
-      case Apply0(calc, _, show) => show(calc.render)
-      case Apply1(lhs, rhs, _, show) =>
-        report.info(s"Rendering Apply1: $lhs, $rhs")
-        show(lhs.render, rhs.render)
+      case Apply0(calc, _, show)     => show(calc.render)
+      case Apply1(lhs, rhs, _, show) => show(lhs.render, rhs.render)
 
       case Apply2(cond, lhs, rhs, _, show) => show(cond.render, lhs.render, rhs.render)
 

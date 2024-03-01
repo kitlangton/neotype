@@ -5,7 +5,7 @@ import zio.test.*
 object SubtypeSpec extends ZIOSpecDefault:
   type LongString = LongString.Type
   given LongString: Subtype[String] with
-    inline def validate(value: String): Boolean =
+    override inline def validate(value: String): Boolean =
       value.length > 10
 
     override inline def failureMessage = "String must be longer than 10 characters"
@@ -17,17 +17,17 @@ object SubtypeSpec extends ZIOSpecDefault:
           LongString.unsafe:
             "Nice long expected string"
         assertTrue:
-          res == "Nice long expected string"
+            res == "Nice long expected string"
       },
       test("failure")(
         try
           LongString.unsafe:
             "toosmall"
           assertNever:
-            "Should blow up when string is small"
+              "Should blow up when string is small"
         catch
           case _ =>
             assertCompletes
-      ),
+      )
     )
   )

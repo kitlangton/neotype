@@ -24,13 +24,13 @@ given [L, A, B, CF <: CodecFormat](using newType: Newtype.WithType[A, B], codec:
 
 // Newtype.Simple
 given [A, B](using newType: Newtype.Simple.WithType[A, B], schema: Schema[A]): Schema[B] =
-  schema.map(a => Some(newType(a)))(_.unwrap)
+  newType.applyF(schema)
 
 given [L, A, B, CF <: CodecFormat](using
     newType: Newtype.Simple.WithType[A, B],
     codec: Codec[L, A, CF]
 ): Codec[L, B, CF] =
-  codec.map(newType(_))(_.unwrap)
+  codec.asInstanceOf[Codec[L, B, CF]]
 
 // Subtype
 given [A, B <: A](using subType: Subtype.WithType[A, B], schema: Schema[A]): Schema[B] =
@@ -50,13 +50,13 @@ given [L, A, B <: A, CF <: CodecFormat](using
 
 // Subtype.Simple
 given [A, B <: A](using subType: Subtype.Simple.WithType[A, B], schema: Schema[A]): Schema[B] =
-  schema.map(a => Some(subType(a)))(identity)
+  subType.applyF(schema)
 
 given [L, A, B <: A, CF <: CodecFormat](using
     subType: Subtype.Simple.WithType[A, B],
     codec: Codec[L, A, CF]
 ): Codec[L, B, CF] =
-  codec.map(subType(_))(identity)
+  codec.asInstanceOf[Codec[L, B, CF]]
 
 // Newtype.WithType
 given [A, B](using newType: Newtype.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
@@ -81,16 +81,7 @@ given [A, B](using newType: Newtype.WithType[A, B], pickler: Pickler[A]): Pickle
 
 // Newtype.Simple.WithType
 given [A, B](using newType: Newtype.Simple.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
-  Pickler(
-    new TapirPickle[B]:
-      override lazy val writer: Writer[B] =
-        pickler.innerUpickle.writer.asInstanceOf[Writer[B]]
-
-      override lazy val reader: Reader[B] =
-        pickler.innerUpickle.reader.asInstanceOf[Reader[B]]
-    ,
-    pickler.schema.map(a => Some(newType(a)))(_.unwrap)
-  )
+  newType.applyF(pickler)
 
 // Subtype.WithType
 given [A, B <: A](using subType: Subtype.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
@@ -115,13 +106,4 @@ given [A, B <: A](using subType: Subtype.WithType[A, B], pickler: Pickler[A]): P
 
 // Subtype.Simple.WithType
 given [A, B <: A](using subType: Subtype.Simple.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
-  Pickler(
-    new TapirPickle[B]:
-      override lazy val writer: Writer[B] =
-        pickler.innerUpickle.writer.asInstanceOf[Writer[B]]
-
-      override lazy val reader: Reader[B] =
-        pickler.innerUpickle.reader.asInstanceOf[Reader[B]]
-    ,
-    pickler.schema.map(a => Some(subType(a)))(identity)
-  )
+  subType.applyF(pickler)

@@ -5,13 +5,13 @@ import zio.json.*
 
 // Newtype
 given [A, B](using newType: Newtype.WithType[A, B], decoder: JsonDecoder[A]): JsonDecoder[B] =
-  decoder.mapOrFail(newType.make)
+  decoder.mapOrFail(newType.make(_))
 
 given [A, B](using newType: Newtype.WithType[A, B], encoder: JsonEncoder[A]): JsonEncoder[B] =
   encoder.contramap(_.unwrap)
 
 given [A, B](using newType: Newtype.WithType[A, B], codec: JsonCodec[A]): JsonCodec[B] =
-  codec.transformOrFail(newType.make, _.unwrap)
+  codec.transformOrFail(newType.make(_), _.unwrap)
 
 // Newtype.Simple
 
@@ -26,7 +26,7 @@ given [A, B](using newtype: Newtype.Simple.WithType[A, B], codec: JsonCodec[A]):
 
 // Subtype
 
-given [A, B <: A](using subtype: Subtype.WithType[A, B], decoder: JsonDecoder[A]): JsonDecoder[B] =
+inline given [A, B <: A](using subtype: Subtype.WithType[A, B], decoder: JsonDecoder[A]): JsonDecoder[B] =
   decoder.mapOrFail(a => subtype.make(a))
 
 given [A, B <: A](using subtype: Subtype.WithType[A, B], encoder: JsonEncoder[A]): JsonEncoder[B] =
