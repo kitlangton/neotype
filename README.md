@@ -33,7 +33,7 @@ import neotype.*
 object NonEmptyString extends Newtype[String]:
 
   // 2. Optionally, define a validate method.
-  inline def validate(input: String): Boolean =
+  override inline def validate(input: String): Boolean =
     input.nonEmpty
 
 // 3. Construct values.
