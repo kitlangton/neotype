@@ -8,7 +8,7 @@ object Name extends Newtype[String]
 type NonEmptyString = NonEmptyString.Type
 object NonEmptyString extends Newtype[String]:
   override inline def validate(input: String): Boolean =
-    true
+    input.nonEmpty
 
 type Email = Email.Type
 object Email extends Newtype[String]:

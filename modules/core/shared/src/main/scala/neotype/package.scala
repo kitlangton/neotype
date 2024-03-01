@@ -20,7 +20,7 @@ trait ValidatedWrapper[A] extends Wrapper[A]:
     ${ Macros.applyAllImpl[A, Type, self.type]('values, 'self) }
 
   trait ValidateEvidence
-  inline given ValidateEvidence = new ValidateEvidence {}
+  given ValidateEvidence = new ValidateEvidence {}
   extension (using ValidateEvidence)(inline bool: Boolean) //
     inline def ??(message: String): Boolean = bool
 
@@ -44,29 +44,19 @@ abstract class Newtype[A] extends ValidatedWrapper[A]:
     if validate(input) then Right(input)
     else Left(failureMessage)
 
+  // TODO: Maybe use this?
+  // def make(input: A)(using IsValidatedType[A]): Either[String, Type] =
+  //   if validate(input) then Right(input)
+  //   else Left(failureMessage)
+
   extension (inline input: Type) //
     inline def unwrap: A = input
 
-  inline def unsafeWrap(inline input: A): Type              = input
-  inline def unsafeWrapF[F[_]](inline input: F[A]): F[Type] = input
+  inline def unsafeMake(inline input: A): Type              = input
+  inline def unsafeMakeF[F[_]](inline input: F[A]): F[Type] = input
 
 object Newtype:
   type WithType[A, B] = Newtype[A] { type Type = B }
-
-  trait Simple[A] extends Wrapper[A]:
-    opaque type Type = A
-
-    given Newtype.Simple.WithType[A, Type] = this
-
-    inline def apply(inline input: A): Type = input
-
-    extension (inline input: Type) //
-      inline def unwrap: A = input
-
-    inline def applyF[F[_]](inline input: F[A]): F[Type] = input
-
-  object Simple:
-    type WithType[A, B] = Newtype.Simple[A] { type Type = B }
 
 abstract class Subtype[A] extends ValidatedWrapper[A]:
   self =>
@@ -78,29 +68,8 @@ abstract class Subtype[A] extends ValidatedWrapper[A]:
     if validate(input) then Right(input)
     else Left(failureMessage)
 
-  inline def unsafeWrap(inline input: A): Type              = input
-  inline def unsafeWrapF[F[_]](inline input: F[A]): F[Type] = input
-
-  inline def unsafe(inline input: A): Type =
-    make:
-        input
-      .getOrElse:
-        throw IllegalArgumentException:
-            failureMessage
+  inline def unsafeMake(inline input: A): Type              = input
+  inline def unsafeMakeF[F[_]](inline input: F[A]): F[Type] = input
 
 object Subtype:
   type WithType[A, B <: A] = Subtype[A] { type Type = B }
-
-  trait Simple[A] extends Wrapper[A]:
-    opaque type Type <: A = A
-    given Subtype.Simple.WithType[A, Type] = this
-
-    inline def apply(inline input: A): Type = input
-
-    extension (inline input: Type) //
-      inline def unwrap: A = input
-
-    inline def applyF[F[_]](inline input: F[A]): F[Type] = input
-
-  object Simple:
-    type WithType[A, B <: A] = Subtype.Simple[A] { type Type = B }

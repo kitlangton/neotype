@@ -15,18 +15,6 @@ given [A, B](using newType: Newtype.WithType[A, B]): MappedEncoding[B, A] =
     newType.unwrap(b)
   }
 
-// Newtype.Simple
-
-given [A, B](using newType: Newtype.Simple.WithType[A, B]): MappedEncoding[A, B] =
-  MappedEncoding { (a: A) =>
-    newType.apply(a)
-  }
-
-given [A, B](using newType: Newtype.Simple.WithType[A, B]): MappedEncoding[B, A] =
-  MappedEncoding { (b: B) =>
-    newType.unwrap(b)
-  }
-
 // Subtype
 
 inline given [A, B <: A](using newType: Subtype.WithType[A, B]): MappedEncoding[A, B] =
@@ -35,18 +23,6 @@ inline given [A, B <: A](using newType: Subtype.WithType[A, B]): MappedEncoding[
   }
 
 given [A, B <: A](using newType: Subtype.WithType[A, B]): MappedEncoding[B, A] =
-  MappedEncoding { (b: B) =>
-    b
-  }
-
-// Subtype.Simple
-
-given [A, B <: A](using newType: Subtype.Simple.WithType[A, B]): MappedEncoding[A, B] =
-  MappedEncoding { (a: A) =>
-    newType.apply(a)
-  }
-
-given [A, B <: A](using newType: Subtype.Simple.WithType[A, B]): MappedEncoding[B, A] =
   MappedEncoding { (b: B) =>
     b
   }

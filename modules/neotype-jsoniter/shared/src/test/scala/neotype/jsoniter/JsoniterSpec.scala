@@ -24,10 +24,10 @@ given SubtypeLongString: Subtype[String] with
   override inline def failureMessage = "String must be longer than 10 characters"
 
 type SimpleNewtype = SimpleNewtype.Type
-given SimpleNewtype: Newtype.Simple[Int]()
+given SimpleNewtype: Newtype[Int]()
 
 type SimpleSubtype = SimpleSubtype.Type
-given SimpleSubtype: Subtype.Simple[String]()
+given SimpleSubtype: Subtype[String]()
 
 object JsoniterSpec extends ZIOSpecDefault:
   final case class Composed(

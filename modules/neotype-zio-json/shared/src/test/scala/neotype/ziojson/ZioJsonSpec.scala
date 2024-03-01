@@ -3,53 +3,42 @@ package neotype.ziojson
 import neotype.*
 import zio.test.*
 import zio.json.*
-
-type NonEmptyString = NonEmptyString.Type
-object NonEmptyString extends Newtype[String]:
-  override inline def validate(value: String): Boolean =
-    value.nonEmpty
-
-  override inline def failureMessage = "String must not be empty"
-
-type SubtypeLongString = SubtypeLongString.Type
-object SubtypeLongString extends Subtype[String]:
-  override inline def validate(value: String): Boolean =
-    value.length > 10
-
-  override inline def failureMessage = "String must be longer than 10 characters"
-
-type SimpleNewtype = SimpleNewtype.Type
-object SimpleNewtype extends Newtype.Simple[Int]
-
-type SimpleSubtype = SimpleSubtype.Type
-object SimpleSubtype extends Subtype.Simple[String]
-
-final case class Person(name: NonEmptyString, age: Int, address: SubtypeLongString) derives JsonCodec
+import neotype.test.definitions.*
 
 object ZioJsonSpec extends ZIOSpecDefault:
+  given JsonCodec[Composite] = DeriveJsonCodec.gen
+
   def spec = suite("ZioJsonSpec")(
     suite("NonEmptyString")(
       test("parse success") {
         val json   = """ "hello" """
-        val parsed = json.fromJson[NonEmptyString]
-        assertTrue(parsed == Right(NonEmptyString("hello")))
+        val parsed = json.fromJson[ValidatedNewtype]
+        assertTrue(parsed == Right(ValidatedNewtype("hello")))
       },
       test("parse failure") {
         val json   = """ "" """
-        val parsed = json.fromJson[NonEmptyString]
+        val parsed = json.fromJson[ValidatedNewtype]
         assertTrue(parsed == Left("(String must not be empty)"))
+      },
+      test("toJson") {
+        val json = ValidatedNewtype("hello").toJson
+        assertTrue(json == """"hello"""")
       }
     ),
     suite("SubtypeLongString")(
       test("parse success") {
         val json   = """ "hello world" """
-        val parsed = json.fromJson[SubtypeLongString]
-        assertTrue(parsed == Right(SubtypeLongString("hello world")))
+        val parsed = json.fromJson[ValidatedSubtype]
+        assertTrue(parsed == Right(ValidatedSubtype("hello world")))
       },
       test("parse failure") {
         val json   = """ "hello" """
-        val parsed = json.fromJson[SubtypeLongString]
+        val parsed = json.fromJson[ValidatedSubtype]
         assertTrue(parsed == Left("(String must be longer than 10 characters)"))
+      },
+      test("toJson") {
+        val json = ValidatedSubtype("hello world").toJson
+        assertTrue(json == """"hello world"""")
       }
     ),
     suite("SimpleNewtype")(
@@ -62,30 +51,58 @@ object ZioJsonSpec extends ZIOSpecDefault:
         val json   = """ "hello" """
         val parsed = json.fromJson[SimpleNewtype]
         assertTrue(parsed.isLeft)
+      },
+      test("toJson") {
+        val json = SimpleNewtype(123).toJson
+        assertTrue(json == "123")
       }
     ),
     suite("SimpleSubtype")(
       test("parse success") {
-        val json   = """ "hello" """
-        val parsed = json.fromJson[SimpleSubtype]
-        assertTrue(parsed == Right(SimpleSubtype("hello")))
-      },
-      test("parse failure") {
         val json   = """ 123 """
         val parsed = json.fromJson[SimpleSubtype]
-        assertTrue(parsed.isLeft)
-      }
-    ),
-    suite("Person")(
-      test("parse success") {
-        val json   = """ { "name": "hello", "age": 123, "address": "hello world" } """
-        val parsed = json.fromJson[Person]
-        assertTrue(parsed == Right(Person(NonEmptyString("hello"), 123, SubtypeLongString("hello world"))))
+        assertTrue(parsed == Right(SimpleSubtype(123)))
       },
       test("parse failure") {
-        val json   = """ { "name": "", "age": 123, "address": "hello world" } """
-        val parsed = json.fromJson[Person]
-        assertTrue(parsed == Left(".name(String must not be empty)"))
+        val json   = """ "WHOOPS" """
+        val parsed = json.fromJson[SimpleSubtype]
+        assertTrue(parsed.isLeft)
+      },
+      test("toJson") {
+        val json = SimpleSubtype(123).toJson
+        assertTrue(json == "123")
+      }
+    ),
+    suite("Composite")(
+      test("parse success") {
+        val json   = """ { "newtype": "hello", "simpleNewtype": 123, "subtype": "hello world", "simpleSubtype": 123 } """
+        val parsed = json.fromJson[Composite]
+        assertTrue(
+          parsed == Right(
+            Composite(
+              ValidatedNewtype("hello"),
+              SimpleNewtype(123),
+              ValidatedSubtype("hello world"),
+              SimpleSubtype(123)
+            )
+          )
+        )
+      },
+      test("parse failure") {
+        val json   = """ { "newtype": "", "simpleNewtype": 123, "subtype": "hello", "simpleSubtype": "WHOOPS" } """
+        val parsed = json.fromJson[Composite]
+        assertTrue(parsed == Left(".newtype(String must not be empty)"))
+      },
+      test("toJson") {
+        val json = Composite(
+          ValidatedNewtype("hello"),
+          SimpleNewtype(123),
+          ValidatedSubtype("hello world"),
+          SimpleSubtype(123)
+        ).toJson
+        assertTrue(
+          json == """{"newtype":"hello","simpleNewtype":123,"subtype":"hello world","simpleSubtype":123}"""
+        )
       }
     )
   )

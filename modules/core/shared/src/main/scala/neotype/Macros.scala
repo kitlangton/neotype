@@ -3,6 +3,7 @@ package neotype
 import scala.quoted.*
 import scala.util.{Failure, Success}
 import StringFormatting.*
+import neotype.eval.{Unseal, Eval, Seal, Uninlined}
 
 private[neotype] object Macros:
 
@@ -23,8 +24,8 @@ private[neotype] object Macros:
 
     lazy val expressionSource: Option[String] =
       validate.asTerm match
-        case Uninlined(Block(_, Lambda(_, Seal(Calc(calc))))) =>
-          Some(calc.render(using Map("INPUT" -> "input".blue)))
+        case Uninlined(Block(_, Lambda(_, Seal(Eval(eval))))) =>
+          Some(eval.render(using Map("INPUT" -> "input".blue)))
         case _ =>
           None
 
@@ -40,8 +41,8 @@ private[neotype] object Macros:
     lazy val isBodyInline = validateMethod.flags.is(Flags.Inline)
 
     inputExpr match
-      case Calc[Input](calc) =>
-        scala.util.Try(calc.result(using Map.empty)) match
+      case Eval(eval) =>
+        scala.util.Try(eval.result(using Map.empty)) match
           case Failure(_) =>
             report.errorAndAbort(ErrorMessages.inputParseFailureMessage(inputExpr, nt))
           case Success(_) =>
@@ -51,8 +52,8 @@ private[neotype] object Macros:
 
     val validateApplied = Expr.betaReduce('{ $validate($inputExpr) })
     validateApplied match
-      case Calc[Input](calc) =>
-        scala.util.Try(calc.result(using Map.empty)) match
+      case Eval(eval) =>
+        scala.util.Try(eval.result(using Map.empty)) match
           case Failure(exception) =>
             report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, isBodyInline))
           case Success(true) =>
@@ -61,7 +62,6 @@ private[neotype] object Macros:
             report.errorAndAbort(
               ErrorMessages.compileTimeValidationFailureMessage(inputExpr, nt, expressionSource, message)
             )
-          case _ => report.errorAndAbort("IMPOSSIBLE!!! The result of evaluating valiadte should always be a Boolean.")
       case _ =>
         report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, isBodyInline))
 
@@ -97,8 +97,8 @@ private[neotype] object TestMacros:
   def evalImpl[A: Type](using Quotes)(expr: Expr[A]): Expr[A] =
     import quotes.reflect.*
     expr match
-      case Calc[A](calc) =>
-        val result      = calc.result(using Map.empty)
+      case Eval[A](eval) =>
+        val result      = eval.result(using Map.empty)
         given ToExpr[A] = toExprInstance(result).asInstanceOf[ToExpr[A]]
         Expr(result)
       case _ =>
@@ -108,16 +108,16 @@ private[neotype] object TestMacros:
   def toExprInstance(using Quotes)(any: Any): ToExpr[?] =
     import quotes.reflect.*
     any match
-      case _: Int        => summon[ToExpr[Int]]
-      case _: String     => summon[ToExpr[String]]
-      case _: Boolean    => summon[ToExpr[Boolean]]
-      case _: Long       => summon[ToExpr[Long]]
-      case _: Double     => summon[ToExpr[Double]]
-      case _: Float      => summon[ToExpr[Float]]
-      case _: Char       => summon[ToExpr[Char]]
-      case _: Byte       => summon[ToExpr[Byte]]
-      case _: Short      => summon[ToExpr[Short]]
-      case _: Set[Int]   => summon[ToExpr[Set[Int]]]
-      case _: List[Int]  => summon[ToExpr[List[Int]]]
-      case _: BigInt     => summon[ToExpr[BigInt]]
-      case _: BigDecimal => summon[ToExpr[BigDecimal]]
+      case _: Int                  => summon[ToExpr[Int]]
+      case _: String               => summon[ToExpr[String]]
+      case _: Boolean              => summon[ToExpr[Boolean]]
+      case _: Long                 => summon[ToExpr[Long]]
+      case _: Double               => summon[ToExpr[Double]]
+      case _: Float                => summon[ToExpr[Float]]
+      case _: Char                 => summon[ToExpr[Char]]
+      case _: Byte                 => summon[ToExpr[Byte]]
+      case _: Short                => summon[ToExpr[Short]]
+      case _: Set[Int @unchecked]  => summon[ToExpr[Set[Int]]]
+      case _: List[Int @unchecked] => summon[ToExpr[List[Int]]]
+      case _: BigInt               => summon[ToExpr[BigInt]]
+      case _: BigDecimal           => summon[ToExpr[BigDecimal]]

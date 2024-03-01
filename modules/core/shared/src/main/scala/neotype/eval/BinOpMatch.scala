@@ -1,17 +1,17 @@
-package neotype
+package neotype.eval
 
 import scala.quoted.*
 
 case class BinOpMatch(name: String):
-  def unapply(using Quotes)(expr: Expr[Any]): Option[(Calc[Any], Calc[Any])] =
+  def unapply(using Quotes)(expr: Expr[Any]): Option[(Eval[Any], Eval[Any])] =
     import quotes.reflect.*
     expr.asTerm match
       case Apply(Select(lhs, `name`), List(rhs)) =>
         (lhs.asExpr, rhs.asExpr) match
-          case (Calc(lhs), Calc(rhs)) =>
+          case (Eval(lhs), Eval(rhs)) =>
             Some((lhs, rhs))
 //          case _ =>
-//            report.errorAndAbort(s"Cannot convert ${lhs.show} and ${rhs.show} to Calc")
+//            report.errorAndAbort(s"Cannot convert ${lhs.show} and ${rhs.show} to Eval")
       case _ =>
         None
 

@@ -21,16 +21,8 @@ given simpleNt[A, B](using
     config: DeriveConfig[A],
     ev: IsSimpleType[newtype.type]
 ): DeriveConfig[B] =
-  newtype.unsafeWrapF(config)
-
-// Newtype.Simple
-given [A, B](using newtype: Newtype.Simple.WithType[A, B], config: DeriveConfig[A]): DeriveConfig[B] =
-  newtype.applyF(config)
+  newtype.unsafeMakeF(config)
 
 // Subtype
 given [A, B <: A](using subtype: Subtype.WithType[A, B], config: DeriveConfig[A]): DeriveConfig[B] =
   config.mapOrFail(subtype.make(_).left.map(e => Config.Error.InvalidData(Chunk.empty, e)))
-
-// Subtype.Simple
-given [A, B <: A](using subtype: Subtype.Simple.WithType[A, B], config: DeriveConfig[A]): DeriveConfig[B] =
-  config.map(subtype.apply(_))

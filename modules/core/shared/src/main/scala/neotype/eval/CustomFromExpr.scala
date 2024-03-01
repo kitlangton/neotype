@@ -1,4 +1,4 @@
-package neotype
+package neotype.eval
 
 import scala.quoted.*
 

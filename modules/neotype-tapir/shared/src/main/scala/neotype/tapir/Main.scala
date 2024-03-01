@@ -22,16 +22,6 @@ given [L, A, B, CF <: CodecFormat](using newType: Newtype.WithType[A, B], codec:
     .validate(Validator.custom(b => ValidationResult.validWhen(newType.validate(b)), Some(newType.failureMessage)))
     .mapDecode(a => DecodeResult.fromEitherString(a.toString, newType.make(a)))(_.unwrap)
 
-// Newtype.Simple
-given [A, B](using newType: Newtype.Simple.WithType[A, B], schema: Schema[A]): Schema[B] =
-  newType.applyF(schema)
-
-given [L, A, B, CF <: CodecFormat](using
-    newType: Newtype.Simple.WithType[A, B],
-    codec: Codec[L, A, CF]
-): Codec[L, B, CF] =
-  codec.asInstanceOf[Codec[L, B, CF]]
-
 // Subtype
 given [A, B <: A](using subType: Subtype.WithType[A, B], schema: Schema[A]): Schema[B] =
   schema
@@ -47,16 +37,6 @@ given [L, A, B <: A, CF <: CodecFormat](using
   codec
     .validate(Validator.custom(b => ValidationResult.validWhen(subType.validate(b)), Some(subType.failureMessage)))
     .mapDecode(a => DecodeResult.fromEitherString(a.toString, subType.make(a)))(identity)
-
-// Subtype.Simple
-given [A, B <: A](using subType: Subtype.Simple.WithType[A, B], schema: Schema[A]): Schema[B] =
-  subType.applyF(schema)
-
-given [L, A, B <: A, CF <: CodecFormat](using
-    subType: Subtype.Simple.WithType[A, B],
-    codec: Codec[L, A, CF]
-): Codec[L, B, CF] =
-  codec.asInstanceOf[Codec[L, B, CF]]
 
 // Newtype.WithType
 given [A, B](using newType: Newtype.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
@@ -79,10 +59,6 @@ given [A, B](using newType: Newtype.WithType[A, B], pickler: Pickler[A]): Pickle
       .map(newType.make(_).toOption)(_.unwrap)
   )
 
-// Newtype.Simple.WithType
-given [A, B](using newType: Newtype.Simple.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
-  newType.applyF(pickler)
-
 // Subtype.WithType
 given [A, B <: A](using subType: Subtype.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
   Pickler(
@@ -103,7 +79,3 @@ given [A, B <: A](using subType: Subtype.WithType[A, B], pickler: Pickler[A]): P
       .validate(Validator.custom(b => ValidationResult.validWhen(subType.validate(b)), Some(subType.failureMessage)))
       .map(subType.make(_).toOption)(identity)
   )
-
-// Subtype.Simple.WithType
-given [A, B <: A](using subType: Subtype.Simple.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
-  subType.applyF(pickler)

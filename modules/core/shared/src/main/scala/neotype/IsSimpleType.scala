@@ -1,7 +1,9 @@
 package neotype
 
 import scala.quoted.*
+import scala.annotation.implicitNotFound
 
+@implicitNotFound("${A} has a `validate` method")
 trait IsSimpleType[A]
 
 object IsSimpleType:
@@ -30,6 +32,7 @@ object IsSimpleType:
         new IsSimpleType[A] {}
       }
 
+@implicitNotFound("${A} does not have a `validate` method")
 trait IsValidatedType[A]
 
 object IsValidatedType:

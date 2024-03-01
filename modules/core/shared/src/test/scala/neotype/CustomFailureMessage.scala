@@ -1,19 +1,19 @@
 package neotype
 
-given CustomFailureNewtype: Newtype[String] with
+object CustomFailureNewtype extends Newtype[String]:
   override inline def validate(value: String): Boolean =
     value == "secret string"
 
   override inline def failureMessage: String = "Must be the secret string!"
 
 // TODO: Figure out why the compiler won't let me override an inline method with a default member
-given BadCustomFailureNewtype: Newtype[String] with
+object BadCustomFailureNewtype extends Newtype[String]:
   override inline def validate(value: String): Boolean =
     value == "secret string"
 
   override def failureMessage: String = "Oops. I forgot to inline"
 
-given EqualityParsingNewtype: Newtype[String] with
+object EqualityParsingNewtype extends Newtype[String]:
   override inline def validate(value: String): Boolean =
     val long: Long       = 5L
     val int: Int         = 10
@@ -27,7 +27,7 @@ given EqualityParsingNewtype: Newtype[String] with
 
   override inline def failureMessage: String = "Must be the secret string!"
 
-given LessThanParsingNewtype: Newtype[String] with
+object LessThanParsingNewtype extends Newtype[String]:
   override inline def validate(value: String): Boolean =
     val long: Long     = 5L
     val int: Int       = 10

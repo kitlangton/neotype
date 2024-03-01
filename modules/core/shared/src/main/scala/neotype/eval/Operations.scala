@@ -1,4 +1,4 @@
-package neotype
+package neotype.eval
 
 private[neotype] object Operations:
 

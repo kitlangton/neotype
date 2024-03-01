@@ -87,9 +87,9 @@ object NewtypeSpec extends ZIOSpecDefault:
         assertTrue(res.map(PositiveIntNewtype.unwrap(_)) == Left("Validation Failed"))
       }
     ),
-    suite("unsafeWrap")(
+    suite("unsafeMake")(
       test("success") {
-        val res = PositiveIntNewtype.unsafeWrap(1).unwrap
+        val res = PositiveIntNewtype.unsafeMake(1).unwrap
         assertTrue(res == 1)
       }
     )

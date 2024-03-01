@@ -3,18 +3,7 @@ package neotype.zioquill
 import io.getquill.*
 import neotype.{Newtype, Subtype}
 import zio.test.*
-
-type NonEmptyString = NonEmptyString.Type
-object NonEmptyString extends Newtype[String]:
-  override inline def validate(value: String): Boolean =
-    value.nonEmpty
-
-type SubtypeLongString = SubtypeLongString.Type
-object SubtypeLongString extends Subtype[String]:
-  override inline def validate(value: String): Boolean =
-    value.length > 10
-
-final case class Person(name: NonEmptyString, age: Int)
+import neotype.test.definitions.*
 
 object Queries:
   val h2DataSource = new org.h2.jdbcx.JdbcDataSource
@@ -26,43 +15,58 @@ object Queries:
 
   val createTable = run {
     sql"""
-CREATE TABLE IF NOT EXISTS Person (
-    name VARCHAR(255) NOT NULL,
-    age INT NOT NULL);
+      CREATE TABLE composite (
+        newtype VARCHAR(255),
+        simple_newtype INT,
+        subtype VARCHAR(255),
+        simple_subtype INT
+      );
 
-INSERT INTO Person (name, age) VALUES ('Jimmy Jazz', 1);
-INSERT INTO Person (name, age) VALUES ('Barry Blues', 2);
-       """.as[Update[Unit]]
+      INSERT INTO composite (newtype, simple_newtype, subtype, simple_subtype)
+      VALUES ('Hello', 123, 'Hello World!', 123456),
+             ('Cool', 321, 'Hello World!', 123456);
+         """.as[Update[Unit]]
   }
 
-  def insertEmptyNamed = run {
+  def insertInvalidRow = run {
     sql"""
-INSERT INTO Person (name, age) VALUES ('', 3);
+    INSERT INTO composite (newtype, simple_newtype, subtype, simple_subtype)
+    VALUES ('', 123, 'Hello', 123456);
        """.as[Update[Unit]]
   }
 
-  def getPersons = run(query[Person])
+  def getValues = run(query[Composite])
 
 object ZioQuillSpec extends ZIOSpecDefault:
   def spec = suite("ZioQuillSpec") {
     suite("NonEmptyString")(
       test("success") {
-        val result = Queries.getPersons
+        val result = Queries.getValues
         assertTrue(
           result == List( //
-            Person(NonEmptyString("Jimmy Jazz"), 1),
-            Person(NonEmptyString("Barry Blues"), 2)
+            Composite(
+              ValidatedNewtype("Hello"),
+              SimpleNewtype(123),
+              ValidatedSubtype("Hello World!"),
+              SimpleSubtype(123456)
+            ),
+            Composite(
+              ValidatedNewtype("Cool"),
+              SimpleNewtype(321),
+              ValidatedSubtype("Hello World!"),
+              SimpleSubtype(123456)
+            )
           )
         )
       },
       test("fail") {
-        Queries.insertEmptyNamed
-        val result = scala.util.Try(Queries.getPersons)
+        Queries.insertInvalidRow
+        val result = scala.util.Try(Queries.getValues)
         assertTrue(
           result
             .asInstanceOf[scala.util.Failure[?]]
             .exception
-            .getMessage == "Failed to create newtype: Validation Failed"
+            .getMessage == "Failed to create newtype: String must not be empty"
         )
       }
     ) @@ TestAspect.sequential

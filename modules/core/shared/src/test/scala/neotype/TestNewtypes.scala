@@ -6,7 +6,6 @@ given NewtypeWithoutValidation: Newtype[String] with
   override inline def validate(string: String): Boolean = true
 
 given RegexNewtype: Newtype[String] with
-  // check if matches regex
   override inline def validate(string: String): Boolean =
     string.matches("^[a-zA-Z0-9]*$")
 
@@ -57,7 +56,7 @@ given VariousStringNewtype: Newtype[String] with
 type IsUUID = IsUUID.Type
 given IsUUID: Newtype[String] with
   override inline def validate(string: String): Boolean =
-    string.isUUID ?? "MUST "
+    string.isUUID ?? "MUST BE UUID"
 
 type IsURL = IsURL.Type
 given IsURL: Newtype[String] with

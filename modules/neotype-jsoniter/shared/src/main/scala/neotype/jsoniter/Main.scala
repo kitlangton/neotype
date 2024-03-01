@@ -19,10 +19,6 @@ inline given [A, B](using newType: Newtype.WithType[A, B]): JsonValueCodec[B] = 
 
   override def nullValue: B = null.asInstanceOf[B]
 
-// Newtype.Simple
-inline given [A, B](using newType: Newtype.Simple.WithType[A, B]): JsonValueCodec[B] =
-  newType.applyF(JsonCodecMaker.make[A])
-
 // Subtype
 inline given [A, B <: A](using subType: Subtype.WithType[A, B]): JsonValueCodec[B] =
   new JsonValueCodec[B]:
@@ -38,7 +34,3 @@ inline given [A, B <: A](using subType: Subtype.WithType[A, B]): JsonValueCodec[
       codec.encodeValue(x, out)
 
     override def nullValue: B = null.asInstanceOf[B]
-
-// Subtype.Simple
-inline given [A, B <: A](using subType: Subtype.Simple.WithType[A, B]): JsonValueCodec[B] =
-  subType.applyF(JsonCodecMaker.make[A])

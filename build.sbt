@@ -112,7 +112,7 @@ lazy val zioConfig = (project in file("modules/neotype-zio-config"))
       "dev.zio" %% "zio-config-magnolia" % "4.0.1"
     )
   )
-  .dependsOn(core.jvm)
+  .dependsOn(core.jvm % "compile->compile;test->test")
 
 lazy val zioSchema = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio-schema"))
   .settings(
@@ -146,7 +146,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
       "com.h2database" % "h2"             % "2.1.214" % Test
     )
   )
-  .dependsOn(core.jvm)
+  .dependsOn(core.jvm % "compile->compile;test->test")
 
 lazy val zioTest = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio-test"))
   .settings(

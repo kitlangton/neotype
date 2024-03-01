@@ -25,13 +25,13 @@ object SubtypeLongString extends Subtype[String]:
   override inline def failureMessage = "String must be longer than 10 characters"
 
 type SimpleNewtype = SimpleNewtype.Type
-object SimpleNewtype extends Newtype.Simple[Int]()
+object SimpleNewtype extends Newtype[Int]()
 
 type SimpleSubtype = SimpleSubtype.Type
-object SimpleSubtype extends Subtype.Simple[Int]()
+object SimpleSubtype extends Subtype[Int]()
 
 type NestedNonEmptyString = NestedNonEmptyString.Type
-object NestedNonEmptyString extends Newtype.Simple[NonEmptyString]()
+object NestedNonEmptyString extends Newtype[NonEmptyString]()
 
 object TapirSpec extends ZIOSpecDefault:
 
@@ -70,7 +70,7 @@ object TapirSpec extends ZIOSpecDefault:
           assertTrue(decoded == DecodeResult.Value(NonEmptyString("hello")))
         },
         test("pickler validation failure") {
-          val v         = NonEmptyString.unsafeWrap("")
+          val v         = NonEmptyString.unsafeMake("")
           val pickler   = summon[Pickler[NonEmptyString]]
           val validated = pickler.schema.validator(v)
           val codec     = pickler.toCodec
@@ -90,7 +90,7 @@ object TapirSpec extends ZIOSpecDefault:
           )
         },
         test("schema validation failure") {
-          val v         = NonEmptyString.unsafeWrap("")
+          val v         = NonEmptyString.unsafeMake("")
           val validated = summon[Schema[NonEmptyString]].validator(v)
           assertTrue(
             validated.exists(e =>
@@ -170,7 +170,7 @@ object TapirSpec extends ZIOSpecDefault:
           assertTrue(decoded == DecodeResult.Value(NonEmptyString("hello world")))
         },
         test("schema validation failure") {
-          val v         = SubtypeLongString.unsafeWrap("short")
+          val v         = SubtypeLongString.unsafeMake("short")
           val validated = summon[Schema[SubtypeLongString]].validator(v)
           assertTrue(
             validated.exists(e =>

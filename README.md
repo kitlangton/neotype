@@ -8,7 +8,7 @@
 [Link-SonatypeSnapshots]: https://oss.sonatype.org/content/repositories/snapshots/io/github/kitlangton/neotype_3/ "Sonatype Snapshots"
 [Link-SonatypeReleases]: https://oss.sonatype.org/content/repositories/releases/io/github/kitlangton/neotype_3/ "Sonatype Releases"
 
-A friendly newtype library for Scala 3.
+A friendly refined/newtype library for Scala 3.
 
 ```scala
 "io.github.kitlangton" %% "neotype" % "0.1.7"
@@ -18,29 +18,33 @@ A friendly newtype library for Scala 3.
 
 - Compile-time Checked Values
 - Write validations as **plain, old Scala expressions**
-- Very Helpful Error Messages (_see below_)
-- No Runtime Allocations (Thanks to `inline` and `opaque type`)
-- Ability to integrate with other libraries (e.g. `zio-json`, `circe`, etc.)
+- Helpful compliation errors (_see below_)
+- No runtime allocations (Thanks to `inline` and `opaque type`)
+- Integrates with other libraries (e.g. `zio-json`, `circe`, `tapir`, etc.)
 
 ### Example
+
+Here is how to define a compile-time validated Newtype.
 
 ```scala
 import neotype.*
 
-// Define a newtype:
-given NonEmptyString: Newtype[String] with
+// 1. Define a newtype.
+object NonEmptyString extends Newtype[String]:
 
-  // Define a validation that can at compile-time OR run-time.
+  // 2. Optionally, define a validate method.
   inline def validate(input: String): Boolean =
     input.nonEmpty
 
-// Wrap values, which checked at compile-time:
+// 3. Construct values.
 NonEmptyString("Hello") // OK
 NonEmptyString("")      // Compile Error
 ```
 
+Attempting to call `NonEmptyString("")` would result in the following compilation error:
+
 ```scala
-Error: /Users/kit/code/neotype/examples/src/main/scala/neotype/examples/Main.scala:9:16
+Error: /src/main/scala/examples/Main.scala:9:16
   NonEmptyString("")
   ^^^^^^^^^^^^^^^^^^
   —— Newtype Error ——————————————————————————————————————————————————————————
@@ -67,13 +71,16 @@ Neotype integrates with the following libraries.
 
 ```scala
 import neotype.*
-import neotype.ziojson.*
+import neotype.ziojson.given
 import zio.json.*
 
 type NonEmptyString = NonEmptyString.Type
-given NonEmptyString: Newtype[String] with
-  inline def validate(value: String): Boolean = value.nonEmpty
-  // override inline def failureMessage = "String must not be empty"
+object NonEmptyString extends Newtype[String]:
+  override inline def validate(value: String): Boolean =
+    value.nonEmpty
+
+  override inline def failureMessage: String =
+    "String must not be empty"
 
 case class Person(name: NonEmptyString, age: Int) derives JsonCodec
 
@@ -84,5 +91,5 @@ val failed = """{"name": "", "age": 30}""".fromJson[Person]
 // Left(".name(String must not be empty)")
 ```
 
-By importing `neotype.ziojson.*`, we automatically generate a `JsonCodec` for `NonEmptyString`. Custom
+By importing `neotype.ziojson.given`, we automatically generate a `JsonCodec` for `NonEmptyString`. Custom
 failure messages are also supported (by overriding `def failureMessage` in the Newtype definition).
