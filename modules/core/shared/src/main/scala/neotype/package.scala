@@ -4,20 +4,20 @@ import scala.compiletime.summonInline
 import scala.quoted.*
 import scala.quoted.runtime.StopMacroExpansion
 
-trait Wrapper[A]:
+sealed trait ValidatedWrapper[A]:
   type Type
-
-trait ValidatedWrapper[A] extends Wrapper[A]:
-  self =>
 
   def validate(input: A): Boolean = true
   def failureMessage: String      = "Validation Failed"
 
   inline def apply(inline input: A): Type =
-    ${ Macros.applyImpl[A, Type, self.type]('input, 'validate, 'failureMessage) }
+    ${ Macros.applyImpl[A, Type, this.type]('input, 'validate, 'failureMessage) }
 
   inline def applyAll(inline values: A*): List[Type] =
-    ${ Macros.applyAllImpl[A, Type, self.type]('values, 'self) }
+    ${ Macros.applyAllImpl[A, Type, this.type]('values, 'this) }
+
+  inline def unsafeMake(inline input: A): Type
+  inline def unsafeMakeF[F[_]](inline input: F[A]): F[Type]
 
   trait ValidateEvidence
   given ValidateEvidence = new ValidateEvidence {}
@@ -35,7 +35,6 @@ private inline def isEmailRegex =
   """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r
 
 abstract class Newtype[A] extends ValidatedWrapper[A]:
-  self =>
   opaque type Type = A
 
   transparent inline given instance: Newtype.WithType[A, Type] = this
@@ -43,11 +42,6 @@ abstract class Newtype[A] extends ValidatedWrapper[A]:
   def make(input: A): Either[String, Type] =
     if validate(input) then Right(input)
     else Left(failureMessage)
-
-  // TODO: Maybe use this?
-  // def make(input: A)(using IsValidatedType[A]): Either[String, Type] =
-  //   if validate(input) then Right(input)
-  //   else Left(failureMessage)
 
   extension (inline input: Type) //
     inline def unwrap: A = input
@@ -59,10 +53,9 @@ object Newtype:
   type WithType[A, B] = Newtype[A] { type Type = B }
 
 abstract class Subtype[A] extends ValidatedWrapper[A]:
-  self =>
   opaque type Type <: A = A
 
-  given Subtype.WithType[A, Type] = this
+  transparent inline given Subtype.WithType[A, Type] = this
 
   def make(input: A): Either[String, Type] =
     if validate(input) then Right(input)

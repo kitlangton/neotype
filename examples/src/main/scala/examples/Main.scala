@@ -1,12 +1,7 @@
 package examples
 
+import examples.types.*
 import neotype.*
-import neotype.ziojson.given
-import zio.json.*
-import types.*
-
-import scala.util.NotGiven
-import zio.json.ast.Json.Num
 
 // Here's an example of a Newtype that wraps a String.
 
@@ -29,7 +24,7 @@ object NumericString extends Newtype[String]:
 object ConstructingYourNewtype:
   // Simply, construct your newtype with a compile-time known value.
   // This will execute your `validate` method at compile time.
-  NumericString("123")
+  NumericString("23")
 
   // If we try to construct a newtype with a value that doesn't pass the `validate` method,
   // we'll get a compile error.

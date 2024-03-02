@@ -24,7 +24,6 @@ object IsSimpleType:
     lazy val nt = getNt(TypeRepr.of[A])
 
     val hasDefinedValidateMethod = nt.typeSymbol.declaredMethods.exists(_.name == "validate")
-    println(s"DECLARED METHODS: ${nt.typeSymbol.declaredMethods} FOR ${nt.show}")
 
     if hasDefinedValidateMethod then report.errorAndAbort(s"Newtype ${nt.show} is not a simple type")
     else
@@ -53,7 +52,7 @@ object IsValidatedType:
     lazy val nt = getNt(TypeRepr.of[A])
 
     val hasDefinedValidateMethod = nt.typeSymbol.declaredMethods.exists(_.name == "validate")
-    println(s"DECLARED METHODS IS VAL: ${nt.typeSymbol.declaredMethods} FOR ${nt.show}")
+
     if !hasDefinedValidateMethod then report.errorAndAbort(s"Newtype $nt is not a validated type")
     else
       '{
