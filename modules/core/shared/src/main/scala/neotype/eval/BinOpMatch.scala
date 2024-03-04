@@ -1,6 +1,7 @@
 package neotype.eval
 
 import scala.quoted.*
+import scala.collection.immutable.NumericRange.Inclusive
 
 case class BinOpMatch(name: String):
   def unapply(using Quotes)(expr: Expr[Any]): Option[(Eval[Any], Eval[Any])] =
@@ -10,8 +11,14 @@ case class BinOpMatch(name: String):
         (lhs.asExpr, rhs.asExpr) match
           case (Eval(lhs), Eval(rhs)) =>
             Some((lhs, rhs))
-//          case _ =>
-//            report.errorAndAbort(s"Cannot convert ${lhs.show} and ${rhs.show} to Eval")
+
+          case s =>
+            report.errorAndAbort(s"""
+            |Cannot match BinOp 
+            |name: $name 
+            |lhs: ${lhs.show}
+            |rhs: ${rhs.show}
+            """.stripMargin)
       case _ =>
         None
 

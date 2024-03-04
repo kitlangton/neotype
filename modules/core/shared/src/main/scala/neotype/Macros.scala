@@ -3,14 +3,13 @@ package neotype
 import scala.quoted.*
 import scala.util.{Failure, Success}
 import StringFormatting.*
-import neotype.eval.{Unseal, Eval, Seal, Uninlined}
+import neotype.eval.{Unseal, Eval, Seal, Uninlined, EvalError}
 
 private[neotype] object Macros:
 
-  def applyImpl[Input: Type, T: Type, NT <: ValidatedWrapper[Input] { type Type = T }: Type](
+  def applyImpl[Input: Type, T: Type, NT <: Neotype[Input] { type Type = T }: Type](
       inputExpr: Expr[Input],
-      validate: Expr[Input => Boolean],
-      failureMessage: Expr[String]
+      validate: Expr[Input => Boolean | String]
   )(using Quotes): Expr[T] =
     import quotes.reflect.*
 
@@ -22,23 +21,15 @@ private[neotype] object Macros:
       case None        => return inputExpr.asExprOf[T]
       case Some(value) => value
 
-    lazy val expressionSource: Option[String] =
-      validate.asTerm match
-        case Uninlined(Block(_, Lambda(_, Seal(Eval(eval))))) =>
-          Some(eval.render(using Map("INPUT" -> "input".blue)))
-        case _ =>
-          None
+    val isValidateInline = validateMethod.flags.is(Flags.Inline)
+    if !isValidateInline then
+      report.errorAndAbort(
+        ErrorMessages.validateIsNotInlineMessage(inputExpr, nt, validateMethod.pos)
+      )
 
     lazy val treeSource =
       try validateMethod.tree.pos.sourceCode
       catch case _: Throwable => None
-
-    // TODO: Warn if failureMessage is not an inlined method
-    lazy val message = failureMessage match
-      case Expr(str: String) => str
-      case _                 => "Validation Failed"
-
-    lazy val isBodyInline = validateMethod.flags.is(Flags.Inline)
 
     inputExpr match
       case Eval(eval) =>
@@ -55,17 +46,35 @@ private[neotype] object Macros:
       case Eval(eval) =>
         scala.util.Try(eval.result(using Map.empty)) match
           case Failure(exception) =>
-            report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, isBodyInline))
+            val missingReference = exception match
+              case EvalError.MissingReference(name) => Some(name)
+              case _                                => None
+
+            // throw exception
+            // TODO: Add fatal exception error message
+            // TODO: Have more specific errors for unknown method calls, functions, etc.
+            report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, missingReference))
+
           case Success(true) =>
             inputExpr.asExprOf[T]
-          case Success(false) =>
-            report.errorAndAbort(
-              ErrorMessages.compileTimeValidationFailureMessage(inputExpr, nt, expressionSource, message)
-            )
-      case _ =>
-        report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, isBodyInline))
 
-  def applyAllImpl[A: Type, T: Type, NT <: ValidatedWrapper[A] { type Type = T }: Type](
+          case Success(false) =>
+            lazy val expressionSource: Option[String] =
+              validate.asTerm match
+                case Uninlined(Block(_, Lambda(_, Seal(Eval(eval))))) =>
+                  Some(eval.render(using Map("INPUT" -> "input".blue)))
+                case _ =>
+                  None
+
+            report.errorAndAbort(ErrorMessages.validationFailureMessage(inputExpr, nt, expressionSource, None))
+
+          case Success(errorMessage: String) =>
+            report.errorAndAbort(ErrorMessages.validationFailureMessage(inputExpr, nt, None, Some(errorMessage)))
+
+      case other =>
+        report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, None))
+
+  def applyAllImpl[A: Type, T: Type, NT <: Neotype[A] { type Type = T }: Type](
       as: Expr[Seq[A]],
       self: Expr[NT]
   )(using Quotes): Expr[List[T]] =

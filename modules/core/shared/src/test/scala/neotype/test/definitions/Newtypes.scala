@@ -4,20 +4,16 @@ import neotype.*
 
 type ValidatedNewtype = ValidatedNewtype.Type
 object ValidatedNewtype extends Newtype[String]:
-  override inline def validate(value: String): Boolean =
-    value.nonEmpty
-
-  override inline def failureMessage = "String must not be empty"
+  override inline def validate(value: String): Result =
+    if value.nonEmpty then true else "String must not be empty"
 
 type SimpleNewtype = SimpleNewtype.Type
 object SimpleNewtype extends Newtype[Int]
 
 type ValidatedSubtype = ValidatedSubtype.Type
 object ValidatedSubtype extends Subtype[String]:
-  override inline def validate(value: String): Boolean =
-    value.length > 10
-
-  override inline def failureMessage = "String must be longer than 10 characters"
+  override inline def validate(value: String): Result =
+    if value.length > 10 then true else "String must be longer than 10 characters"
 
 type SimpleSubtype = SimpleSubtype.Type
 object SimpleSubtype extends Subtype[Int]

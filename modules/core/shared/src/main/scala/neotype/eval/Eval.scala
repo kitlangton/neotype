@@ -9,6 +9,10 @@ import scala.quoted.*
 import scala.util.matching.Regex
 import CustomFromExpr.given
 import neotype.eval.Eval.closureToFunction
+import java.util as ju
+
+enum EvalError extends Throwable:
+  case MissingReference(name: String) extends EvalError
 
 enum Eval[A]:
   case Value(value: A)
@@ -27,7 +31,10 @@ enum Eval[A]:
       show: (String, String, String) => String
   ) extends Eval[D]
 
-  case EvalApply(eval: Eval[A], args: List[Eval[?]])                           extends Eval[Any]
+  case EvalApply(eval: Eval[A], args: List[Eval[?]]) extends Eval[Any]
+
+  case EvalStringContext(parts: List[String], args: List[Eval[?]]) extends Eval[String]
+
   case EvalBlock(defs: List[EvalDef[?]], eval: Eval[A])                        extends Eval[A]
   case Reference(name: String)                                                 extends Eval[A]
   case MatchExpr(expr: Eval[A], cases: List[EvalMatchCase[A]])                 extends Eval[A]
@@ -45,6 +52,14 @@ enum Eval[A]:
       case Apply1(lhs, rhs, _, show) => show(lhs.render, rhs.render)
 
       case Apply2(cond, lhs, rhs, _, show) => show(cond.render, lhs.render, rhs.render)
+
+      case EvalStringContext(parts, args) =>
+        val partsStr = parts.map(s => s.green)
+        val argsStr = args.map(_.render).map {
+          case s: String => s"""$${$s}"""
+          case other     => other
+        }
+        s"""s"${StringContext(partsStr*).s(argsStr*)}""""
 
       case EvalBlock(defs, eval) =>
         val newCtx = defs.foldLeft(ctx) { (ctx, defn) =>
@@ -76,9 +91,17 @@ enum Eval[A]:
   def result(using context: Map[String, Any], q: Quotes): A =
     import q.reflect.*
     this match
-      case Value(value)        => value
-      case Reference(name)     => context(name).asInstanceOf[A]
-      case Apply0(eval, op, _) => op(eval.result).asInstanceOf[A]
+      case Value(value) => value
+      case Reference(name) =>
+        context
+          .getOrElse(
+            name,
+            throw EvalError.MissingReference(name)
+          )
+          .asInstanceOf[A]
+
+      case Apply0(eval, op, _) =>
+        op(eval.result).asInstanceOf[A]
 
       case Apply1(eval, arg, op, _) =>
         arg.result match
@@ -102,6 +125,10 @@ enum Eval[A]:
             q.reflect.report.errorAndAbort(s"EvalMatchCase not found for $exprResult")
             throw MatchError(exprResult)
 
+      case EvalStringContext(parts, args) =>
+        val argsStr = args.map(_.result(using context))
+        StringContext(parts*).s(argsStr*)
+
       case EvalBlock(defs, eval) =>
         val newContext = defs.foldLeft(context) { (ctx, defn) =>
           defn match
@@ -118,6 +145,7 @@ enum Eval[A]:
 
       case EvalApply(eval, args) =>
         val calcResult = eval.result
+
         calcResult match
           case EvalClosure(cctx, params, body) =>
             val newCtx = params.zip(args.map(_.result)).foldLeft(cctx) { (ctx, arg) =>
@@ -125,6 +153,8 @@ enum Eval[A]:
             }
             report.info(s"Applying closure $calcResult with args $args")
             body.result(using newCtx)
+          case f: Function1[Any, Any] =>
+            f.apply(args.toList)
           case _ =>
             q.reflect.report.errorAndAbort(s"Cannot apply $calcResult")
             throw MatchError(calcResult)
@@ -238,6 +268,10 @@ object Eval:
         Some(Eval.Apply2(string, start, end, _.substring(_, _), call2("substring")))
       case '{ (${ Eval(string) }: String).toUpperCase } =>
         Some(Eval.Apply0(string, _.toUpperCase, nullary("toUpperCase")))
+      case '{ (${ Eval(string) }: String).distinct } =>
+        Some(Eval.Apply0(string, _.distinct, nullary("distinct")))
+      case '{ (${ Eval(string) }: String).filter(${ Eval(predicate) }: Char => Boolean) } =>
+        Some(Eval.Apply1(string, predicate, _.filter(_), call("filter")))
       case '{ (${ Eval(string) }: String).toLowerCase } =>
         Some(Eval.Apply0(string, _.toLowerCase, nullary("toLowerCase")))
       case '{ (${ Eval(str) }: String).startsWith(${ Eval(prefix) }: String) } =>
@@ -266,6 +300,14 @@ object Eval:
         Some(Eval.Apply1(str, predicate, _.forall(_), call("forall")))
       case '{ (${ Eval(str) }: String).exists(${ Eval(predicate) }: Char => Boolean) } =>
         Some(Eval.Apply1(str, predicate, _.exists(_), call("exists")))
+      case '{ (${ Eval(str) }: String).contains(${ Eval(char) }: Char) } =>
+        Some(Eval.Apply1(str, char, _.contains(_), call("contains")))
+      case '{ (${ Eval(str) }: String).toSet } =>
+        Some(Eval.Apply0(str, _.toSet, nullary("toSet")))
+      case '{ (${ Eval(str) }: String).stripMargin } =>
+        Some(Eval.Apply0(str, _.stripMargin, nullary("stripMargin")))
+      case '{ StringContext(${ Varargs(Exprs[String](strings)) }*).s(${ Varargs(Evals(evals)) }*) } =>
+        Some(Eval.EvalStringContext(strings.toList, evals.toList))
 
       case '{ scala.Predef.identity(${ Eval(eval) }) } =>
         Some(eval)
@@ -381,6 +423,28 @@ object Eval:
       case '{ type a; type b; (${ Eval(list) }: List[`a`]).map(${ Eval(f) }: `a` => `b`) } =>
         Some(Eval.Apply1(list, f, _.map(_), call("map")))
 
+      // Seq Operations
+      case '{ type a; (${ Eval(list) }: Seq[`a`]).forall(${ Eval(predicate) }: `a` => Boolean) } =>
+        Some(Eval.Apply1(list, predicate, _.forall(_), call("forall")))
+      case '{ type a; (${ Eval(list) }: Seq[`a`]).contains(${ Eval(elem) }: `a`) } =>
+        Some(Eval.Apply1(list, elem, _.contains(_), call("contains")))
+      case '{ type a; (${ Eval(list) }: Seq[`a`]).isEmpty } =>
+        Some(Eval.Apply0(list, _.isEmpty, nullary("isEmpty")))
+      case '{ type a; (${ Eval(list) }: Seq[`a`]).filterNot(${ Eval(predicate) }: `a` => Boolean) } =>
+        Some(Eval.Apply1(list, predicate, _.filterNot(_), call("filterNot")))
+
+      // Iterable Operations
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).mkString } =>
+        Some(Eval.Apply0(list, _.mkString, nullary("mkString")))
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).mkString(${ Eval(string) }: String) } =>
+        Some(Eval.Apply1(list, string, _.mkString(_), call("mkString")))
+      case '{ type a; (${ Eval(list) }: Seq[`a`]).toSet } =>
+        Some(Eval.Apply0(list, _.toSet, nullary("toSet")))
+
+      // Range Operations
+      case '{ (${ Eval(char) }: Char).to(${ Eval(end) }: Char) } =>
+        Some(Eval.Apply1(char, end, _.to(_), call("to")))
+
       case Unseal(Closure(Ident(name), _)) =>
         Some(Eval.Reference(name))
 
@@ -392,9 +456,13 @@ object Eval:
 
       case other =>
         // DEV MODE
-//        report.errorAndAbort(
-//          s"CALC PARSE FAIL: ${other.show}\n${other.asTerm.tpe.show}\n${other.asTerm.underlyingArgument}"
-//        )
+        // report.errorAndAbort(
+        //   s"""Eval parse failure:
+        //      |show: ${other.show}
+        //      | tpe: ${other.asTerm.tpe.show}
+        //      |term: ${other.asTerm}
+        //      |""".stripMargin
+        // )
         None
 
     eval.asInstanceOf[Option[Eval[A]]]
@@ -484,3 +552,16 @@ object Uninlined:
 object Seal:
   def unapply(using Quotes)(term: quotes.reflect.Term): Option[Expr[Any]] =
     Some(term.asExpr)
+
+object Evals:
+  def unapply(exprs: Seq[Expr[?]])(using Quotes): Option[Seq[Eval[?]]] =
+    val builder = Seq.newBuilder[Eval[?]]
+    val iter    = exprs.iterator
+    while iter.hasNext do
+      val expr = iter.next()
+      Eval.unapply(expr) match
+        case Some(eval) => builder += eval
+        case None       => return None
+    Some(builder.result())
+
+end Evals

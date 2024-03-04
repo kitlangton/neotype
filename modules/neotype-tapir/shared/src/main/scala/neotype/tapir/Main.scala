@@ -10,36 +10,68 @@ import sttp.tapir.CodecFormat
 import sttp.tapir.json.pickler.*
 
 // Newtype
-given [A, B](using newType: Newtype.WithType[A, B], schema: Schema[A]): Schema[B] =
+given [A, B](using newtype: Newtype.WithType[A, B], schema: Schema[A]): Schema[B] =
   schema
     .validate(
-      Validator.custom(b => ValidationResult.validWhen(newType.validate(b)), Some(newType.failureMessage))
+      Validator.custom(
+        b => //
+          newtype.make(b) match
+            case Left(message) => ValidationResult.Invalid(message)
+            case Right(_)      => ValidationResult.Valid
+        ,
+        None
+      )
     )
-    .map(newType.make(_).toOption)(_.unwrap)
+    .map(newtype.make(_).toOption)(_.unwrap)
 
-given [L, A, B, CF <: CodecFormat](using newType: Newtype.WithType[A, B], codec: Codec[L, A, CF]): Codec[L, B, CF] =
+given [L, A, B, CF <: CodecFormat](using newtype: Newtype.WithType[A, B], codec: Codec[L, A, CF]): Codec[L, B, CF] =
   codec
-    .validate(Validator.custom(b => ValidationResult.validWhen(newType.validate(b)), Some(newType.failureMessage)))
-    .mapDecode(a => DecodeResult.fromEitherString(a.toString, newType.make(a)))(_.unwrap)
+    .validate(
+      Validator.custom(
+        b => //
+          newtype.make(b) match
+            case Left(message) => ValidationResult.Invalid(message)
+            case Right(_)      => ValidationResult.Valid
+        ,
+        None
+      )
+    )
+    .mapDecode(a => DecodeResult.fromEitherString(a.toString, newtype.make(a)))(_.unwrap)
 
 // Subtype
-given [A, B <: A](using subType: Subtype.WithType[A, B], schema: Schema[A]): Schema[B] =
+given [A, B <: A](using subtype: Subtype.WithType[A, B], schema: Schema[A]): Schema[B] =
   schema
     .validate(
-      Validator.custom(b => ValidationResult.validWhen(subType.validate(b)), Some(subType.failureMessage))
+      Validator.custom(
+        b => //
+          subtype.make(b) match
+            case Left(message) => ValidationResult.Invalid(message)
+            case Right(_)      => ValidationResult.Valid
+        ,
+        None
+      )
     )
-    .map(subType.make(_).toOption)(identity)
+    .map(subtype.make(_).toOption)(identity)
 
 given [L, A, B <: A, CF <: CodecFormat](using
-    subType: Subtype.WithType[A, B],
+    subtype: Subtype.WithType[A, B],
     codec: Codec[L, A, CF]
 ): Codec[L, B, CF] =
   codec
-    .validate(Validator.custom(b => ValidationResult.validWhen(subType.validate(b)), Some(subType.failureMessage)))
-    .mapDecode(a => DecodeResult.fromEitherString(a.toString, subType.make(a)))(identity)
+    .validate(
+      Validator.custom(
+        b => //
+          subtype.make(b) match
+            case Left(message) => ValidationResult.Invalid(message)
+            case Right(_)      => ValidationResult.Valid
+        ,
+        None
+      )
+    )
+    .mapDecode(a => DecodeResult.fromEitherString(a.toString, subtype.make(a)))(identity)
 
 // Newtype.WithType
-given [A, B](using newType: Newtype.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
+given [A, B](using newtype: Newtype.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
   Pickler(
     new TapirPickle[B]:
       override lazy val writer: Writer[B] =
@@ -48,19 +80,28 @@ given [A, B](using newType: Newtype.WithType[A, B], pickler: Pickler[A]): Pickle
       override lazy val reader: Reader[B] =
         pickler.innerUpickle.reader
           .map { a =>
-            newType.make(a) match
+            newtype.make(a) match
               case Left(value)  => throw new RuntimeException(value)
               case Right(value) => value
           }
           .asInstanceOf[Reader[B]]
     ,
     pickler.schema
-      .validate(Validator.custom(b => ValidationResult.validWhen(newType.validate(b)), Some(newType.failureMessage)))
-      .map(newType.make(_).toOption)(_.unwrap)
+      .validate(
+        Validator.custom(
+          b =>
+            newtype.make(b) match
+              case Left(message) => ValidationResult.Invalid(message)
+              case Right(_)      => ValidationResult.Valid
+          ,
+          None
+        )
+      )
+      .map(newtype.make(_).toOption)(_.unwrap)
   )
 
 // Subtype.WithType
-given [A, B <: A](using subType: Subtype.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
+given [A, B <: A](using subtype: Subtype.WithType[A, B], pickler: Pickler[A]): Pickler[B] =
   Pickler(
     new TapirPickle[B]:
       override lazy val writer: Writer[B] =
@@ -69,13 +110,22 @@ given [A, B <: A](using subType: Subtype.WithType[A, B], pickler: Pickler[A]): P
       override lazy val reader: Reader[B] =
         pickler.innerUpickle.reader
           .map { a =>
-            subType.make(a) match
+            subtype.make(a) match
               case Left(value)  => throw new RuntimeException(value)
               case Right(value) => value
           }
           .asInstanceOf[Reader[B]]
     ,
     pickler.schema
-      .validate(Validator.custom(b => ValidationResult.validWhen(subType.validate(b)), Some(subType.failureMessage)))
-      .map(subType.make(_).toOption)(identity)
+      .validate {
+        Validator.custom(
+          b =>
+            subtype.make(b) match
+              case Left(message) => ValidationResult.Invalid(message)
+              case Right(_)      => ValidationResult.Valid
+          ,
+          None
+        )
+      }
+      .map(subtype.make(_).toOption)(identity)
   )

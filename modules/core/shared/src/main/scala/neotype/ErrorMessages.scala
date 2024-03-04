@@ -5,7 +5,7 @@ import StringFormatting.*
 
 private[neotype] object ErrorMessages:
   val header =
-    "—— Newtype Error ——————————————————————————————————————————————————————————".red
+    "—— Neotype Error ——————————————————————————————————————————————————————————".red
   val footer =
     "———————————————————————————————————————————————————————————————————————————".red
 
@@ -29,8 +29,8 @@ private[neotype] object ErrorMessages:
      |     $newTypeNameString(${example})
      |  ${"2.".dim} Call the ${"make".green} method, which returns a runtime-validated ${"Either".yellow}:
      |     $newTypeNameString.${"make".green}(${valueExprString})
-     |  ${"3.".dim} If you are sure the input is valid, use the ${"unsafe".green} method:
-     |     $newTypeNameString.${"unsafe".green}(${valueExprString})
+     |  ${"3.".dim} If you are sure the input is valid, use the ${"unsafeMake".green} method:
+     |     $newTypeNameString.${"unsafeMake".green}(${valueExprString})
      |  ${"4.".dim} If you think this is a bug, please open an issue at:
      |     ${"https://github.com/kitlangton/neotype/issues".blue.underlined}
      |  $footer
@@ -38,16 +38,16 @@ private[neotype] object ErrorMessages:
 
   /** An error message for when the compile-time validation of a Newtype's apply method fails.
     */
-  def compileTimeValidationFailureMessage(using
+  def validationFailureMessage(using
       Quotes
-  )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], failureMessage: String): String =
+  )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], maybeCustomMessage: Option[String]): String =
     import quotes.reflect.*
 
-    val isDefaultFailureMessage = failureMessage == "Validation Failed"
-    val renderedFailure         = if isDefaultFailureMessage then "" else s"\n  ${failureMessage.bold}"
-    val sourceExpr = source.fold("") { s =>
-      s"\n  ${"check:".dim} ${s}"
-    }
+    val customMessage = maybeCustomMessage.map(m => s"\n$m").getOrElse("")
+
+    // indent 2 spaces, make every line bold and red
+    val renderedFailure = customMessage.split("\n").map(msg => s"  ${msg.bold}").mkString("\n")
+    val sourceExpr      = source.fold("")(s => s"\n  ${"check:".dim} ${s}")
 
     val inputTpe          = input.asTerm.tpe.widenTermRefByName
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
@@ -59,11 +59,18 @@ private[neotype] object ErrorMessages:
      |  $footer
      |""".stripMargin
 
-  def validateIsNotInlineMessage(using Quotes)(input: Expr[Any], nt: quotes.reflect.TypeRepr): String =
+  def validateIsNotInlineMessage(using Quotes)(
+      input: Expr[Any], //
+      nt: quotes.reflect.TypeRepr,
+      validatePosition: Option[quotes.reflect.Position]
+  ): String =
     import quotes.reflect.*
     val inputTpe          = input.asTerm.tpe.widenTermRefByName
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
     val inputTypeString   = inputTpe.typeSymbol.name.replaceAll("\\$$", "").yellow
+    val renderedPosition = validatePosition.fold("") { pos =>
+      s"""// ${pos.sourceFile.path}:${pos.startLine}\n  """.stripMargin.dim
+    }
     s"""  $header
      |  $newTypeNameString's ${"validate".green} method must be an ${"inline".magenta} def!
      |
@@ -71,28 +78,14 @@ private[neotype] object ErrorMessages:
      |  expression at compile-time. In order to access the AST at compile-time, you
      |  must add the ${"inline".magenta} keyword:
      |
-     |  ${"inline".magenta.underlined} ${"def".magenta} ${s"validate(input: $inputTypeString".cyan}${"):".cyan} ${"Boolean".yellow} ${"=".cyan} ${"...".cyan}
-     |  $footer
-     |""".stripMargin
-
-  def failedToParseCustomErrorMessage(using Quotes)(nt: quotes.reflect.TypeRepr): String =
-    val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
-    s"""  $header
-     |  😭 I've ${"FAILED".red} to parse $newTypeNameString's ${"failureMessage".green}!
-     |
-     |  ${"Possible Solutions".bold}
-     |  ${"1.".dim} Make sure your failure message is an ${"inline".magenta} ${"String".yellow} literal.
-     |     ${"override inline def failureMessage:".blue} ${"String".yellow} ${"=".blue} ${"\"Expected a fibonacci number...\"".green}
-     |  ${"2.".dim} If you think this is a bug, please open an issue at:
-     |     ${"https://github.com/kitlangton/neotype/issues".blue.underlined}
+     |  ${renderedPosition}${"override".magenta} ${"inline".magenta.underlined} ${"def".magenta} ${s"validate(input: $inputTypeString".cyan}${"):".cyan} ${"Boolean".yellow} ${"=".cyan} ${"...".cyan}
      |  $footer
      |""".stripMargin
 
   def failedToParseValidateMethod(using
       Quotes
-  )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], isBodyInline: Boolean): String =
+  )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], missingReference: Option[String]): String =
     import quotes.reflect.*
-    if !isBodyInline then return validateIsNotInlineMessage(input, nt)
 
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
     val sourceExpr = source.fold("") { s =>
@@ -100,24 +93,22 @@ private[neotype] object ErrorMessages:
     }
     val inputTpe        = input.asTerm.tpe.widenTermRefByName
     val inputTypeString = inputTpe.typeSymbol.name.replaceAll("\\$$", "").yellow
-    val solutionMessage =
-      // TODO: Eliminate the duplication here. Can remove else case?
-      if isBodyInline then s"""
-          |  💁 If you want this expression to be supported, please open an issue at:
-          |     ${"https://github.com/kitlangton/neotype/issues".blue.underlined}""".stripMargin
-      else s"""
-        |  ${"Possible Solutions".bold}
-        |  ${"1.".dim} Make sure validate is an ${"inline".magenta} method.
-        |     ${"inline".magenta.underlined} ${"def".magenta} ${s"validate(input: $inputTypeString".blue}${"):".blue} ${"Boolean".yellow} ${"=".blue} ${"...".blue}
-        |  ${"2.".dim} If you want this expression to be supported, please open an issue at:
-        |     ${"https://github.com/kitlangton/neotype/issues".blue.underlined}""".stripMargin
+
+    val missingReferenceMessage =
+      missingReference.fold("") { ref =>
+        "\n\n" + s"""  Unknown identifier ${ref.underlined.bold}""".red
+      }
+
     s"""  $header
-       |  I've ${"FAILED".red} to parse $newTypeNameString's ${"validate".green} method!$sourceExpr
+       |  I've ${"FAILED".red} to parse $newTypeNameString's ${"validate".green} method!$sourceExpr$missingReferenceMessage
        |
        |  ${"Neotype".bold} works by parsing the AST of your ${"validate".green} method into an executable
-       |  expression at compile-time. This means I cannot support every possible
-       |  Scala expression. However, I'll keeping adding as many as I can!
-       |  $solutionMessage
+       |  expression at compile-time. Sadly, this means I cannot parse arbitrary,
+       |  user-defined methods. Likewise, support for the entire Scala standard
+       |  library is incomplete.
+       |
+       |  If you think this expression should be supported, please open an issue at:
+       |  ${"https://github.com/kitlangton/neotype/issues".blue.underlined}
        |  $footer
        |""".stripMargin
 

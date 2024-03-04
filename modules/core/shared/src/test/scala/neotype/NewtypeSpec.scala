@@ -11,13 +11,13 @@ object NewtypeSpec extends ZIOSpecDefault:
   val spec = suiteAll("NewtypeSpec") {
 
     test("parse success") {
-      val res = RegexNewtype("abcd")
+      val res: RegexNewtype = RegexNewtype("abcd")
       assertTrue(res.unwrap == "abcd")
     }
 
     test("parse failure") {
       val res = typeCheckErrors("""RegexNewtype("-")""").head
-      assertTrue(res.message contains "Newtype Error")
+      assertTrue(res.message contains "Neotype Error")
     }
 
     test("specific givens") {
@@ -38,7 +38,7 @@ object NewtypeSpec extends ZIOSpecDefault:
 
     test("positive failure") {
       val res = typeCheckErrors("""PositiveIntNewtype(-1)""").head
-      assertTrue(res.message contains "Newtype Error")
+      assertTrue(res.message contains "Neotype Error")
     }
 
     // Positive Long
@@ -49,7 +49,7 @@ object NewtypeSpec extends ZIOSpecDefault:
 
     test("positive long failure") {
       val res = typeCheckErrors("""PositiveLongNewtype(-1L)""").head
-      assertTrue(res.message contains "Newtype Error")
+      assertTrue(res.message contains "Neotype Error")
     }
 
     // NonEmpty
@@ -60,7 +60,7 @@ object NewtypeSpec extends ZIOSpecDefault:
 
     test("non empty failure") {
       val res = typeCheckErrors(""" NonEmptyStringNewtype("") """).head
-      assertTrue(res.message contains "Newtype Error")
+      assertTrue(res.message contains "Neotype Error")
     }
 
     test("success") {
@@ -75,7 +75,7 @@ object NewtypeSpec extends ZIOSpecDefault:
 
     test("isUuid failure") {
       val res = typeCheckErrors(""" IsUUID("oops") """).head
-      assertTrue(res.message contains "Newtype Error")
+      assertTrue(res.message contains "Neotype Error")
     }
 
     test("isURL success") {
@@ -86,7 +86,7 @@ object NewtypeSpec extends ZIOSpecDefault:
     test("isURL failure") {
       val res = typeCheckErrors(""" IsURL("google.com") """).head
       assertTrue(
-        res.message contains "Newtype Error",
+        res.message contains "Neotype Error",
         !(res.message contains "Validation Failed")
       )
     }

@@ -12,10 +12,8 @@ object NonEmptyString extends Newtype[String]:
 
 type Email = Email.Type
 object Email extends Newtype[String]:
-  override inline def validate(value: String): Boolean =
-    value.contains("@") && value.contains(".")
-
-  override inline def failureMessage = "Invalid email"
+  override inline def validate(value: String): Result =
+    if value.contains("@") && value.contains(".") then true else "Invalid email"
 
 type FourSeasons = FourSeasons.Type
 object FourSeasons extends Newtype[String]:

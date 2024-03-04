@@ -13,12 +13,11 @@ object NumericString extends Newtype[String]:
 
   // 3. If you want to "refine" your newtype to only accept certain values,
   //    then you can override the `validate` method.
-  override inline def validate(value: String): Boolean =
-    value.forall(_.isDigit)
-
-  // 4. If you want to provide a custom error message, you can override
-  //    the `failureMessage` method.
-  override inline def failureMessage = "String must be numeric"
+  //
+  //    If you want a custom error message, you can return a `String` from `validate`.
+  //    (Thanks Scala 3 for union types!)
+  override inline def validate(value: String): Result =
+    if value.forall(_.isDigit) then true else "String must be numeric"
 
 // Now, let's see how we can use this newtype.
 object ConstructingYourNewtype:

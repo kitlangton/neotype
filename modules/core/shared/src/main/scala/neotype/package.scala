@@ -4,14 +4,14 @@ import scala.compiletime.summonInline
 import scala.quoted.*
 import scala.quoted.runtime.StopMacroExpansion
 
-sealed trait ValidatedWrapper[A]:
+sealed trait Neotype[A]:
   type Type
 
-  def validate(input: A): Boolean = true
-  def failureMessage: String      = "Validation Failed"
+  type Result = Boolean | String
+  def validate(input: A): Result = true
 
   inline def apply(inline input: A): Type =
-    ${ Macros.applyImpl[A, Type, this.type]('input, 'validate, 'failureMessage) }
+    ${ Macros.applyImpl[A, Type, this.type]('input, '{ INPUT => validate(INPUT) }) }
 
   inline def applyAll(inline values: A*): List[Type] =
     ${ Macros.applyAllImpl[A, Type, this.type]('values, 'this) }
@@ -34,17 +34,18 @@ private inline def isURLRegex  = "^(http|https)://.*$".r
 private inline def isEmailRegex =
   """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r
 
-abstract class Newtype[A] extends ValidatedWrapper[A]:
+abstract class Newtype[A] extends Neotype[A]:
   opaque type Type = A
 
   transparent inline given instance: Newtype.WithType[A, Type] = this
 
   def make(input: A): Either[String, Type] =
-    if validate(input) then Right(input)
-    else Left(failureMessage)
+    validate(input) match
+      case true            => Right(input)
+      case false           => Left("Validation Failed")
+      case message: String => Left(message)
 
-  extension (inline input: Type) //
-    inline def unwrap: A = input
+  inline def unwrap(inline input: Type): A = input
 
   inline def unsafeMake(inline input: A): Type              = input
   inline def unsafeMakeF[F[_]](inline input: F[A]): F[Type] = input
@@ -52,14 +53,19 @@ abstract class Newtype[A] extends ValidatedWrapper[A]:
 object Newtype:
   type WithType[A, B] = Newtype[A] { type Type = B }
 
-abstract class Subtype[A] extends ValidatedWrapper[A]:
+extension [A, B](value: B)(using newtype: Newtype.WithType[A, B]) //
+  inline def unwrap = newtype.unwrap(value)
+
+abstract class Subtype[A] extends Neotype[A]:
   opaque type Type <: A = A
 
   transparent inline given Subtype.WithType[A, Type] = this
 
   def make(input: A): Either[String, Type] =
-    if validate(input) then Right(input)
-    else Left(failureMessage)
+    validate(input) match
+      case true            => Right(input)
+      case false           => Left("Validation Failed")
+      case message: String => Left(message)
 
   inline def unsafeMake(inline input: A): Type              = input
   inline def unsafeMakeF[F[_]](inline input: F[A]): F[Type] = input

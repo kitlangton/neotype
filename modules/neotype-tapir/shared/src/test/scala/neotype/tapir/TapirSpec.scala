@@ -46,7 +46,7 @@ object TapirSpec extends ZIOSpecDefault:
           val decoded   = codec.decode("\"\"")
           assertTrue(
             validated.exists(e =>
-              e.validator.show == Some("String must not be empty") &&
+              e.customMessage == Some("String must not be empty") &&
                 e.invalidValue == ""
             ),
             decoded.is(_.subtype[DecodeResult.Error]).original == "\"\"",
@@ -63,7 +63,7 @@ object TapirSpec extends ZIOSpecDefault:
           val validated = summon[Schema[ValidatedNewtype]].validator(v)
           assertTrue(
             validated.exists(e =>
-              e.validator.show == Some("String must not be empty") &&
+              e.customMessage == Some("String must not be empty") &&
                 e.invalidValue == ""
             )
           )
@@ -140,7 +140,7 @@ object TapirSpec extends ZIOSpecDefault:
           val validated = summon[Schema[ValidatedSubtype]].validator(v)
           assertTrue(
             validated.exists(e =>
-              e.validator.show == Some("String must be longer than 10 characters") &&
+              e.customMessage == Some("String must be longer than 10 characters") &&
                 e.invalidValue == "short"
             )
           )

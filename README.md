@@ -75,11 +75,8 @@ import zio.json.*
 
 type NonEmptyString = NonEmptyString.Type
 object NonEmptyString extends Newtype[String]:
-  override inline def validate(value: String): Boolean =
-    value.nonEmpty
-
-  override inline def failureMessage: String =
-    "String must not be empty"
+  override inline def validate(value: String): Result =
+    if value.nonEmpty then true else "String must not be empty"
 
 case class Person(name: NonEmptyString, age: Int) derives JsonCodec
 
