@@ -5,7 +5,7 @@ import scala.quoted.*
 import scala.quoted.runtime.StopMacroExpansion
 import javax.xml.validation.Validator
 
-sealed abstract class Neotype[A]:
+sealed abstract class TypeWrapper[A]:
   type Type
 
   /** Validates the input and returns a boolean or an error message.
@@ -63,20 +63,26 @@ sealed abstract class Neotype[A]:
   *
   * Example:
   *
-  * ```
+  * ```scala
   * // DEFINITION
+  * type Digits = Digits.Type
   * object Digits extends Newtype[String]:
   *   override inline def validate(value: String) =
-  *     if value.forall(_.isDigit) then true
-  *     else "String must be numeric"
+  *     value.forall(_.isDigit)
   *
-  * // USAGE
+  * // COMPILE-TIME VALIDATION
   * Digits("123") // Compiles successfully.
   * Digits("abc") // Would fail to compile due to validation.
+  *
+  * // RUN-TIME VALIDATION
+  * val input = "123"
+  * Digits.make(input) // Right(Digits("123"))
+  *
+  * val bad = "abc"
+  * Digits.make(bad) // Left("String must be numeric")
   * ```
   */
-
-abstract class Newtype[A] extends Neotype[A]:
+abstract class Newtype[A] extends TypeWrapper[A]:
   opaque type Type = A
 
   transparent inline given instance: Newtype.WithType[A, Type] = this
@@ -105,7 +111,7 @@ extension [A, B](value: B)(using newtype: Newtype.WithType[A, B]) //
   /** Unwraps the newtype, returning the underlying value. */
   inline def unwrap = newtype.unwrap(value)
 
-abstract class Subtype[A] extends Neotype[A]:
+abstract class Subtype[A] extends TypeWrapper[A]:
   opaque type Type <: A = A
 
   transparent inline given Subtype.WithType[A, Type] = this

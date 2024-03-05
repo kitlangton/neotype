@@ -7,7 +7,7 @@ import neotype.eval.{Unseal, Eval, Seal, Uninlined, EvalError}
 
 private[neotype] object Macros:
 
-  def applyImpl[Input: Type, T: Type, NT <: Neotype[Input] { type Type = T }: Type](
+  def applyImpl[Input: Type, T: Type, NT <: TypeWrapper[Input] { type Type = T }: Type](
       inputExpr: Expr[Input],
       validate: Expr[Input => Boolean | String]
   )(using Quotes): Expr[T] =
@@ -74,7 +74,7 @@ private[neotype] object Macros:
       case other =>
         report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, None))
 
-  def applyAllImpl[A: Type, T: Type, NT <: Neotype[A] { type Type = T }: Type](
+  def applyAllImpl[A: Type, T: Type, NT <: TypeWrapper[A] { type Type = T }: Type](
       as: Expr[Seq[A]],
       self: Expr[NT]
   )(using Quotes): Expr[List[T]] =

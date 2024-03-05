@@ -7,7 +7,7 @@ import scala.annotation.implicitNotFound
 trait IsSimpleType[A]
 
 object IsSimpleType:
-  transparent inline given [A <: Neotype[?]]: IsSimpleType[A] = ${
+  transparent inline given [A <: TypeWrapper[?]]: IsSimpleType[A] = ${
     isSimpleTypeImpl[A]
   }
 
@@ -35,7 +35,7 @@ object IsSimpleType:
 trait IsValidatedType[A]
 
 object IsValidatedType:
-  transparent inline given [A <: Neotype[?]]: IsValidatedType[A] = ${
+  transparent inline given [A <: TypeWrapper[?]]: IsValidatedType[A] = ${
     isValidatedTypeImpl[A]
   }
 
