@@ -68,29 +68,6 @@ object NewtypeSpec extends ZIOSpecDefault:
       assertTrue(res.map(PositiveIntNewtype.unwrap(_)) == List(1, 2))
     }
 
-    test("isUuid success") {
-      val res = IsUUID("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21")
-      assertTrue(IsUUID.unwrap(res) == "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a21")
-    }
-
-    test("isUuid failure") {
-      val res = typeCheckErrors(""" IsUUID("oops") """).head
-      assertTrue(res.message contains "Neotype Error")
-    }
-
-    test("isURL success") {
-      val res = IsURL("https://www.google.com")
-      assertTrue(IsURL.unwrap(res) == "https://www.google.com")
-    }
-
-    test("isURL failure") {
-      val res = typeCheckErrors(""" IsURL("google.com") """).head
-      assertTrue(
-        res.message contains "Neotype Error",
-        !(res.message contains "Validation Failed")
-      )
-    }
-
     // custom failure message
     test("custom failure message") {
       val res = typeCheckErrors(""" CustomFailureNewtype("hello") """).head

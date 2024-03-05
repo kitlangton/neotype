@@ -52,15 +52,4 @@ object PersonNewtype extends Newtype[Person]:
 object VariousStringNewtype extends Newtype[String]:
   override inline def validate(string: String): Boolean =
     string.startsWith("a") && string.endsWith("z") &&
-      string.length > 0 && string.contains("b") &&
-      string.isUUID && string.isURL && string.isEmail
-
-type IsUUID = IsUUID.Type
-object IsUUID extends Newtype[String]:
-  override inline def validate(string: String): Boolean =
-    string.isUUID ?? "MUST BE UUID"
-
-type IsURL = IsURL.Type
-object IsURL extends Newtype[String]:
-  override inline def validate(string: String): Boolean =
-    string.isURL
+      string.length > 0 && string.contains("b")

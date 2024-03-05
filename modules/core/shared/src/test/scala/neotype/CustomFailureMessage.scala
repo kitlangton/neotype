@@ -1,7 +1,7 @@
 package neotype
 
 object CustomFailureNewtype extends Newtype[String]:
-  override inline def validate(value: String): Result =
+  override inline def validate(value: String) =
     if value == "secret string" then true else "Must be the secret string!"
 
 object EqualityParsingNewtype extends Newtype[String]:
