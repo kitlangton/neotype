@@ -22,12 +22,13 @@ A friendly newtype library for Scala 3.
 - No runtime allocations (Thanks to `inline` and `opaque type`)
 - Integrates with other libraries (e.g. `zio-json`, `circe`, `tapir`, etc.)
 
-## Video Tour
+## [5 Minute Video Tour](http://www.youtube.com/watch?v=6AxSX_WX7ek)
 
-[![NEOTYPE VIDEO TOUR](https://img.youtube.com/vi/6AxSX_WX7ek/maxresdefault.jpg)](http://www.youtube.com/watch?v=6AxSX_WX7ek "NEOTYPE TOUR")
+<a href="http://www.youtube.com/watch?v=6AxSX_WX7ek" title="NEOTYPE TOUR">
+    <img src="https://img.youtube.com/vi/6AxSX_WX7ek/maxresdefault.jpg" alt="NEOTYPE VIDEO TOUR" width="500" height="300">
+</a>
 
-
-### Example
+## Example
 
 Here is how to define a compile-time validated Newtype.
 
