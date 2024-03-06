@@ -24,7 +24,7 @@ A friendly newtype library for Scala 3.
 
 ## Video Tour
 
-[![NEOTYPE VIDEO TOUR](http://img.youtube.com/vi/6AxSX_WX7ek/0.jpg)](http://www.youtube.com/watch?v=6AxSX_WX7ek "NEOTYPE TOUR")
+[![NEOTYPE VIDEO TOUR](https://img.youtube.com/vi/6AxSX_WX7ek/maxresdefault.jpg)](http://www.youtube.com/watch?v=6AxSX_WX7ek "NEOTYPE TOUR")
 
 
 ### Example
