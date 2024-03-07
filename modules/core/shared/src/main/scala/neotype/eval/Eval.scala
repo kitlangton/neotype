@@ -8,50 +8,30 @@ import neotype.StringFormatting.*
 import scala.quoted.*
 import scala.util.matching.Regex
 import CustomFromExpr.given
-import neotype.eval.Eval.closureToFunction
+// import neotype.eval.Eval.closureToFunction
 import java.util as ju
 
 enum EvalError extends Throwable:
   case MissingReference(name: String) extends EvalError
 
-enum Eval[A]:
-  case Value(value: A)
+  override def getMessage: String = this match
+    case MissingReference(name) => s"Missing reference: $name"
 
-  // The Apply* variants represent method calls.
-  // Apply0 encodes a nullary method. E.g., `string.length`
-  // Apply1 encodes a unary method. E.g., `string.startsWith("a")`
-  // Apply2 encodes a binary method. E.g., `string.substring(1, 2)`
-  case Apply0[A, B](eval: Eval[A], op: A => B, show: String => String)                                 extends Eval[B]
-  case Apply1[A, B, C](eval: Eval[A], rhs: Eval[B], op: (A, B) => C, show: (String, String) => String) extends Eval[C]
-  case Apply2[A, B, C, D](
-      eval: Eval[A],
-      lhs: Eval[B],
-      rhs: Eval[C],
-      op: (A, B, C) => D,
-      show: (String, String, String) => String
-  ) extends Eval[D]
-
-  case EvalApply(eval: Eval[A], args: List[Eval[?]]) extends Eval[Any]
-
-  case EvalStringContext(parts: List[String], args: List[Eval[?]]) extends Eval[String]
-
-  case EvalBlock(defs: List[EvalDef[?]], eval: Eval[A])                        extends Eval[A]
-  case Reference(name: String)                                                 extends Eval[A]
-  case MatchExpr(expr: Eval[A], cases: List[EvalMatchCase[A]])                 extends Eval[A]
-  case IfThenElse(cond: Eval[Boolean], thenEval: Eval[A], elseEval: Eval[A])   extends Eval[A]
-  case EvalClosure(ctx: Map[String, Any], params: List[String], body: Eval[A]) extends Eval[A]
+sealed trait Eval[A]:
+  import Eval.*
 
   def render(using ctx: Map[String, String])(using Quotes): String =
     import quotes.reflect.*
+
     this match
       case Value(value)    => Eval.renderValue(value)
       case Reference(name) => ctx.getOrElse(name, "_")
 
       // Comparisons
-      case Apply0(eval, _, show)     => show(eval.render)
-      case Apply1(lhs, rhs, _, show) => show(lhs.render, rhs.render)
-
-      case Apply2(cond, lhs, rhs, _, show) => show(cond.render, lhs.render, rhs.render)
+      case Apply0(eval, _, show)       => show(eval.render)
+      case Apply1(a, b, _, show)       => show(a.render, b.render)
+      case Apply2(a, b, c, _, show)    => show(a.render, b.render, c.render)
+      case Apply3(a, b, c, d, _, show) => show(a.render, b.render, c.render, d.render)
 
       case EvalStringContext(parts, args) =>
         val partsStr = parts.map(s => s.green)
@@ -88,10 +68,10 @@ enum Eval[A]:
   private def indent(str: String): String =
     str.linesIterator.map("  " + _).mkString("\n")
 
-  def result(using context: Map[String, Any], q: Quotes): A =
-    import q.reflect.*
+  def result(using context: Map[String, Any]): A =
     this match
-      case Value(value) => value
+      case Value(value) =>
+        value
       case Reference(name) =>
         context
           .getOrElse(
@@ -104,14 +84,13 @@ enum Eval[A]:
         op(eval.result).asInstanceOf[A]
 
       case Apply1(eval, arg, op, _) =>
-        arg.result match
-          case closure: EvalClosure[?] =>
-            val f = closureToFunction(closure)
-            op.asInstanceOf[(Any, Any) => Any](eval.result, f).asInstanceOf[A]
-          case result =>
-            op(eval.result, result).asInstanceOf[A]
+        op(eval.result, arg.result).asInstanceOf[A]
 
-      case Apply2(eval, arg1, arg2, op, _) => op(eval.result, arg1.result, arg2.result).asInstanceOf[A]
+      case Apply2(eval, arg1, arg2, op, renderF) =>
+        op(eval.result, arg1.result, arg2.result).asInstanceOf[A]
+
+      case Apply3(eval, arg1, arg2, arg3, op, renderF) =>
+        op(eval.result, arg1.result, arg2.result, arg3.result).asInstanceOf[A]
 
       case MatchExpr(expr, cases) =>
         val exprResult = expr.result
@@ -122,7 +101,6 @@ enum Eval[A]:
             }
             eval.result(using newCtx)
           case None =>
-            q.reflect.report.errorAndAbort(s"EvalMatchCase not found for $exprResult")
             throw MatchError(exprResult)
 
       case EvalStringContext(parts, args) =>
@@ -143,26 +121,82 @@ enum Eval[A]:
       case IfThenElse(cond, thenEval, elseEval) =>
         if cond.result then thenEval.result else elseEval.result
 
+      case EvalConstruct(constructor, args) =>
+        constructor(args.map(_.result))
+
       case EvalApply(eval, args) =>
         val calcResult = eval.result
-
         calcResult match
-          case EvalClosure(cctx, params, body) =>
-            val newCtx = params.zip(args.map(_.result)).foldLeft(cctx) { (ctx, arg) =>
-              ctx + arg
-            }
-            report.info(s"Applying closure $calcResult with args $args")
-            body.result(using newCtx)
-          case f: Function1[Any, Any] =>
-            f.apply(args.toList)
+          // case EvalClosure(cctx, params, body) =>
+          //   val newCtx = params.zip(args.map(_.result)).foldLeft(cctx) { (ctx, arg) =>
+          //     ctx + arg
+          //   }
+          //   body.result(using newCtx)
+          case f1: Function1[Any, Any] =>
+            f1.apply(args(0).result)
+          case f2: Function2[Any, Any, Any] =>
+            val res = f2.apply(args(0).result, args(1).result)
+            res
           case _ =>
-            q.reflect.report.errorAndAbort(s"Cannot apply $calcResult")
             throw MatchError(calcResult)
   end result
 
 end Eval
 
 object Eval:
+  case class Value[A](value: A) extends Eval[A]
+
+  // The Apply* variants represent method calls.
+  // Apply0 encodes a nullary method. E.g., `string.length`
+  // Apply1 encodes a unary method. E.g., `string.startsWith("a")`
+  // Apply2 encodes a binary method. E.g., `string.substring(1, 2)`
+  case class Apply0[A, B](eval: Eval[A], op: A => B, show: String => String) extends Eval[B]
+  case class Apply1[A, B, C](eval: Eval[A], rhs: Eval[B], op: (A, B) => C, show: (String, String) => String)
+      extends Eval[C]
+  case class Apply2[A, B, C, D](
+      eval: Eval[A],
+      lhs: Eval[B],
+      rhs: Eval[C],
+      op: (A, B, C) => D,
+      show: (String, String, String) => String
+  ) extends Eval[D]
+  case class Apply3[A, B, C, D, E](
+      eval: Eval[A],
+      arg1: Eval[B],
+      arg2: Eval[C],
+      arg3: Eval[D],
+      op: (A, B, C, D) => E,
+      show: (String, String, String, String) => String
+  ) extends Eval[E]
+
+  case class EvalConstruct[A](constructor: List[Any] => A, args: List[Eval[?]]) extends Eval[A]
+  case class EvalApply[A](eval: Eval[A], args: List[Eval[?]])                   extends Eval[Any]
+
+  case class EvalStringContext[A](parts: List[String], args: List[Eval[?]]) extends Eval[String]
+
+  case class EvalBlock[A](defs: List[EvalDef[?]], eval: Eval[A])                      extends Eval[A]
+  case class Reference[A](name: String)                                               extends Eval[A]
+  case class MatchExpr[A](expr: Eval[A], cases: List[EvalMatchCase[A]])               extends Eval[A]
+  case class IfThenElse[A](cond: Eval[Boolean], thenEval: Eval[A], elseEval: Eval[A]) extends Eval[A]
+
+  // case class EvalClosure[A](ctx: Map[String, Any], params: List[String], body: Eval[A]) extends Eval[A]
+  object EvalClosure:
+    def apply[A](ctx: Map[String, Any], params: List[String], body: Eval[A]): Eval[A] =
+      params match
+        case List(p1)     => EvalClosure1(ctx, p1, body)
+        case List(p1, p2) => EvalClosure2(ctx, p1, p2, body)
+        case _            => throw new Exception(s"Unsupported number of parameters: ${params.size}")
+
+  case class EvalClosure1[A](ctx: Map[String, Any], p1: String, body: Eval[A]) extends Eval[A] with Function1[Any, Any]:
+    def apply(a: Any): Any =
+      body.result(using ctx ++ Map(p1 -> a))
+
+  case class EvalClosure2[A](ctx: Map[String, Any], p1: String, p2: String, body: Eval[A])
+      extends Eval[A]
+      with Function2[Any, Any, Any]:
+    def apply(a: Any, b: Any): Any =
+      body.result(using ctx ++ Map(p1 -> a, p2 -> b))
+
   def renderValue(value: Any): String =
     value match
       case s: String => s""""$s"""".green
@@ -181,20 +215,9 @@ object Eval:
   def infix(op: String)   = (a: String, b: String) => s"$a $op $b"
   def call(op: String)    = (a: String, b: String) => s"$a.$op($b)"
   def call2(op: String)   = (a: String, b: String, c: String) => s"$a.$op($b, $c)"
+  def call3(op: String)   = (a: String, b: String, c: String, d: String) => s"$a.$op($b, $c, $d)"
   def nullary(op: String) = (a: String) => s"$a.$op"
   def prefix(op: String)  = (a: String) => s"$op$a"
-
-  def closureToFunction[A](closure: EvalClosure[A])(using Quotes): Any =
-    import quotes.reflect.*
-    closure match
-      case EvalClosure(ctx, List(p), body) =>
-        (a: Any) => body.result(using ctx ++ Map(p -> a))
-      case EvalClosure(ctx, List(p1, p2), body) =>
-        (a: Any, b: Any) => body.result(using ctx ++ Map(p1 -> a, p2 -> b))
-      case EvalClosure(ctx, List(p1, p2, p3), body) =>
-        (a: Any, b: Any, c: Any) => body.result(using ctx ++ Map(p1 -> a, p2 -> b, p3 -> c))
-      case _ =>
-        report.errorAndAbort(s"Closure to function for arity ${closure.params.size} not implemented")
 
   def unapply[A](expr: Expr[A])(using Quotes): Option[Eval[A]] =
     import quotes.reflect.*
@@ -215,9 +238,39 @@ object Eval:
       // Implicit Conversions
       case '{ int2Integer(${ Eval(int) }: Int) } => Some(int)
 
+      // EMPTY
+      case '{ type a; Set.empty[`a`] }              => Some(Eval.Value(Set.empty[`a`]))
+      case '{ type a; List.empty[`a`] }             => Some(Eval.Value(List.empty[`a`]))
+      case '{ Nil }                                 => Some(Eval.Value(Nil))
+      case '{ type a; Vector.empty[`a`] }           => Some(Eval.Value(Vector.empty[`a`]))
+      case '{ type a; Option.empty[`a`] }           => Some(Eval.Value(Option.empty[`a`]))
+      case '{ None }                                => Some(Eval.Value(None))
+      case '{ type a; type b; Map.empty[`a`, `b`] } => Some(Eval.Value(Map.empty[`a`, `b`]))
+
       // CONTAINER TYPES
-      case '{ ${ CustomFromExpr.fromExprSet(set) }: Set[a] }    => Some(Eval.Value(set))
-      case '{ ${ CustomFromExpr.fromExprList(list) }: List[a] } => Some(Eval.Value(list))
+      case '{ type a; ${ CustomFromExpr.fromExprSet(set) }: Set[`a`] }          => Some(Eval.Value(set))
+      case '{ type a; ${ CustomFromExpr.fromExprList(list) }: List[`a`] }       => Some(Eval.Value(list))
+      case '{ type a; ${ CustomFromExpr.fromExprVector(vector) }: Vector[`a`] } => Some(Eval.Value(vector))
+      case '{ type a; ${ CustomFromExpr.fromExprOption(option) }: Option[`a`] } => Some(Eval.Value(option))
+
+      // CONSTRUCTORS
+      case '{ type a; List(${ Eval(elem) }) } =>
+        Some(Eval.EvalConstruct(args => List(args*), List(elem)))
+      case '{ type a; Set(${ Eval(elem) }) } =>
+        Some(Eval.EvalConstruct(args => Set(args*), List(elem)))
+      case '{ type a; Vector(${ Eval(elem) }) } =>
+        Some(Eval.EvalConstruct(args => Vector(args*), List(elem)))
+
+      case '{ type a; List(${ Varargs(Evals(elems)) }*) } =>
+        Some(Eval.EvalConstruct(args => List(args*), elems.toList))
+      case '{ type a; Set(${ Varargs(Evals(elems)) }*) } =>
+        Some(Eval.EvalConstruct(args => Set(args*), elems.toList))
+      case '{ type a; Vector(${ Varargs(Evals(elems)) }*) } =>
+        Some(Eval.EvalConstruct(args => Vector(args*), elems.toList))
+      case '{ type a; Some(${ Eval(elem) }: `a`) } =>
+        Some(Eval.EvalConstruct(args => Some(args.head), List(elem)))
+      case '{ type a; Option(${ Eval(elem) }: `a`) } =>
+        Some(Eval.EvalConstruct(args => Option(args.head), List(elem)))
 
       case Unseal(Ident(name)) => Some(Eval.Reference(name))
 
@@ -338,7 +391,16 @@ object Eval:
       case MatchBinTimes(lhs, rhs) =>
         Some(Eval.Apply1(lhs, rhs, Operations.times, infix("*")))
 
-      case Unseal(quotes.reflect.Block(stats, Seal(Eval(expr)))) =>
+      // case Unseal(Lambda(args, Seal(Eval(body)))) =>
+      //   val params = args.map(_.name)
+      //   Some(
+      //     EvalBlock(
+      //       List(EvalDef.EvalDefDef("$anonfunc", params, body)),
+      //       Eval.Reference("$anonfunc")
+      //     )
+      //   )
+
+      case Unseal(quotes.reflect.Block(stats, rhs @ Seal(Eval(exprEval)))) =>
         val defs = stats.collect {
           case ValDef(name, _, Some(Seal(Eval(eval)))) =>
             EvalDef.EvalValDef(name, eval)
@@ -346,7 +408,7 @@ object Eval:
             val params = valDefs.flatMap(_.params).collect { case ValDef(name, _, _) => name }
             EvalDef.EvalDefDef(name, params, rhs)
         }
-        Some(Eval.EvalBlock(defs, expr))
+        Some(Eval.EvalBlock(defs, exprEval))
 
       // Match Expressions
       case Unseal(Match(Seal(Eval(expr)), caseDefs)) =>
@@ -398,30 +460,19 @@ object Eval:
         Some(Eval.Apply1(elem, list, _ :: _, infix("::")))
       case '{ type a; (${ Eval(list) }: List[`a`]).:::[`a`](${ Eval(other) }: List[`a`]) } =>
         Some(Eval.Apply1(other, list, _ ::: _, infix(":::")))
-      case '{ type a; (${ Eval(list) }: List[`a`]).head } =>
+      case '{ type a; (${ Eval(list) }: Seq[`a`]).head } =>
         Some(Eval.Apply0(list, _.head, nullary("head")))
-      case '{ type a; (${ Eval(list) }: List[`a`]).tail } =>
+      case '{ type a; (${ Eval(list) }: Seq[`a`]).tail } =>
         Some(Eval.Apply0(list, _.tail, nullary("tail")))
-      case '{ type a; (${ Eval(list) }: List[`a`]).isEmpty } =>
-        Some(Eval.Apply0(list, _.isEmpty, nullary("isEmpty")))
-      case '{ type a; (${ Eval(list) }: List[`a`]).nonEmpty } =>
-        Some(Eval.Apply0(list, _.nonEmpty, nullary("nonEmpty")))
-      case '{ type a; (${ Eval(list) }: List[`a`]).size } =>
-        Some(Eval.Apply0(list, _.size, nullary("size")))
+      // case '{ type a; (${ Eval(list) }: Seq[`a`]).isEmpty } =>
+      //   Some(Eval.Apply0(list, _.isEmpty, nullary("isEmpty")))
+      // case '{ type a; (${ Eval(list) }: Seq[`a`]).nonEmpty } =>
+      //   Some(Eval.Apply0(list, _.nonEmpty, nullary("nonEmpty")))
       case '{ type a; (${ Eval(list) }: List[`a`]).length } =>
         Some(Eval.Apply0(list, _.length, nullary("length")))
-      case '{ type a; (${ Eval(list) }: List[`a`]).contains(${ Eval(elem) }: `a`) } =>
-        Some(Eval.Apply1(list, elem, _.contains(_), call("contains")))
-      case '{ type a; (${ Eval(list) }: List[`a`]).exists(${ Eval(predicate) }: `a` => Boolean) } =>
-        Some(Eval.Apply1(list, predicate, _.exists(_), call("exists")))
-      case '{ type a; (${ Eval(list) }: List[`a`]).forall(${ Eval(predicate) }: `a` => Boolean) } =>
-        Some(Eval.Apply1(list, predicate, _.forall(_), call("forall")))
-      case '{ type a; (${ Eval(list) }: List[`a`]).apply(${ Eval(index) }: Int) } =>
+
+      case '{ type a; (${ Eval(list) }: Seq[`a`]).apply(${ Eval(index) }: Int) } =>
         Some(Eval.Apply1(list, index, _.apply(_), infix("apply")))
-      case '{ type a; (${ Eval(list) }: List[`a`]).filter(${ Eval(predicate) }: `a` => Boolean) } =>
-        Some(Eval.Apply1(list, predicate, _.filter(_), call("filter")))
-      case '{ type a; type b; (${ Eval(list) }: List[`a`]).map(${ Eval(f) }: `a` => `b`) } =>
-        Some(Eval.Apply1(list, f, _.map(_), call("map")))
 
       // Seq Operations
       case '{ type a; (${ Eval(list) }: Seq[`a`]).forall(${ Eval(predicate) }: `a` => Boolean) } =>
@@ -433,13 +484,249 @@ object Eval:
       case '{ type a; (${ Eval(list) }: Seq[`a`]).filterNot(${ Eval(predicate) }: `a` => Boolean) } =>
         Some(Eval.Apply1(list, predicate, _.filterNot(_), call("filterNot")))
 
+      // Iterable Ops
+      //  iterable.++(iterable)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).++(${ Eval(other) }: Iterable[`a`]) } =>
+        Some(Eval.Apply1(list, other, _.++(_), infix("++")))
+
+      //  iterable.collect { case a => a }
+      // case '{ type a; type b; (${ Eval(list) }: Iterable[`a`]).collect(${ Eval(pf) }: PartialFunction[`a`, `b`]) } =>
+      //   Some(Eval.Apply1(list, pf, _.collect(_), call("collect")))
+
+      //  iterable.collectFirst { case a => a }
+
+      //  iterable.concat(iterable)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).concat(${ Eval(other) }: Iterable[`a`]) } =>
+        Some(Eval.Apply1(list, other, _.concat(_), call("concat")))
+
+      //  iterable.count(_ => true)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).count(${ Eval(predicate) }: `a` => Boolean) } =>
+        Some(Eval.Apply1(list, predicate, _.count(_), call("count")))
+
+      //  iterable.drop(1)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).drop(${ Eval(n) }: Int) } =>
+        Some(Eval.Apply1(list, n, _.drop(_), call("drop")))
+
+      //  iterable.dropRight(1)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).dropRight(${ Eval(n) }: Int) } =>
+        Some(Eval.Apply1(list, n, _.dropRight(_), call("dropRight")))
+
+      //  iterable.dropWhile(_ => true)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).dropWhile(${ Eval(predicate) }: `a` => Boolean) } =>
+        Some(Eval.Apply1(list, predicate, _.dropWhile(_), call("dropWhile")))
+
+      //  iterable.empty
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).empty } =>
+        Some(Eval.Apply0(list, _.empty, nullary("empty")))
+
+      //  iterable.exists(_ => true)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).exists(${ Eval(predicate) }: `a` => Boolean) } =>
+        Some(Eval.Apply1(list, predicate, _.exists(_), call("exists")))
+
+      //  iterable.filter(_ => true)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).filter(${ Eval(predicate) }: `a` => Boolean) } =>
+        Some(Eval.Apply1(list, predicate, _.filter(_), call("filter")))
+
+      //  iterable.filterNot(_ => true)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).filterNot(${ Eval(predicate) }: `a` => Boolean) } =>
+        Some(Eval.Apply1(list, predicate, _.filterNot(_), call("filterNot")))
+
+      //  iterable.find(_ => true)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).find(${ Eval(predicate) }: `a` => Boolean) } =>
+        Some(Eval.Apply1(list, predicate, _.find(_), call("find")))
+
+      //  iterable.flatMap(a => List(a))
+      case '{ type a; type b; (${ Eval(list) }: List[`a`]).flatMap(${ Eval(f) }: `a` => IterableOnce[`b`]) } =>
+        Some(Eval.Apply1(list, f, _.flatMap(_), call("flatMap")))
+      case '{ type a; type b; (${ Eval(list) }: Vector[`a`]).flatMap(${ Eval(f) }: `a` => IterableOnce[`b`]) } =>
+        Some(Eval.Apply1(list, f, _.flatMap(_), call("flatMap")))
+      case '{ type a; type b; (${ Eval(list) }: Set[`a`]).flatMap(${ Eval(f) }: `a` => IterableOnce[`b`]) } =>
+        Some(Eval.Apply1(list, f, _.flatMap(_), call("flatMap")))
+
+      // iterable.flatten
+      // TODO: Ensure this is correct
+      case '{ type a; (${ Eval(list) }: Iterable[Iterable[`a`]]).flatten } =>
+        Some(Eval.Apply0(list, _.flatten, nullary("flatten")))
+
+      //  iterable.fold(0)(_ + _)
+      case '{
+            type a;
+            (${ Eval(list) }: Iterable[`a`]).fold[`a`](${ Eval(zero) }: `a`)(${ Eval(op) }: (`a`, `a`) => `a`)
+          } =>
+        Some(Eval.Apply2(list, zero, op, _.fold(_)(_), call2("fold")))
+
+      //  iterable.foldLeft(0)(_ + _)
+      case '{
+            type a; type b;
+            (${ Eval(as) }: scala.collection.Iterable[`a`]).foldLeft[`b`](${ Eval(zero) }: `b`)(${
+              Eval(op)
+            }: (`b`, `a`) => `b`)
+          } =>
+        Some(Eval.Apply2(as, zero, op, _.foldLeft(_)(_), call2("foldLeft")))
+
+      //  iterable.foldRight(0)(_ + _)
+      case '{
+            type a; type b;
+            (${ Eval(as) }: scala.collection.Iterable[`a`]).foldRight[`b`](${ Eval(zero) }: `b`)(${
+              Eval(op)
+            }: (`a`, `b`) => `b`)
+          } =>
+        Some(Eval.Apply2(as, zero, op, _.foldRight(_)(_), call2("foldRight")))
+
+      //  iterable.forall(_ => true)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).forall(${ Eval(predicate) }: `a` => Boolean) } =>
+        Some(Eval.Apply1(list, predicate, _.forall(_), call("forall")))
+
+      //  iterable.foreach(_ => ())
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).foreach(${ Eval(f) }: `a` => Unit) } =>
+        Some(Eval.Apply1(list, f, _.foreach(_), call("foreach")))
+
+      //  iterable.groupBy(_ => 0)
+      case '{ type a; type k; (${ Eval(list) }: Iterable[`a`]).groupBy(${ Eval(f) }: `a` => `k`) } =>
+        Some(Eval.Apply1(list, f, _.groupBy(_), call("groupBy")))
+
+      //  iterable.groupMap(_ => 0)(_ => 0)
+      //   def groupMap[K, B](key: A => K)(f: A => B): immutable.Map[K, CC[B]] = {
+      case '{
+            type a; type b; type k;
+            (${ Eval(list) }: Iterable[`a`]).groupMap[`k`, `b`](${ Eval(f) }: `a` => `k`)(${
+              Eval(g)
+            }: `a` => `b`)
+          } =>
+        Some(Eval.Apply2(list, f, g, _.groupMap(_)(_), call2("groupMap")))
+
+      //  iterable.groupMapReduce(_ => 0)(_ => 0)(_ + _)
+      //   def groupMapReduce[K, B](key: A => K)(f: A => B)(reduce: (B, B) => B): immutable.Map[K, B] = {
+      case '{
+            type a; type b; type k;
+            (${ Eval(list) }: Iterable[`a`]).groupMapReduce[`k`, `b`](${ Eval(f) }: `a` => `k`)(${
+              Eval(g)
+            }: `a` => `b`)(${ Eval(reduce) }: (`b`, `b`) => `b`)
+          } =>
+        Some(Eval.Apply3(list, f, g, reduce, _.groupMapReduce(_)(_)(_), call3("groupMapReduce")))
+
+      //  iterable.grouped(1)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).grouped(${ Eval(size) }: Int) } =>
+        Some(Eval.Apply1(list, size, _.grouped(_), call("grouped")))
+
+      //  iterable.head
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).head } =>
+        Some(Eval.Apply0(list, _.head, nullary("head")))
+
+      //  iterable.headOption
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).headOption } =>
+        Some(Eval.Apply0(list, _.headOption, nullary("headOption")))
+
+      //  iterable.init
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).init } =>
+        Some(Eval.Apply0(list, _.init, nullary("init")))
+
+      //  iterable.inits
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).inits } =>
+        Some(Eval.Apply0(list, _.inits, nullary("inits")))
+      //  iterable.knownSize
+      //  iterable.isEmpty
+      //  iterable.last
+      //  iterable.lastOption
+      //  iterable.map(a => a)
+      //  iterable.max
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).max(using ${ MatchOrdering[`a`](ordering) }) } =>
+        given Ordering[`a`] = ordering
+        Some(Eval.Apply0(list, _.max, nullary("max")))
+      //  iterable.maxOption
+      //  iterable.maxBy(_ => 0)
+      //  iterable.maxByOption(_ => 0)
+      //  iterable.mkString
+      //  iterable.mkString(",")
+      //  iterable.mkString("[", ",", "]")
+      //  iterable.min
+      //  iterable.minOption
+      //  iterable.minBy(_ => 0)
+      //  iterable.minByOption(_ => 0)
+      //  iterable.nonEmpty
+      //  iterable.partition(_ => true)
+      //  iterable.partitionMap(a => Right(a))
+      //  iterable.reduce(_ + _)
+      //  iterable.reduceOption(_ + _)
+      //  iterable.reduceLeft(_ + _)
+      //  iterable.reduceLeftOption(_ + _)
+      //  iterable.reduceRight(_ + _)
+      //  iterable.reduceRightOption(_ + _)
+      //  iterable.scan(0)(_ + _)
+      //  iterable.scanLeft(0)(_ + _)
+      //  iterable.scanRight(0)(_ + _)
+      //  iterable.size
+      //  iterable.sizeCompare(0)
+      //  iterable.sizeCompare(iterable)
+      //  iterable.sizeIs > 5
+      //  iterable.slice(0, 1)
+      //  iterable.sliding(3)
+      //  iterable.sliding(3, 1)
+      //  iterable.span(_ => true)
+      //  iterable.splitAt(1)
+      //  iterable.stepper
+      //  iterable.sum
+      //  iterable.tail
+      //  iterable.tails
+      //  iterable.take(1)
+      //  iterable.takeRight(1)
+      //  iterable.takeWhile(_ => true)
+      //  iterable.tapEach(_ => ())
+      //  iterable.toArray
+      //  iterable.toBuffer
+      //  iterable.toIndexedSeq
+      //  iterable.toList
+      //  // iterable.toMap
+      //  iterable.toSeq
+      //  iterable.toSet
+      //  iterable.toVector
+      //  // iterable.transpose
+      //  // iterable.unzip
+      //  // iterable.unzip3
+      //  iterable.view
+      //  iterable.withFilter(_ => true)
+      //  iterable.zip(iterable)
+      //  iterable.zipAll(iterable, 0, 0)
+      //  iterable.zipWithIndex
+
       // Iterable Operations
+      // .mkString
       case '{ type a; (${ Eval(list) }: Iterable[`a`]).mkString } =>
         Some(Eval.Apply0(list, _.mkString, nullary("mkString")))
-      case '{ type a; (${ Eval(list) }: Iterable[`a`]).mkString(${ Eval(string) }: String) } =>
-        Some(Eval.Apply1(list, string, _.mkString(_), call("mkString")))
+      // .mkString(sep)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).mkString(${ Eval(sep) }: String) } =>
+        Some(Eval.Apply1(list, sep, _.mkString(_), call("mkString")))
+      // .toSet
       case '{ type a; (${ Eval(list) }: Seq[`a`]).toSet } =>
         Some(Eval.Apply0(list, _.toSet, nullary("toSet")))
+      // .map(f)
+      case '{ type a; type b; (${ Eval(list) }: Iterable[`a`]).map(${ Eval(f) }: `a` => `b`) } =>
+        Some(Eval.Apply1(list, f, _.map(_), call("map")))
+      // .filter(f)
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).filter(${ Eval(predicate) }: `a` => Boolean) } =>
+        Some(Eval.Apply1(list, predicate, _.filter(_), call("filter")))
+      // .isEmpty
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).isEmpty } =>
+        Some(Eval.Apply0(list, _.isEmpty, nullary("isEmpty")))
+      // .nonEmpty
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).nonEmpty } =>
+        Some(Eval.Apply0(list, _.nonEmpty, nullary("nonEmpty")))
+      // .contains
+      // case '{ type a; (${ Eval(list) }: Iterable[`a`]).contains(${ Eval(elem) }: `a`) } =>
+      //   Some(Eval.Apply1(list, elem, _.contains(_), call("contains")))
+
+      // .exists
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).exists(${ Eval(predicate) }: `a` => Boolean) } =>
+        Some(Eval.Apply1(list, predicate, _.exists(_), call("exists")))
+      // .forall
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).forall(${ Eval(predicate) }: `a` => Boolean) } =>
+        Some(Eval.Apply1(list, predicate, _.forall(_), call("forall")))
+      // .size
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).size } =>
+        Some(Eval.Apply0(list, _.size, nullary("size")))
+      // .length
+      // case '{ type a; (${ Eval(list) }: Iterable[`a`]).length } =>
+      //   Some(Eval.Apply0(list, _.size, nullary("length")))
 
       // Range Operations
       case '{ (${ Eval(char) }: Char).to(${ Eval(end) }: Char) } =>
@@ -456,13 +743,13 @@ object Eval:
 
       case other =>
         // DEV MODE
-        // report.errorAndAbort(
-        //   s"""Eval parse failure:
-        //      |show: ${other.show}
-        //      | tpe: ${other.asTerm.tpe.show}
-        //      |term: ${other.asTerm}
-        //      |""".stripMargin
-        // )
+        report.errorAndAbort(
+          s"""Eval parse failure:
+             |show: ${other.show}
+             | tpe: ${other.asTerm.tpe.show}
+             |term: ${other.asTerm}
+             |""".stripMargin
+        )
         None
 
     eval.asInstanceOf[Option[Eval[A]]]
@@ -475,7 +762,7 @@ case class EvalMatchCase[A](pattern: EvalPattern[A], guard: Option[Eval[Boolean]
   def render(using Map[String, String])(using Quotes): String =
     s"${pattern.render} => ${eval.render}"
 
-  def matches(using ctx: Map[String, Any], q: Quotes)(value: Any): Boolean =
+  def matches(using ctx: Map[String, Any])(value: Any): Boolean =
     val patternMatches = pattern.matches(value)
     lazy val guardResult = guard
       .map { eval =>
@@ -518,7 +805,7 @@ enum EvalPattern[A]:
       case Alternative(patterns) =>
         patterns.map(_.render).mkString("(", " | ", ")")
 
-  def matches(value: Any)(using Map[String, Any], Quotes): Boolean =
+  def matches(value: Any)(using Map[String, Any]): Boolean =
     this match
       case Value(patternValue) =>
         patternValue.result == value
@@ -565,3 +852,19 @@ object Evals:
     Some(builder.result())
 
 end Evals
+
+object MatchOrdering:
+  def unapply[A](expr: Expr[Ordering[?]])(using Quotes): Option[Ordering[A]] =
+    val ordering = expr match
+      case '{ Ordering.Int }     => Some(summon[Ordering[Int]])
+      case '{ Ordering.Long }    => Some(summon[Ordering[Long]])
+      case '{ Ordering.Double }  => Some(summon[Ordering[Double]])
+      case '{ Ordering.Float }   => Some(summon[Ordering[Float]])
+      case '{ Ordering.Byte }    => Some(summon[Ordering[Byte]])
+      case '{ Ordering.Short }   => Some(summon[Ordering[Short]])
+      case '{ Ordering.Char }    => Some(summon[Ordering[Char]])
+      case '{ Ordering.Boolean } => Some(summon[Ordering[Boolean]])
+      case '{ Ordering.Unit }    => Some(summon[Ordering[Unit]])
+      case '{ Ordering.String }  => Some(summon[Ordering[String]])
+      case _                     => None
+    ordering.asInstanceOf[Option[Ordering[A]]]

@@ -107,26 +107,89 @@ private[neotype] object TestMacros:
     import quotes.reflect.*
     expr match
       case Eval[A](eval) =>
+        // try
         val result      = eval.result(using Map.empty)
-        given ToExpr[A] = toExprInstance(result).asInstanceOf[ToExpr[A]]
+        given ToExpr[A] = toExprType[A]
         Expr(result)
+//         catch
+//           case e: Throwable =>
+//             report.errorAndAbort(s"""
+// --------------
+// error: ${e}
+// Failed to evaluate expression at compile time
+// SHOW: ${expr.show}
+
+// TERM: ${expr.asTerm}
+
+// EVAL: ${eval}
+// --------------
+//               """)
       case _ =>
         report.errorAndAbort(s"Could not parse input at compile time: ${expr.show}\n\n${expr.asTerm.toString.blue}")
         ???
 
-  def toExprInstance(using Quotes)(any: Any): ToExpr[?] =
+  def toExprType[A: Type](using Quotes): ToExpr[A] =
     import quotes.reflect.*
-    any match
-      case _: Int                  => summon[ToExpr[Int]]
-      case _: String               => summon[ToExpr[String]]
-      case _: Boolean              => summon[ToExpr[Boolean]]
-      case _: Long                 => summon[ToExpr[Long]]
-      case _: Double               => summon[ToExpr[Double]]
-      case _: Float                => summon[ToExpr[Float]]
-      case _: Char                 => summon[ToExpr[Char]]
-      case _: Byte                 => summon[ToExpr[Byte]]
-      case _: Short                => summon[ToExpr[Short]]
-      case _: Set[Int @unchecked]  => summon[ToExpr[Set[Int]]]
-      case _: List[Int @unchecked] => summon[ToExpr[List[Int]]]
-      case _: BigInt               => summon[ToExpr[BigInt]]
-      case _: BigDecimal           => summon[ToExpr[BigDecimal]]
+    Type.of[A] match
+      case '[Int]        => summon[ToExpr[Int]].asInstanceOf[ToExpr[A]]
+      case '[String]     => summon[ToExpr[String]].asInstanceOf[ToExpr[A]]
+      case '[Boolean]    => summon[ToExpr[Boolean]].asInstanceOf[ToExpr[A]]
+      case '[Long]       => summon[ToExpr[Long]].asInstanceOf[ToExpr[A]]
+      case '[Double]     => summon[ToExpr[Double]].asInstanceOf[ToExpr[A]]
+      case '[Float]      => summon[ToExpr[Float]].asInstanceOf[ToExpr[A]]
+      case '[Char]       => summon[ToExpr[Char]].asInstanceOf[ToExpr[A]]
+      case '[Byte]       => summon[ToExpr[Byte]].asInstanceOf[ToExpr[A]]
+      case '[Short]      => summon[ToExpr[Short]].asInstanceOf[ToExpr[A]]
+      case '[BigInt]     => summon[ToExpr[BigInt]].asInstanceOf[ToExpr[A]]
+      case '[BigDecimal] => summon[ToExpr[BigDecimal]].asInstanceOf[ToExpr[A]]
+      case '[Unit]       => summon[ToExpr[Unit]].asInstanceOf[ToExpr[A]]
+      case '[Set[a]] =>
+        given ToExpr[a] = toExprType[a]
+        summon[ToExpr[Set[a]]].asInstanceOf[ToExpr[A]]
+      case '[List[a]] =>
+        given ToExpr[a] = toExprType[a]
+        summon[ToExpr[List[a]]].asInstanceOf[ToExpr[A]]
+      case '[Vector[a]] =>
+        given ToExpr[a] = toExprType[a]
+        summon[ToExpr[Vector[a]]].asInstanceOf[ToExpr[A]]
+      case '[Option[a]] =>
+        given ToExpr[a] = toExprType[a]
+        summon[ToExpr[Option[a]]].asInstanceOf[ToExpr[A]]
+      case '[Map[k, v]] =>
+        given ToExpr[k] = toExprType[k]
+        given ToExpr[v] = toExprType[v]
+        summon[ToExpr[Map[k, v]]].asInstanceOf[ToExpr[A]]
+      case _ =>
+        val typeRepr = TypeRepr.of[A]
+        typeRepr match
+          // A | B
+          case OrType(left, right) =>
+            (left.asType, right.asType) match
+              case ('[a], '[b]) =>
+                given ToExpr[a] = toExprType[a]
+                given ToExpr[b] = toExprType[b]
+                OrTypeToExpr[a, b].asInstanceOf[ToExpr[A]]
+          case _ =>
+            report.errorAndAbort(s"toExprType failed for: ${typeRepr.show}")
+
+  given VectorToExpr[T: Type: ToExpr]: ToExpr[Vector[T]] with
+    def apply(xs: Vector[T])(using Quotes): Expr[Vector[T]] =
+      '{ Vector(${ Varargs(xs.map(summon[ToExpr[T]].apply)) }*) }
+
+  given MapToExpr[K: Type: ToExpr, V: Type: ToExpr]: ToExpr[Map[K, V]] with
+    def apply(m: Map[K, V])(using Quotes): Expr[Map[K, V]] =
+      '{
+        Map(${
+          Varargs(m.map { case (k, v) =>
+            '{ ${ summon[ToExpr[K]].apply(k) } -> ${ summon[ToExpr[V]].apply(v) } }
+          }.toList)
+        }*)
+      }
+
+  def OrTypeToExpr[A: Type: ToExpr, B: Type: ToExpr]: ToExpr[A | B] = new:
+    def apply(aOrB: A | B)(using Quotes): Expr[A | B] =
+      try Expr(aOrB.asInstanceOf[A])
+      catch case _ => Expr(aOrB.asInstanceOf[B])
+
+  given UnitToExpr: ToExpr[Unit] with
+    def apply(x: Unit)(using Quotes): Expr[Unit] = '{ () }
