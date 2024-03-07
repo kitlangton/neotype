@@ -277,11 +277,15 @@ val evalTests =
     } -> 11,
     eval {
       List(0, 1, 2, 3).map(_ * 2)
-    } -> List(0, 2, 4, 6),
+    }                                         -> List(0, 2, 4, 6),
+    eval(List(0, 1, 2, 3).filter(a => a > 1)) -> List(2, 3),
     eval {
-      List(0, 1, 2, 3).filter(a => a > 1)
-    } -> List(2, 3)
+      val x = Person("Hello", 12)
+      x.name
+    } -> "Hello"
   )
+
+case class Person(name: String, age: Int)
 
 object IterableTest:
   eval {
@@ -378,4 +382,7 @@ object IterableTest:
     // iterable.zipWithIndex
 
     0 // TODO: Extend FromExpr to work with Some(1), (), etc.
+
+    // Case Classes
+
   }

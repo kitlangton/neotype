@@ -33,3 +33,15 @@ type PositiveIntList = PositiveIntList.Type
 object PositiveIntList extends Newtype[List[Int]]:
   override inline def validate(value: List[Int]): Boolean =
     !value.exists(_ < 0)
+
+// It sort of works with case classes...
+case class Person(name: String, age: Int)
+
+type ElderlyPerson = ElderlyPerson.Type
+object ElderlyPerson extends Newtype[Person]:
+  override inline def validate(value: Person): Boolean =
+    value.age > 65
+
+object NewtypeExamples:
+  val elder = ElderlyPerson(Person("Lazarus", 70))
+  // val youth = ElderlyPerson(Person("Kit", 30))

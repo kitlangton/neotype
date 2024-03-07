@@ -63,6 +63,16 @@ sealed trait Eval[A]:
         val thenEvalStr = thenEval.render
         val elseEvalStr = elseEval.render
         s"if $condStr then $thenEvalStr else $elseEvalStr"
+
+      case ProductValue(name, fields) =>
+        s"$name(${fields
+            .map { (k, v) =>
+              s"$k = ${v.render}"
+            }
+            .mkString(", ")})"
+
+      case ProductSelect(eval, field) =>
+        s"${eval.render}.$field"
   end render
 
   private def indent(str: String): String =
@@ -124,6 +134,14 @@ sealed trait Eval[A]:
       case EvalConstruct(constructor, args) =>
         constructor(args.map(_.result))
 
+      case ProductValue(name, fields) =>
+        fields.view.mapValues(_.result).toMap
+
+      case ProductSelect(eval, field) =>
+        println(s"SELECTING $field FROM $eval")
+        println(s"RESULT: ${eval.result}")
+        eval.result.asInstanceOf[Map[String, Any]].getOrElse(field, throw MatchError(field))
+
       case EvalApply(eval, args) =>
         val calcResult = eval.result
         calcResult match
@@ -171,6 +189,9 @@ object Eval:
 
   case class EvalConstruct[A](constructor: List[Any] => A, args: List[Eval[?]]) extends Eval[A]
   case class EvalApply[A](eval: Eval[A], args: List[Eval[?]])                   extends Eval[Any]
+
+  case class ProductValue(name: String, fields: Map[String, Eval[?]]) extends Eval[Any]
+  case class ProductSelect[A](eval: Eval[A], field: String)           extends Eval[Any]
 
   case class EvalStringContext[A](parts: List[String], args: List[Eval[?]]) extends Eval[String]
 
@@ -234,6 +255,17 @@ object Eval:
       case '{ BigDecimal(${ Expr(long) }: Long) }     => Some(Eval.Value(BigDecimal(long)))
       case '{ BigDecimal(${ Expr(double) }: Double) } => Some(Eval.Value(BigDecimal(double)))
       case '{ (${ Expr(string) }: String).r }         => Some(Eval.Value(string.r))
+
+      case Unseal(p @ Apply(Select(_, "apply"), Evals(args))) if p.tpe.typeSymbol.flags.is(Flags.Case) =>
+        val typeName   = p.tpe.typeSymbol.name
+        val fieldNames = p.tpe.typeSymbol.primaryConstructor.paramSymss.flatten.map(_.name)
+        val fields     = fieldNames.zip(args).toMap
+        val product    = ProductValue(typeName, fields)
+        Some(product)
+
+      case Unseal(Select(p @ Seal(Eval(eval)), field)) if p.tpe.typeSymbol.flags.is(Flags.Case) =>
+        val productSelect = ProductSelect(eval, field)
+        Some(productSelect)
 
       // Implicit Conversions
       case '{ int2Integer(${ Eval(int) }: Int) } => Some(int)
@@ -847,6 +879,16 @@ object Evals:
     while iter.hasNext do
       val expr = iter.next()
       Eval.unapply(expr) match
+        case Some(eval) => builder += eval
+        case None       => return None
+    Some(builder.result())
+
+  def unapply(using Quotes)(terms: Seq[quotes.reflect.Term]): Option[Seq[Eval[?]]] =
+    val builder = Seq.newBuilder[Eval[?]]
+    val iter    = terms.iterator
+    while iter.hasNext do
+      val term = iter.next()
+      Eval.unapply(term.asExpr) match
         case Some(eval) => builder += eval
         case None       => return None
     Some(builder.result())
