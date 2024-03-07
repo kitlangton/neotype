@@ -35,6 +35,7 @@ object PositiveIntList extends Newtype[List[Int]]:
     !value.exists(_ < 0)
 
 // It sort of works with case classes...
+// As long as you only select fields.
 case class Person(name: String, age: Int)
 
 type ElderlyPerson = ElderlyPerson.Type
@@ -44,4 +45,4 @@ object ElderlyPerson extends Newtype[Person]:
 
 object NewtypeExamples:
   val elder = ElderlyPerson(Person("Lazarus", 70))
-  // val youth = ElderlyPerson(Person("Kit", 30))
+  val youth = ElderlyPerson(Person("Kit", 30))

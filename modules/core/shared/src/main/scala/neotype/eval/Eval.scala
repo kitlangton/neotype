@@ -393,6 +393,9 @@ object Eval:
         Some(Eval.Apply0(str, _.stripMargin, nullary("stripMargin")))
       case '{ StringContext(${ Varargs(Exprs[String](strings)) }*).s(${ Varargs(Evals(evals)) }*) } =>
         Some(Eval.EvalStringContext(strings.toList, evals.toList))
+      // string * int
+      case '{ (${ Eval(str) }: String) * (${ Eval(int) }: Int) } =>
+        Some(Eval.Apply1(str, int, _ * _, infix("*")))
 
       case '{ scala.Predef.identity(${ Eval(eval) }) } =>
         Some(eval)
