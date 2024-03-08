@@ -1,8 +1,5 @@
 package neotype
 
-import scala.quoted.FromExpr
-import scala.util.matching.Regex
-
 object NewtypeWithoutValidation extends Newtype[String]:
   override inline def validate(string: String): Boolean = true
 

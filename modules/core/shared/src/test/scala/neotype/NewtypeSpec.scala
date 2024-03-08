@@ -5,7 +5,6 @@ import zio.test.*
 
 import scala.compiletime.summonInline
 import scala.compiletime.testing.*
-import zio.metrics.Metric.runtime
 
 object NewtypeSpec extends ZIOSpecDefault:
   val spec = suiteAll("NewtypeSpec") {

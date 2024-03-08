@@ -9,7 +9,8 @@ private[neotype] object ErrorMessages:
   val footer =
     "———————————————————————————————————————————————————————————————————————————".red
 
-  /** An error message for when the input to a Newtype's apply method is not known at compile time.
+  /** An error message for when the input to a Newtype's apply method is not
+    * known at compile time.
     */
   def inputParseFailureMessage(using Quotes)(input: Expr[Any], nt: quotes.reflect.TypeRepr): String =
     import quotes.reflect.*
@@ -36,7 +37,8 @@ private[neotype] object ErrorMessages:
      |  $footer
      |""".stripMargin
 
-  /** An error message for when the compile-time validation of a Newtype's apply method fails.
+  /** An error message for when the compile-time validation of a Newtype's apply
+    * method fails.
     */
   def validationFailureMessage(using
       Quotes
@@ -85,14 +87,13 @@ private[neotype] object ErrorMessages:
   def failedToParseValidateMethod(using
       Quotes
   )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], missingReference: Option[String]): String =
-    import quotes.reflect.*
 
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
     val sourceExpr = source.fold("") { s =>
       s"\n\n${indent(s)}"
     }
-    val inputTpe        = input.asTerm.tpe.widenTermRefByName
-    val inputTypeString = inputTpe.typeSymbol.name.replaceAll("\\$$", "").yellow
+    // val inputTpe = input.asTerm.tpe.widenTermRefByName
+    // val inputTypeString = inputTpe.typeSymbol.name.replaceAll("\\$$", "").yellow
 
     val missingReferenceMessage =
       missingReference.fold("") { ref =>

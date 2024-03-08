@@ -1,7 +1,6 @@
 package neotype.eval
 
 import scala.quoted.*
-import scala.collection.immutable.NumericRange.Inclusive
 
 case class BinOpMatch(name: String):
   def unapply(using Quotes)(expr: Expr[Any]): Option[(Eval[Any], Eval[Any])] =
