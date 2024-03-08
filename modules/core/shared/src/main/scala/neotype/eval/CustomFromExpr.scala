@@ -1,6 +1,7 @@
 package neotype.eval
 
 import scala.quoted.*
+import scala.annotation.nowarn
 
 object CustomFromExpr:
   given fromExprSet[A]: FromExpr[Set[A]] with
@@ -11,7 +12,8 @@ object CustomFromExpr:
         case None => None
         case Some(fromExprA) =>
           given FromExpr[A] = fromExprA
-          given Type[A]     = aType.asInstanceOf[Type[A]]
+          @nowarn("msg=unused")
+          given Type[A] = aType.asInstanceOf[Type[A]]
           x match
             case '{ Set[A](${ Varargs(Exprs(elems)) }*) }                            => Some(elems.toSet)
             case '{ Set.empty[A] }                                                   => Some(Set.empty[A])
@@ -27,7 +29,8 @@ object CustomFromExpr:
         case None => None
         case Some(fromExprA) =>
           given FromExpr[A] = fromExprA
-          given Type[A]     = aType.asInstanceOf[Type[A]]
+          @nowarn("msg=unused")
+          given Type[A] = aType.asInstanceOf[Type[A]]
           x match
             case '{ List[A](${ Varargs(Exprs(elems)) }*) }                            => Some(elems.toList)
             case '{ List.empty[A] }                                                   => Some(List.empty[A])
@@ -43,7 +46,8 @@ object CustomFromExpr:
         case None => None
         case Some(fromExprA) =>
           given FromExpr[A] = fromExprA
-          given Type[A]     = aType.asInstanceOf[Type[A]]
+          @nowarn("msg=unused")
+          given Type[A] = aType.asInstanceOf[Type[A]]
           x match
             case '{ Vector[A](${ Varargs(Exprs(elems)) }*) }                            => Some(elems.toVector)
             case '{ Vector.empty[A] }                                                   => Some(Vector.empty[A])
@@ -59,7 +63,8 @@ object CustomFromExpr:
         case None => None
         case Some(fromExprA) =>
           given FromExpr[A] = fromExprA
-          given Type[A]     = aType.asInstanceOf[Type[A]]
+          @nowarn("msg=unused")
+          given Type[A] = aType.asInstanceOf[Type[A]]
           x match
             case '{ Option[A](${ Expr(a) }) } => Some(Some(a))
             case '{ Some[A](${ Expr(a) }) }   => Some(Some(a))

@@ -2,8 +2,6 @@ package neotype
 
 import scala.compiletime.summonInline
 import scala.quoted.*
-import scala.quoted.runtime.StopMacroExpansion
-import javax.xml.validation.Validator
 
 sealed abstract class TypeWrapper[A]:
   type Type
