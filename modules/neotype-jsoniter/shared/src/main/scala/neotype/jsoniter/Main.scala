@@ -5,7 +5,10 @@ import com.github.plokhotnyuk.jsoniter_scala.macros.{JsonCodecMaker, CodecMakerC
 import neotype.*
 
 // Newtype
-inline given [A, B](using newType: Newtype.WithType[A, B], inline config: CodecMakerConfig): JsonValueCodec[B] =
+inline given newtypeCodec[A, B](using
+    newType: Newtype.WithType[A, B],
+    inline config: CodecMakerConfig = CodecMakerConfig
+): JsonValueCodec[B] =
   new JsonValueCodec[B]:
     private val codec = JsonCodecMaker.make[A](config)
 
@@ -21,7 +24,10 @@ inline given [A, B](using newType: Newtype.WithType[A, B], inline config: CodecM
     override def nullValue: B = null.asInstanceOf[B]
 
 // Subtype
-inline given [A, B <: A](using subType: Subtype.WithType[A, B], inline config: CodecMakerConfig): JsonValueCodec[B] =
+inline given subtypeCodec[A, B <: A](using
+    subType: Subtype.WithType[A, B],
+    inline config: CodecMakerConfig = CodecMakerConfig
+): JsonValueCodec[B] =
   new JsonValueCodec[B]:
     private val codec = JsonCodecMaker.make[A](config)
 
