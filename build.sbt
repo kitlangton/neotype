@@ -40,6 +40,8 @@ lazy val root = (project in file("."))
     circe.jvm,
     core.js,
     core.jvm,
+    jsoniter.js,
+    jsoniter.jvm,
     examples,
     tapir.js,
     tapir.jvm,
