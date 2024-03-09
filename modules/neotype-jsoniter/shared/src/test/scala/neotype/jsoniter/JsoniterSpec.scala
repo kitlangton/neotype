@@ -13,7 +13,7 @@ import neotype.test.definitions.*
 object JsoniterSpec extends ZIOSpecDefault:
 
   inline given codecMakerConfig: CodecMakerConfig = CodecMakerConfig
-  given JsonValueCodec[Composite] = JsonCodecMaker.make(codecMakerConfig)
+  given JsonValueCodec[Composite]                 = JsonCodecMaker.make(codecMakerConfig)
 
   def spec = suite("Jsoniter Support")(
     test("parse success") {
