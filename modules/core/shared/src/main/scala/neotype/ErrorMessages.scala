@@ -87,14 +87,13 @@ private[neotype] object ErrorMessages:
   def failedToParseValidateMethod(using
       Quotes
   )(input: Expr[Any], nt: quotes.reflect.TypeRepr, source: Option[String], missingReference: Option[String]): String =
-    import quotes.reflect.*
 
     val newTypeNameString = nt.typeSymbol.name.replaceAll("\\$$", "").green.bold
     val sourceExpr = source.fold("") { s =>
       s"\n\n${indent(s)}"
     }
-    val inputTpe        = input.asTerm.tpe.widenTermRefByName
-    val inputTypeString = inputTpe.typeSymbol.name.replaceAll("\\$$", "").yellow
+    // val inputTpe = input.asTerm.tpe.widenTermRefByName
+    // val inputTypeString = inputTpe.typeSymbol.name.replaceAll("\\$$", "").yellow
 
     val missingReferenceMessage =
       missingReference.fold("") { ref =>

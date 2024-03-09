@@ -115,7 +115,7 @@ private object NumericBinOp:
       (NumericType.LongT, NumericBinOp.Mod)                -> ((a: Long, b: Long) => a % b),
       (NumericType.LongT, NumericBinOp.Min)                -> ((a: Long, b: Long) => a.min(b)),
       (NumericType.LongT, NumericBinOp.Max)                -> ((a: Long, b: Long) => a.max(b)),
-      (NumericType.LongT, NumericBinOp.Pow)                -> ((a: Long, b: Long) => Math.pow(a, b)),
+      (NumericType.LongT, NumericBinOp.Pow)                -> ((a: Long, b: Long) => Math.pow(a.toDouble, b.toDouble)),
       (NumericType.LongT, NumericBinOp.LessThan)           -> ((a: Long, b: Long) => a < b),
       (NumericType.LongT, NumericBinOp.LessThanOrEqual)    -> ((a: Long, b: Long) => a <= b),
       (NumericType.LongT, NumericBinOp.GreaterThan)        -> ((a: Long, b: Long) => a > b),
@@ -232,6 +232,7 @@ private enum NumericType:
 
       case (any: BigInt, BigIntT)     => any
       case (any: BigInt, BigDecimalT) => BigDecimal(any)
+      case (any, _)                   => any
 
 private object NumericType:
   def forNumber(any: Any): NumericType =

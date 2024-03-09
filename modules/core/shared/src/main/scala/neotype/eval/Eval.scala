@@ -2,14 +2,12 @@ package neotype.eval
 
 import BinOpMatch.*
 
-import scala.annotation.tailrec
 import neotype.StringFormatting.*
 
 import scala.quoted.*
 import scala.util.matching.Regex
 import CustomFromExpr.given
 // import neotype.eval.Eval.closureToFunction
-import java.util as ju
 
 enum EvalError extends Throwable:
   case MissingReference(name: String) extends EvalError
@@ -21,8 +19,6 @@ sealed trait Eval[A]:
   import Eval.*
 
   def render(using ctx: Map[String, String])(using Quotes): String =
-    import quotes.reflect.*
-
     this match
       case Value(value)    => Eval.renderValue(value)
       case Reference(name) => ctx.getOrElse(name, "_")
@@ -35,10 +31,7 @@ sealed trait Eval[A]:
 
       case EvalStringContext(parts, args) =>
         val partsStr = parts.map(s => s.green)
-        val argsStr = args.map(_.render).map {
-          case s: String => s"""$${$s}"""
-          case other     => other
-        }
+        val argsStr  = args.map(_.render).map(s => s"""$${$s}""")
         s"""s"${StringContext(partsStr*).s(argsStr*)}""""
 
       case EvalBlock(defs, eval) =>
@@ -52,6 +45,11 @@ sealed trait Eval[A]:
               ))
         }
         eval.render(using newCtx)
+
+      case EvalConstruct(constructor, args) => ??? // FIXME ?
+      case EvalApply(eval, args)            => ??? // FIXME ?
+      case EvalClosure1(ctx, p1, body)      => ??? // FIXME ?
+      case EvalClosure2(ctx, p1, p2, body)  => ??? // FIXME ?
 
       case MatchExpr(expr, cases) =>
         val exprStr  = expr.render
@@ -127,6 +125,8 @@ sealed trait Eval[A]:
               ctx + (name -> closure)
         }
         eval.result(using newContext)
+      case EvalClosure1(ctx, p1, body)     => ??? // FIXME ?
+      case EvalClosure2(ctx, p1, p2, body) => ??? // FIXME ?
 
       case IfThenElse(cond, thenEval, elseEval) =>
         if cond.result then thenEval.result else elseEval.result
@@ -851,13 +851,13 @@ enum EvalPattern[A]:
 
 object EvalPattern:
   def parse(using Quotes)(term: quotes.reflect.Tree): EvalPattern[Any] =
-    import quotes.reflect as r
+    import quotes.reflect
     term match
-      case r.Wildcard()               => EvalPattern.Wildcard()
-      case r.Bind(name, r.Wildcard()) => EvalPattern.Variable(name)
-      case Seal(Eval(value))          => EvalPattern.Value(value)
-      case r.Alternatives(patterns)   => EvalPattern.Alternative(patterns.map(parse))
-      case other                      => r.report.errorAndAbort(s"EvalPattern parse failed to parse: ${other}")
+      case reflect.Wildcard()                     => EvalPattern.Wildcard()
+      case reflect.Bind(name, reflect.Wildcard()) => EvalPattern.Variable(name)
+      case Seal(Eval(value))                      => EvalPattern.Value(value)
+      case reflect.Alternatives(patterns)         => EvalPattern.Alternative(patterns.map(parse))
+      case other                                  => reflect.report.errorAndAbort(s"EvalPattern parse failed to parse: ${other}")
 
 object Unseal:
   def unapply(expr: Expr[?])(using Quotes): Option[quotes.reflect.Term] =

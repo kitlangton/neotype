@@ -21,8 +21,9 @@ val sharedSettings = Seq(
   scalacOptions ++= Seq(
     "-deprecation",
 //    "-explain",
-    "-Xcheck-macros"
-    //    "-Ycheck:all"
+    "-Xcheck-macros",
+    //    "-Ycheck:all",
+    "-Wunused:all"
   ),
   libraryDependencies ++= Seq(
     "dev.zio" %%% "zio-test"     % zioVersion % Test,
