@@ -4,7 +4,7 @@ import neotype.*
 import zio.test.*
 import zio.*
 import com.github.plokhotnyuk.jsoniter_scala.core.{JsonCodec, JsonValueCodec, readFromString}
-import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
+import com.github.plokhotnyuk.jsoniter_scala.macros.{CodecMakerConfig, JsonCodecMaker}
 import neotype.jsoniter.given
 
 import scala.util.Try
@@ -12,7 +12,8 @@ import neotype.test.definitions.*
 
 object JsoniterSpec extends ZIOSpecDefault:
 
-  given JsonValueCodec[Composite] = JsonCodecMaker.make
+  inline given codecMakerConfig: CodecMakerConfig = CodecMakerConfig
+  given JsonValueCodec[Composite] = JsonCodecMaker.make(codecMakerConfig)
 
   def spec = suite("Jsoniter Support")(
     test("parse success") {
