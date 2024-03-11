@@ -42,6 +42,8 @@ lazy val root = (project in file("."))
     core.jvm,
     jsoniter.js,
     jsoniter.jvm,
+    playJson.js,
+    playJson.jvm,
     examples,
     tapir.js,
     tapir.jvm,
@@ -79,6 +81,16 @@ lazy val jsoniter = (crossProject(JSPlatform, JVMPlatform) in file("modules/neot
     libraryDependencies ++= Seq(
       "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core"   % "2.28.2",
       "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-macros" % "2.28.2"
+    )
+  )
+  .dependsOn(core % "compile->compile;test->test")
+
+lazy val playJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-play-json"))
+  .settings(
+    name := "neotype-play-json",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "com.typesafe.play" %%% "play-json" % "2.10.4"
     )
   )
   .dependsOn(core % "compile->compile;test->test")

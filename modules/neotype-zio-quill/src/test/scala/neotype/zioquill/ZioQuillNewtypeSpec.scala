@@ -1,9 +1,9 @@
 package neotype.zioquill
 
 import io.getquill.*
+import neotype.test.definitions.*
 import neotype.{Newtype, Subtype}
 import zio.test.*
-import neotype.test.definitions.*
 
 object Queries:
   val h2DataSource = new org.h2.jdbcx.JdbcDataSource

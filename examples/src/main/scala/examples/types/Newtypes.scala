@@ -45,4 +45,4 @@ object ElderlyPerson extends Newtype[Person]:
 
 object NewtypeExamples:
   val elder = ElderlyPerson(Person("Lazarus", 70))
-  val youth = ElderlyPerson(Person("Kit", 30))
+  // val youth = ElderlyPerson(Person("Kit", 30))

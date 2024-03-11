@@ -3,10 +3,34 @@ package neotype.zioschema
 import neotype.*
 import zio.schema.Schema
 
-// Newtype
-given [A, B](using newType: Newtype.WithType[A, B], schema: Schema[A]): Schema[B] =
-  schema.transformOrFail(a => newType.make(a), b => Right(b.unwrap))
+// Validated Newtype
+given [A, B](using
+    newtype: Newtype.WithType[A, B],
+    schema: Schema[A],
+    isValidatedType: IsValidatedType[newtype.type]
+): Schema[B] =
+  schema.transformOrFail(a => newtype.make(a), b => Right(b.unwrap))
 
-// Subtype
-given [A, B <: A](using subtype: Subtype.WithType[A, B], schema: Schema[A]): Schema[B] =
+// Simple Newtype
+given [A, B](using
+    newtype: Newtype.WithType[A, B],
+    schema: Schema[A],
+    isSimpleType: IsSimpleType[newtype.type]
+): Schema[B] =
+  newtype.unsafeMakeF(schema)
+
+// Validated Subtype
+given [A, B <: A](using
+    subtype: Subtype.WithType[A, B],
+    schema: Schema[A],
+    isValidatedType: IsValidatedType[subtype.type]
+): Schema[B] =
   schema.transformOrFail(a => subtype.make(a), b => Right(b))
+
+// Simple Subtype
+given [A, B <: A](using
+    subtype: Subtype.WithType[A, B],
+    schema: Schema[A],
+    isSimpleType: IsSimpleType[subtype.type]
+): Schema[B] =
+  subtype.unsafeMakeF(schema)

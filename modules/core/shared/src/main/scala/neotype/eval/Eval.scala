@@ -138,8 +138,6 @@ sealed trait Eval[A]:
         fields.view.mapValues(_.result).toMap
 
       case ProductSelect(eval, field) =>
-        println(s"SELECTING $field FROM $eval")
-        println(s"RESULT: ${eval.result}")
         eval.result.asInstanceOf[Map[String, Any]].getOrElse(field, throw MatchError(field))
 
       case EvalApply(eval, args) =>
