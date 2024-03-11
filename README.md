@@ -11,7 +11,7 @@
 A friendly newtype library for Scala 3.
 
 ```scala
-"io.github.kitlangton" %% "neotype" % "0.2.3"
+"io.github.kitlangton" %% "neotype" % "0.2.4"
 ```
 
 ## Features
@@ -67,6 +67,8 @@ Neotype integrates with the following libraries.
 - zio-test `DeriveGen`
 - zio-json
 - zio-config
+- zio-schema
+- play-json
 - tapir
 - quill
 - circe
