@@ -3,7 +3,7 @@ inThisBuild(
     name           := "neotype",
     normalizedName := "neotype",
     organization   := "io.github.kitlangton",
-    scalaVersion   := "3.3.2",
+    scalaVersion   := "3.3.3",
     homepage       := Some(url("https://github.com/kitlangton/neotype")),
     licenses       := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
     developers := List(
