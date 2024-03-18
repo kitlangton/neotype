@@ -90,7 +90,7 @@ lazy val playJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neot
     name := "neotype-play-json",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "com.typesafe.play" %%% "play-json" % "2.10.4"
+      "org.playframework" %%% "play-json" % "3.0.2"
     )
   )
   .dependsOn(core % "compile->compile;test->test")
