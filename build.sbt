@@ -79,8 +79,8 @@ lazy val jsoniter = (crossProject(JSPlatform, JVMPlatform) in file("modules/neot
     name := "neotype-jsoniter",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core"   % "2.28.2",
-      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-macros" % "2.28.2"
+      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core"   % "2.28.4",
+      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-macros" % "2.28.4"
     )
   )
   .dependsOn(core % "compile->compile;test->test")
