@@ -91,7 +91,7 @@ abstract class Newtype[A] extends TypeWrapper[A]:
     * If the validation fails, it will return a `Left` with an error message. If
     * the validation succeeds, it will return a `Right` with the new instance.
     */
-  def make(input: A): Either[String, Type] =
+  final def make(input: A): Either[String, Type] =
     validate(input) match
       case true            => Right(input)
       case false           => Left("Validation Failed")
@@ -120,7 +120,7 @@ abstract class Subtype[A] extends TypeWrapper[A]:
     * If the validation fails, it will return a `Left` with an error message. If
     * the validation succeeds, it will return a `Right` with the new instance.
     */
-  def make(input: A): Either[String, Type] =
+  final def make(input: A): Either[String, Type] =
     validate(input) match
       case true            => Right(input)
       case false           => Left("Validation Failed")
