@@ -146,7 +146,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     libraryDependencies ++= Seq(
       "io.getquill"   %% "quill-jdbc-zio" % "4.8.1",
       "org.postgresql" % "postgresql"     % "42.5.6"  % Test,
-      "com.h2database" % "h2"             % "2.1.214" % Test
+      "com.h2database" % "h2"             % "2.2.224" % Test
     )
   )
   .dependsOn(core.jvm % "compile->compile;test->test")
