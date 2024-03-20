@@ -12,7 +12,6 @@ import neotype.test.definitions.*
 
 object JsoniterSpec extends ZIOSpecDefault:
 
-
   def spec = suite("Jsoniter Support")(
     test("parse success") {
       given JsonValueCodec[Composite] = JsonCodecMaker.make
@@ -36,7 +35,7 @@ object JsoniterSpec extends ZIOSpecDefault:
     },
     test("use codec maker configuration") {
       inline given codecMakerConfig: CodecMakerConfig = CodecMakerConfig.withIsStringified(true)
-      given JsonValueCodec[Composite] = JsonCodecMaker.make
+      given JsonValueCodec[Composite]                 = JsonCodecMaker.make
 
       val json =
         """{

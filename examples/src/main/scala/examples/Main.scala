@@ -57,6 +57,7 @@ object NewtypeExamples:
   FiveElements("Fire")
   NonEmptyString("Good")
   PositiveIntList(List(5, 10))
+  Pangram("The quick brown fox jumps over the lazy dog")
 
 // Uncomment out the following lines one at a time to see some fun compile errors.
 // Email("kitgmail.com")

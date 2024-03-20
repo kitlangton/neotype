@@ -6,23 +6,30 @@ import zio.config.magnolia.*
 import zio.Config
 import zio.Chunk
 
-import scala.util.NotGiven
-
-// Newtype
-given complexNt[A, B](using
+given validatedNewtype[A, B](using
     newtype: Newtype.WithType[A, B],
     config: DeriveConfig[A],
     ev: IsValidatedType[newtype.type]
 ): DeriveConfig[B] =
   config.mapOrFail(newtype.make(_).left.map(e => Config.Error.InvalidData(Chunk.empty, e)))
 
-given simpleNt[A, B](using
+given simpleNewtype[A, B](using
     newtype: Newtype.WithType[A, B],
     config: DeriveConfig[A],
     ev: IsSimpleType[newtype.type]
 ): DeriveConfig[B] =
   newtype.unsafeMakeF(config)
 
-// Subtype
-given [A, B <: A](using subtype: Subtype.WithType[A, B], config: DeriveConfig[A]): DeriveConfig[B] =
+given validatedSubtype[A, B <: A](using
+    subtype: Subtype.WithType[A, B],
+    config: DeriveConfig[A],
+    ev: IsValidatedType[subtype.type]
+): DeriveConfig[B] =
   config.mapOrFail(subtype.make(_).left.map(e => Config.Error.InvalidData(Chunk.empty, e)))
+
+given simpleSubtype[A, B <: A](using
+    subtype: Subtype.WithType[A, B],
+    config: DeriveConfig[A],
+    ev: IsSimpleType[subtype.type]
+): DeriveConfig[B] =
+  subtype.unsafeMakeF(config)

@@ -2,7 +2,6 @@ package neotype.circe
 
 import neotype.*
 import io.circe.*
-import io.circe.syntax.*
 
 // Newtype
 given [A, B](using newType: Newtype.WithType[A, B], decoder: Decoder[A]): Decoder[B] =
