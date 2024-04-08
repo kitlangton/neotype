@@ -14,7 +14,7 @@ inThisBuild(
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val tapirVersion = "1.9.11"
+val tapirVersion = "1.10.4"
 val zioVersion   = "2.0.21"
 
 val sharedSettings = Seq(
