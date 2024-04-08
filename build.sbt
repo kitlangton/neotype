@@ -122,9 +122,9 @@ lazy val zioSchema = (crossProject(JSPlatform, JVMPlatform) in file("modules/neo
     name := "neotype-zio-schema",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "dev.zio" %%% "zio-schema"      % "1.0.1",
+      "dev.zio" %%% "zio-schema"      % "1.1.0",
       "dev.zio" %%% "zio-json"        % "0.6.2" % Test,
-      "dev.zio" %%% "zio-schema-json" % "1.0.1" % Test
+      "dev.zio" %%% "zio-schema-json" % "1.1.0" % Test
     )
   )
   .dependsOn(core % "compile->compile;test->test")
