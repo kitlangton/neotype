@@ -68,8 +68,8 @@ lazy val circe = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
     name := "neotype-circe",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core"   % "0.14.6",
-      "io.circe" %%% "circe-parser" % "0.14.6"
+      "io.circe" %%% "circe-core"   % "0.14.7",
+      "io.circe" %%% "circe-parser" % "0.14.7"
     )
   )
   .dependsOn(core % "compile->compile;test->test")
