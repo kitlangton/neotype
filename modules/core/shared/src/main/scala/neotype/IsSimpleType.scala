@@ -1,7 +1,8 @@
 package neotype
 
+import scala.annotation.implicitNotFound
+import scala.annotation.tailrec
 import scala.quoted.*
-import scala.annotation.{implicitNotFound, tailrec}
 
 @implicitNotFound("${A} has a `validate` method")
 trait IsSimpleType[A]

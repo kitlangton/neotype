@@ -1,9 +1,16 @@
 package neotype
 
+import neotype.eval.Eval
+import neotype.eval.EvalError
+import neotype.eval.Seal
+import neotype.eval.Uninlined
+import neotype.eval.Unseal
+
 import scala.quoted.*
-import scala.util.{Failure, Success}
+import scala.util.Failure
+import scala.util.Success
+
 import StringFormatting.*
-import neotype.eval.{Unseal, Eval, Seal, Uninlined, EvalError}
 
 private[neotype] object Macros:
 

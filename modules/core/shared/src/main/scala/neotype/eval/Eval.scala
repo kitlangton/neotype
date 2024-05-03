@@ -1,11 +1,11 @@
 package neotype.eval
 
-import BinOpMatch.*
-
 import neotype.StringFormatting.*
 
 import scala.quoted.*
 import scala.util.matching.Regex
+
+import BinOpMatch.*
 import CustomFromExpr.given
 // import neotype.eval.Eval.closureToFunction
 
@@ -222,10 +222,10 @@ object Eval:
       case c: Char   => s"'$c'".green
       case set: Set[?] =>
         val elems = set.map(renderValue).mkString(", ".reset)
-        s"Set(".reset + elems + ")".reset
+        "Set(".reset + elems + ")".reset
       case list: List[?] =>
         val elems = list.map(renderValue).mkString(", ".reset)
-        s"List(".reset + elems + ")".reset
+        "List(".reset + elems + ")".reset
       case regex: Regex =>
         s"""${renderValue(regex.toString)}.r"""
       case long: Long => s"${long}L".cyan

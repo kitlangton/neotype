@@ -1,8 +1,9 @@
 package neotype.zioquill
 
 import io.getquill.*
+import neotype.Newtype
+import neotype.Subtype
 import neotype.test.definitions.*
-import neotype.{Newtype, Subtype}
 import zio.test.*
 
 object Queries:

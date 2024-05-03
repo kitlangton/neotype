@@ -1,21 +1,25 @@
 package neotype.zioschema
 
-import neotype.{Newtype, Subtype}
+import neotype.Newtype
+import neotype.Subtype
+import neotype.test.definitions.*
 import zio.*
+import zio.json.*
+import zio.json.DeriveJsonEncoder
+import zio.json.JsonEncoder
+import zio.schema.DeriveSchema
+import zio.schema.Schema
+import zio.schema.codec.DecodeError
 import zio.schema.codec.DecodeError.ReadError
+import zio.schema.codec.JsonCodec
 import zio.schema.codec.JsonCodec.JsonDecoder
 import zio.schema.codec.JsonCodec.JsonEncoder.charSequenceToByteChunk
-import zio.schema.codec.{DecodeError, JsonCodec}
-import zio.schema.{DeriveSchema, Schema}
 import zio.stream.ZStream
 import zio.test.*
 import zio.test.Assertion.*
-import zio.json.{DeriveJsonEncoder, JsonEncoder}
-import zio.json.*
 
 import java.nio.CharBuffer
 import java.nio.charset.StandardCharsets
-import neotype.test.definitions.*
 
 object ZioSchemaSpec extends ZIOSpecDefault:
 

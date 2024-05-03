@@ -1,6 +1,7 @@
 package neotype
 
 import scala.quoted.*
+
 import StringFormatting.*
 
 private[neotype] object ErrorMessages:

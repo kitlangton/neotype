@@ -1,12 +1,12 @@
 package neotype.tapir
 
 import neotype.*
-import sttp.tapir.Schema
-import sttp.tapir.Validator
-import sttp.tapir.ValidationResult
 import sttp.tapir.Codec
-import sttp.tapir.DecodeResult
 import sttp.tapir.CodecFormat
+import sttp.tapir.DecodeResult
+import sttp.tapir.Schema
+import sttp.tapir.ValidationResult
+import sttp.tapir.Validator
 import sttp.tapir.json.pickler.*
 
 // Newtype

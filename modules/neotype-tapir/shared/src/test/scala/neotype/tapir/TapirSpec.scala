@@ -1,15 +1,15 @@
 package neotype.tapir
 
-import zio.test.*
 import neotype.Newtype
 import neotype.Subtype
-import sttp.tapir.Schema
+import neotype.test.definitions.*
 import sttp.tapir.Codec
 import sttp.tapir.DecodeResult
 import sttp.tapir.DecodeResult.Error.JsonDecodeException
+import sttp.tapir.Schema
 import sttp.tapir.json.pickler.Pickler
+import zio.test.*
 import zio.test.Assertion.*
-import neotype.test.definitions.*
 
 object TapirSpec extends ZIOSpecDefault:
 

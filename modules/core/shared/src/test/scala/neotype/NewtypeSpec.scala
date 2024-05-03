@@ -1,10 +1,10 @@
 package neotype
 
-import scala.quoted.*
 import zio.test.*
 
 import scala.compiletime.summonInline
 import scala.compiletime.testing.*
+import scala.quoted.*
 
 object NewtypeSpec extends ZIOSpecDefault:
   val spec = suiteAll("NewtypeSpec") {

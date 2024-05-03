@@ -1,10 +1,11 @@
 package neotype.circe
 
-import neotype.{Newtype, Subtype}
-import zio.test.*
 import io.circe.*
 import io.circe.parser.*
+import neotype.Newtype
+import neotype.Subtype
 import neotype.test.definitions.*
+import zio.test.*
 
 object CirceJsonSpec extends ZIOSpecDefault:
   def spec = suite("CirceJsonSpec")(

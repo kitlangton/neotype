@@ -1,7 +1,7 @@
 package neotype.ziotest
 
-import neotype.*
 import _root_.zio.test.*
+import neotype.*
 import zio.test.magnolia.DeriveGen
 
 // Newtype.Simple

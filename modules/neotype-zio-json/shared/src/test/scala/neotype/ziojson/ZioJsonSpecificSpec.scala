@@ -1,8 +1,8 @@
 package neotype.ziojson
 
-import zio.test.*
-import zio.json.*
 import neotype.*
+import zio.json.*
+import zio.test.*
 
 type Sandwich = Sandwich.Type
 object Sandwich extends Newtype[String]:

@@ -1,11 +1,11 @@
 package neotype.zioconfig
 
 import neotype.*
-import zio.test.*
+import neotype.test.definitions.*
+import zio.ConfigProvider
 import zio.config.*
 import zio.config.magnolia.*
-import zio.ConfigProvider
-import neotype.test.definitions.*
+import zio.test.*
 
 object ZioConfigSpec extends ZIOSpecDefault:
   def spec = suite("zio-config")(

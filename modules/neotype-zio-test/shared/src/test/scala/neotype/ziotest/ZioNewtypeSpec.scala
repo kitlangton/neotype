@@ -1,10 +1,11 @@
 package neotype.ziotest
 
-import neotype.{Newtype, Subtype}
-import zio.test.*
-import zio.*
-import zio.test.magnolia.DeriveGen
+import neotype.Newtype
+import neotype.Subtype
 import neotype.test.definitions.*
+import zio.*
+import zio.test.*
+import zio.test.magnolia.DeriveGen
 
 object ZioSpec extends ZIOSpecDefault:
 

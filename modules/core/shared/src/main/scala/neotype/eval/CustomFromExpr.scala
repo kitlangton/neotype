@@ -1,7 +1,7 @@
 package neotype.eval
 
-import scala.quoted.*
 import scala.annotation.nowarn
+import scala.quoted.*
 
 object CustomFromExpr:
   given fromExprSet[A]: FromExpr[Set[A]] with

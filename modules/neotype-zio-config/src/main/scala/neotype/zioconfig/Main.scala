@@ -1,10 +1,10 @@
 package neotype.zioconfig
 
 import neotype.*
+import zio.Chunk
+import zio.Config
 import zio.config.*
 import zio.config.magnolia.*
-import zio.Config
-import zio.Chunk
 
 given validatedNewtype[A, B](using
     newtype: Newtype.WithType[A, B],

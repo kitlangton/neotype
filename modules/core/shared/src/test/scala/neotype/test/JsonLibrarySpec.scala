@@ -1,7 +1,7 @@
 package neotype.test
 
-import zio.test.*
 import neotype.test.definitions.*
+import zio.test.*
 
 trait JsonLibrary[Codec[_]]:
   def decode[A](json: String)(using codec: Codec[A]): Either[String, A]

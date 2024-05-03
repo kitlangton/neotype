@@ -1,8 +1,8 @@
 package neotype.zioquill
 
-import neotype.*
 import io.getquill
 import io.getquill.MappedEncoding
+import neotype.*
 
 // Newtype
 inline given [A, B](using newType: Newtype.WithType[A, B]): MappedEncoding[A, B] =

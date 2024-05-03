@@ -1,14 +1,16 @@
 package neotype.jsoniter
 
+import com.github.plokhotnyuk.jsoniter_scala.core.JsonValueCodec
+import com.github.plokhotnyuk.jsoniter_scala.core.readFromString
+import com.github.plokhotnyuk.jsoniter_scala.macros.CodecMakerConfig
+import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import neotype.*
-import zio.test.*
-import zio.*
-import com.github.plokhotnyuk.jsoniter_scala.core.{JsonValueCodec, readFromString}
-import com.github.plokhotnyuk.jsoniter_scala.macros.{CodecMakerConfig, JsonCodecMaker}
 import neotype.jsoniter.given
+import neotype.test.definitions.*
+import zio.*
+import zio.test.*
 
 import scala.util.Try
-import neotype.test.definitions.*
 
 object JsoniterSpec extends ZIOSpecDefault:
 
