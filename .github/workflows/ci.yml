@@ -15,7 +15,7 @@ on:
     tags: [v*]
 
 env:
-  JAVA_OPTS: '-Xmx2g'
+  JAVA_OPTS: '-Xmx4g'
 
 jobs:
   build:
@@ -24,21 +24,13 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         scala: [3.3.3]
-        java: [temurin@8, temurin@17]
+        java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Java (temurin@8)
-        if: matrix.java == 'temurin@8'
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 8
-          cache: sbt
 
       - name: Setup Java (temurin@17)
         if: matrix.java == 'temurin@17'
@@ -71,21 +63,13 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         scala: [3.3.3]
-        java: [temurin@8]
+        java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Java (temurin@8)
-        if: matrix.java == 'temurin@8'
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 8
-          cache: sbt
 
       - name: Setup Java (temurin@17)
         if: matrix.java == 'temurin@17'
