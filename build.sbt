@@ -8,21 +8,55 @@ inThisBuild(
     licenses       := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
     developers := List(
       Developer("kitlangton", "Kit Langton", "kit.langton@gmail.com", url("https://github.com/kitlangton"))
-    )
+    ),
+    semanticdbEnabled := true,
+    semanticdbVersion := scalafixSemanticdb.revision
   )
 )
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val tapirVersion = "1.10.6"
-val zioVersion   = "2.0.21"
+////////////////////////
+// sbt-github-actions //
+////////////////////////
+ThisBuild / githubWorkflowJavaVersions += JavaSpec.temurin("17")
+
+ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
+ThisBuild / githubWorkflowPublishTargetBranches :=
+  Seq(
+    RefPredicate.StartsWith(Ref.Tag("v")),
+    RefPredicate.Equals(Ref.Branch("main"))
+  )
+
+ThisBuild / githubWorkflowPublish := Seq(
+  WorkflowStep.Sbt(
+    commands = List("ci-release"),
+    name = Some("Publish project"),
+    env = Map(
+      "PGP_PASSPHRASE"    -> "${{ secrets.PGP_PASSPHRASE }}",
+      "PGP_SECRET"        -> "${{ secrets.PGP_SECRET }}",
+      "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
+      "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
+    )
+  )
+)
+
+/////////////////////////
+// Project Definitions //
+/////////////////////////
+
+lazy val jsoniterVersion  = "2.28.5"
+lazy val circeVersion     = "0.14.7"
+lazy val tapirVersion     = "1.10.6"
+lazy val zioVersion       = "2.0.22"
+lazy val zioConfigVersion = "4.0.2"
+lazy val zioSchemaVersion = "1.1.1"
+lazy val zioJsonVersion   = "0.6.2"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
     "-deprecation",
-//    "-explain",
     "-Xcheck-macros",
-    //    "-Ycheck:all",
     "-Wunused:all"
   ),
   libraryDependencies ++= Seq(
@@ -68,8 +102,8 @@ lazy val circe = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
     name := "neotype-circe",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core"   % "0.14.7",
-      "io.circe" %%% "circe-parser" % "0.14.7"
+      "io.circe" %%% "circe-core"   % circeVersion,
+      "io.circe" %%% "circe-parser" % circeVersion
     )
   )
   .dependsOn(core % "compile->compile;test->test")
@@ -79,8 +113,8 @@ lazy val jsoniter = (crossProject(JSPlatform, JVMPlatform) in file("modules/neot
     name := "neotype-jsoniter",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core"   % "2.28.4",
-      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-macros" % "2.28.4"
+      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core"   % jsoniterVersion,
+      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-macros" % jsoniterVersion
     )
   )
   .dependsOn(core % "compile->compile;test->test")
@@ -90,7 +124,7 @@ lazy val playJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neot
     name := "neotype-play-json",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "org.playframework" %%% "play-json" % "3.0.2"
+      "org.playframework" %%% "play-json" % "3.0.3"
     )
   )
   .dependsOn(core % "compile->compile;test->test")
@@ -111,8 +145,8 @@ lazy val zioConfig = (project in file("modules/neotype-zio-config"))
     name := "neotype-zio-config",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "dev.zio" %% "zio-config"          % "4.0.1",
-      "dev.zio" %% "zio-config-magnolia" % "4.0.1"
+      "dev.zio" %% "zio-config"          % zioConfigVersion,
+      "dev.zio" %% "zio-config-magnolia" % zioConfigVersion
     )
   )
   .dependsOn(core.jvm % "compile->compile;test->test")
@@ -122,9 +156,8 @@ lazy val zioSchema = (crossProject(JSPlatform, JVMPlatform) in file("modules/neo
     name := "neotype-zio-schema",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "dev.zio" %%% "zio-schema"      % "1.1.1",
-      "dev.zio" %%% "zio-json"        % "0.6.2" % Test,
-      "dev.zio" %%% "zio-schema-json" % "1.1.1" % Test
+      "dev.zio" %%% "zio-schema"      % zioSchemaVersion,
+      "dev.zio" %%% "zio-schema-json" % zioSchemaVersion % Test
     )
   )
   .dependsOn(core % "compile->compile;test->test")
@@ -134,7 +167,7 @@ lazy val zioJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neoty
     name := "neotype-zio-json",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "dev.zio" %%% "zio-json" % "0.6.2"
+      "dev.zio" %%% "zio-json" % zioJsonVersion
     )
   )
   .dependsOn(core % "compile->compile;test->test")
@@ -144,9 +177,9 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     name := "neotype-zio-quill",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "io.getquill"   %% "quill-jdbc-zio" % "4.8.1",
-      "org.postgresql" % "postgresql"     % "42.5.6"  % Test,
-      "com.h2database" % "h2"             % "2.1.214" % Test
+      "io.getquill"   %% "quill-jdbc-zio" % "4.8.3",
+      "org.postgresql" % "postgresql"     % "42.7.3"  % Test,
+      "com.h2database" % "h2"             % "2.2.224" % Test
     )
   )
   .dependsOn(core.jvm % "compile->compile;test->test")
@@ -170,4 +203,33 @@ lazy val examples = (project in file("examples"))
   )
   .dependsOn(core.jvm, zioJson.jvm, zioQuill)
 
-addCommandAlias("fmt", "scalafmtAll")
+addCommandAlias("prepare", "scalafixAll;scalafmtAll")
+
+welcomeMessage
+
+def welcomeMessage =
+  onLoadMessage := {
+    import scala.Console
+
+    def header(text: String): String = s"${Console.RED}$text${Console.RESET}"
+    def item(text: String): String   = s"${Console.GREEN}> ${Console.CYAN}$text${Console.RESET}"
+
+    s"""|${header("_   _ _____ _____ _______   _______ _____ ")}
+        |${header("| \\ | |  ___|  _  |_   _\\ \\ / | ___ |  ___|")}
+        |${header("|  \\| | |__ | | | | | |  \\ V /| |_/ | |__ ")}
+        |${header("| . ` |  __|| | | | | |   \\ / |  __/|  __|")}
+        |${header("| |\\  | |___\\ \\_/ / | |   | | | |   | |___")}
+        |${header("\\_| \\_\\____/ \\___/  \\_/   \\_/ \\_|   \\____/")}
+        |${header("——————————————————————————————————————————")}
+        |${header("———————— NEWTYPES + REFINED TYPES ————————")}
+        |${header("——————————————————————————————————————————")}
+
+        |Useful sbt tasks:
+
+        |${item("prepare")} - Runs scalafix and scalafmt on all files
+        |${item("~compile")} - Compiles all modules (file-watch enabled)
+        |${item("test")} - Runs all tests
+
+    """.stripMargin
+
+  }

@@ -7,7 +7,7 @@ import play.api.libs.json.*
 // Validated Newtype //
 ///////////////////////
 
-implicit def newtypeReads[A, B](implicit
+given newtypeReads[A, B](using
     newtype: Newtype.WithType[A, B],
     reads: Reads[A],
     isValidatedType: IsValidatedType[newtype.type]
@@ -18,13 +18,13 @@ implicit def newtypeReads[A, B](implicit
       case Left(err) => JsError(err)
   }
 
-implicit def newtypeWrites[A, B](implicit
+given newtypeWrites[A, B](using
     newtype: Newtype.WithType[A, B],
     writes: Writes[A]
 ): Writes[B] =
   newtype.unsafeMakeF(writes)
 
-implicit def newtypeFormat[A, B](implicit
+given newtypeFormat[A, B](using
     newtype: Newtype.WithType[A, B],
     format: Format[A],
     isValidatedType: IsValidatedType[newtype.type]
@@ -44,14 +44,14 @@ implicit def newtypeFormat[A, B](implicit
 // Simple Newtype //
 ////////////////////
 
-implicit def simpleNewtypeReads[A, B](implicit
+given simpleNewtypeReads[A, B](using
     newtype: Newtype.WithType[A, B],
     reads: Reads[A],
     isSimpleType: IsSimpleType[newtype.type]
 ): Reads[B] =
   newtype.unsafeMakeF(reads)
 
-implicit def simpleNewtypeFormat[A, B](implicit
+given simpleNewtypeFormat[A, B](using
     newtype: Newtype.WithType[A, B],
     format: Format[A],
     isSimpleType: IsSimpleType[newtype.type]
@@ -62,7 +62,7 @@ implicit def simpleNewtypeFormat[A, B](implicit
 // Validated Subtype //
 ///////////////////////
 
-implicit def subtypeReads[A, B <: A](implicit
+given subtypeReads[A, B <: A](using
     subtype: Subtype.WithType[A, B],
     reads: Reads[A],
     isValidatedType: IsValidatedType[subtype.type]
@@ -73,13 +73,13 @@ implicit def subtypeReads[A, B <: A](implicit
       case Left(err) => JsError(err)
   }
 
-implicit def subtypeWrites[A, B <: A](implicit
+given subtypeWrites[A, B <: A](using
     subtype: Subtype.WithType[A, B],
     writes: Writes[A]
 ): Writes[B] =
   subtype.unsafeMakeF(writes)
 
-implicit def subtypeFormat[A, B <: A](implicit
+given subtypeFormat[A, B <: A](using
     subtype: Subtype.WithType[A, B],
     format: Format[A],
     isValidatedType: IsValidatedType[subtype.type]
@@ -99,14 +99,14 @@ implicit def subtypeFormat[A, B <: A](implicit
 // Simple Subtype //
 ///////////////////
 
-implicit def simpleSubtypeReads[A, B <: A](implicit
+given simpleSubtypeReads[A, B <: A](using
     subtype: Subtype.WithType[A, B],
     reads: Reads[A],
     isSimpleType: IsSimpleType[subtype.type]
 ): Reads[B] =
   subtype.unsafeMakeF(reads)
 
-implicit def simpleSubtypeFormat[A, B <: A](implicit
+given simpleSubtypeFormat[A, B <: A](using
     subtype: Subtype.WithType[A, B],
     format: Format[A],
     isSimpleType: IsSimpleType[subtype.type]

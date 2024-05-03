@@ -1,7 +1,7 @@
 package neotype
 
 import scala.quoted.*
-import scala.annotation.implicitNotFound
+import scala.annotation.{implicitNotFound, tailrec}
 
 @implicitNotFound("${A} has a `validate` method")
 trait IsSimpleType[A]
@@ -16,20 +16,9 @@ object IsSimpleType:
   ): Expr[IsSimpleType[A]] =
     import quotes.reflect.*
 
-    def getNt(t: TypeRepr): TypeRepr = t.widenTermRefByName match
-      case Refinement(t, _, _) => t
-      case AndType(t1, t2)     => getNt(t2)
-      case t                   => t
-
-    lazy val nt = getNt(TypeRepr.of[A])
-
-    val hasDefinedValidateMethod = nt.typeSymbol.declaredMethods.exists(_.name == "validate")
-
-    if hasDefinedValidateMethod then report.errorAndAbort(s"Newtype ${nt.show} is not a simple type")
-    else
-      '{
-        new IsSimpleType[A] {}
-      }
+    val (name, isValidated) = hasValidateMethod[A]
+    if isValidated then report.errorAndAbort(s"Newtype $name is not a simple type")
+    else '{ new IsSimpleType[A] {} }
 
 @implicitNotFound("${A} does not have a `validate` method")
 trait IsValidatedType[A]
@@ -44,17 +33,22 @@ object IsValidatedType:
   ): Expr[IsValidatedType[A]] =
     import quotes.reflect.*
 
-    def getNt(t: TypeRepr): TypeRepr = t.widenTermRefByName match
-      case Refinement(t, _, _) => t
-      case AndType(t1, t2)     => getNt(t2)
-      case t                   => t
+    val (name, isValidated) = hasValidateMethod[A]
+    if !isValidated then report.errorAndAbort(s"Newtype $name is not a validated type")
+    else '{ new IsValidatedType[A] {} }
 
-    lazy val nt = getNt(TypeRepr.of[A])
+///////////////////
+// Helper Method //
+///////////////////
 
-    val hasDefinedValidateMethod = nt.typeSymbol.declaredMethods.exists(_.name == "validate")
+private def hasValidateMethod[A: Type](using Quotes): (String, Boolean) =
+  import quotes.reflect.*
 
-    if !hasDefinedValidateMethod then report.errorAndAbort(s"Newtype $nt is not a validated type")
-    else
-      '{
-        new IsValidatedType[A] {}
-      }
+  @tailrec
+  def getNewtype(t: TypeRepr): TypeRepr = t.widenTermRefByName match
+    case Refinement(t, _, _) => t
+    case AndType(_, t2)      => getNewtype(t2)
+    case t                   => t
+
+  lazy val nt = getNewtype(TypeRepr.of[A])
+  (nt.show, nt.typeSymbol.declaredMethods.exists(_.name == "validate"))

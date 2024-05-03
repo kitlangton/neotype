@@ -3,6 +3,8 @@ package neotype.ziojson
 import neotype.*
 import zio.json.*
 
+import scala.util.NotGiven
+
 ///////////////////////
 // Validated Newtype //
 ///////////////////////
@@ -16,7 +18,8 @@ given [A, B](using
 
 given [A, B](using
     newtype: Newtype.WithType[A, B],
-    encoder: JsonEncoder[A]
+    encoder: JsonEncoder[A],
+    notGivenEncoder: NotGiven[JsonEncoder[B]]
 ): JsonEncoder[B] =
   newtype.unsafeMakeF(encoder)
 
