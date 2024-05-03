@@ -19,6 +19,9 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 ////////////////////////
 // sbt-github-actions //
 ////////////////////////
+ThisBuild / githubWorkflowJavaVersions += JavaSpec.temurin("17")
+
+ThisBuild / githubWorkflowEnv := Map("JAVA_OPTS" -> "-Xmx2g")
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches :=
   Seq(
