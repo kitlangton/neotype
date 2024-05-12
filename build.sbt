@@ -48,8 +48,8 @@ ThisBuild / githubWorkflowPublish := Seq(
 
 lazy val jsoniterVersion  = "2.28.5"
 lazy val circeVersion     = "0.14.7"
-lazy val tapirVersion     = "1.10.6"
-lazy val zioVersion       = "2.0.22"
+lazy val tapirVersion     = "1.10.7"
+lazy val zioVersion       = "2.1.1"
 lazy val zioConfigVersion = "4.0.2"
 lazy val zioSchemaVersion = "1.1.1"
 lazy val zioJsonVersion   = "0.6.2"
@@ -178,7 +178,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     name := "neotype-zio-quill",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "io.getquill"   %% "quill-jdbc-zio" % "4.8.3",
+      "io.getquill"   %% "quill-jdbc-zio" % "4.8.4",
       "org.postgresql" % "postgresql"     % "42.7.3"  % Test,
       "com.h2database" % "h2"             % "2.2.224" % Test
     )
@@ -215,7 +215,7 @@ def welcomeMessage =
     def header(text: String): String = s"${Console.RED}$text${Console.RESET}"
     def item(text: String): String   = s"${Console.GREEN}> ${Console.CYAN}$text${Console.RESET}"
 
-    s"""|${header("_   _ _____ _____ _______   _______ _____ ")}
+    s"""|${header(" _   _ _____ _____ _______   _______ _____ ")}
         |${header("| \\ | |  ___|  _  |_   _\\ \\ / | ___ |  ___|")}
         |${header("|  \\| | |__ | | | | | |  \\ V /| |_/ | |__ ")}
         |${header("| . ` |  __|| | | | | |   \\ / |  __/|  __|")}
