@@ -93,7 +93,7 @@ lazy val root = (project in file("."))
     zioTest.js,
     zioTest.jvm,
     chimney.js,
-    chimney.jvm
+    chimney.jvm,
     caliban.jvm
   )
 
@@ -205,9 +205,10 @@ lazy val chimney = (crossProject(JSPlatform, JVMPlatform) in file("modules/neoty
   .settings(
     name := "neotype-chimney",
     sharedSettings,
-    libraryDependencies ++= Seq(
-      "io.scalaland" %%% "chimney" % chimneyVersion
-      
+    libraryDependencies ++= Seq("io.scalaland" %%% "chimney" % chimneyVersion)
+  )
+  .dependsOn(core % "compile->compile;test->test")
+
 lazy val caliban = (crossProject(JVMPlatform) in file("modules/neotype-caliban"))
   .settings(
     name := "neotype-caliban",

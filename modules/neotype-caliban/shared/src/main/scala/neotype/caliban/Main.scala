@@ -1,8 +1,8 @@
 package neotype.caliban
 
+import _root_.caliban.CalibanError.ExecutionError
 import caliban.schema.*
 import neotype.*
-import _root_.caliban.CalibanError.ExecutionError
 
 // Newtype
 given [R, A, B](using newType: Newtype.WithType[A, B], schema: Schema[R, A]): Schema[R, B] =

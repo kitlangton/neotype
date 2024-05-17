@@ -1,11 +1,12 @@
 package neotype.caliban
 
-import scala.compiletime.*
-
+import caliban.Value.IntValue
+import caliban.Value.StringValue
 import caliban.schema.*
-import caliban.Value.{IntValue, StringValue}
 import neotype.test.definitions.*
 import zio.test.*
+
+import scala.compiletime.summonInline
 
 object CalibanSpec extends ZIOSpecDefault:
   def spec = suite("CirceJsonSpec")(
