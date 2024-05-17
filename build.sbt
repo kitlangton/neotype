@@ -53,6 +53,7 @@ lazy val zioVersion       = "2.1.1"
 lazy val zioConfigVersion = "4.0.2"
 lazy val zioSchemaVersion = "1.1.1"
 lazy val zioJsonVersion   = "0.6.2"
+lazy val chimneyVersion   = "0.8.5"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
@@ -89,7 +90,9 @@ lazy val root = (project in file("."))
     zioSchema.js,
     zioSchema.jvm,
     zioTest.js,
-    zioTest.jvm
+    zioTest.jvm,
+    chimney.js,
+    chimney.jvm
   )
 
 lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
@@ -192,6 +195,16 @@ lazy val zioTest = (crossProject(JSPlatform, JVMPlatform) in file("modules/neoty
     libraryDependencies ++= Seq(
       "dev.zio" %%% "zio-test"          % zioVersion,
       "dev.zio" %%% "zio-test-magnolia" % zioVersion
+    )
+  )
+  .dependsOn(core % "compile->compile;test->test")
+
+lazy val chimney = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-chimney"))
+  .settings(
+    name := "neotype-chimney",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "io.scalaland" %%% "chimney" % chimneyVersion
     )
   )
   .dependsOn(core % "compile->compile;test->test")
