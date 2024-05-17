@@ -73,6 +73,7 @@ Neotype integrates with the following libraries.
 - quill
 - circe
 - jsoniter
+- chimney
 - caliban
 
 ### ZIO Json Example
