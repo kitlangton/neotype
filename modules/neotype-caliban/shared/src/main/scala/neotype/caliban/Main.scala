@@ -12,7 +12,6 @@ given [A, B](using newType: Newtype.WithType[A, B], argBuilder: ArgBuilder[A]): 
   argBuilder.flatMap(newType.make(_).left.map(ExecutionError(_)))
 
 // Subtype
-
 given [R, A, B <: A](using subType: Subtype.WithType[A, B], schema: Schema[R, A]): Schema[R, B] =
   schema.contramap(identity)
 
