@@ -54,6 +54,7 @@ lazy val zioConfigVersion = "4.0.2"
 lazy val zioSchemaVersion = "1.1.1"
 lazy val zioJsonVersion   = "0.6.2"
 lazy val chimneyVersion   = "0.8.5"
+lazy val calibanVersion   = "2.6.0"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
@@ -93,6 +94,7 @@ lazy val root = (project in file("."))
     zioTest.jvm,
     chimney.js,
     chimney.jvm
+    caliban.jvm
   )
 
 lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
@@ -205,6 +207,13 @@ lazy val chimney = (crossProject(JSPlatform, JVMPlatform) in file("modules/neoty
     sharedSettings,
     libraryDependencies ++= Seq(
       "io.scalaland" %%% "chimney" % chimneyVersion
+      
+lazy val caliban = (crossProject(JVMPlatform) in file("modules/neotype-caliban"))
+  .settings(
+    name := "neotype-caliban",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "com.github.ghostdogpr" %% "caliban" % calibanVersion
     )
   )
   .dependsOn(core % "compile->compile;test->test")
