@@ -53,7 +53,7 @@ lazy val zioVersion       = "2.1.1"
 lazy val zioConfigVersion = "4.0.2"
 lazy val zioSchemaVersion = "1.1.1"
 lazy val zioJsonVersion   = "0.6.2"
-lazy val chimneyVersion   = "0.8.5"
+lazy val chimneyVersion   = "1.0.0"
 lazy val calibanVersion   = "2.6.0"
 
 val sharedSettings = Seq(
