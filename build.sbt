@@ -183,7 +183,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     name := "neotype-zio-quill",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "io.getquill"   %% "quill-jdbc-zio" % "4.8.4",
+      "io.getquill"   %% "quill-jdbc-zio" % "4.8.5",
       "org.postgresql" % "postgresql"     % "42.7.3"  % Test,
       "com.h2database" % "h2"             % "2.2.224" % Test
     )
