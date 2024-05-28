@@ -9,6 +9,7 @@ import neotype.eval.Unseal
 import scala.quoted.*
 import scala.util.Failure
 import scala.util.Success
+import scala.util.Try
 
 import StringFormatting.*
 
@@ -162,10 +163,27 @@ private[neotype] object TestMacros:
       case '[Option[a]] =>
         given ToExpr[a] = toExprType[a]
         summon[ToExpr[Option[a]]].asInstanceOf[ToExpr[A]]
+      case '[Either[e, a]] =>
+        given ToExpr[e] = toExprType[e]
+        given ToExpr[a] = toExprType[a]
+        summon[ToExpr[Either[e, a]]].asInstanceOf[ToExpr[A]]
       case '[Map[k, v]] =>
         given ToExpr[k] = toExprType[k]
         given ToExpr[v] = toExprType[v]
         summon[ToExpr[Map[k, v]]].asInstanceOf[ToExpr[A]]
+      case '[(a, b)] =>
+        given ToExpr[a] = toExprType[a]
+        given ToExpr[b] = toExprType[b]
+        summon[ToExpr[(a, b)]].asInstanceOf[ToExpr[A]]
+      case '[Iterator[a]] =>
+        given ToExpr[a] = toExprType[a]
+        summon[ToExpr[Iterator[a]]].asInstanceOf[ToExpr[A]]
+      case '[Iterable[a]] =>
+        given ToExpr[a] = toExprType[a]
+        summon[ToExpr[Iterable[a]]].asInstanceOf[ToExpr[A]]
+      case '[scala.util.Try[a]] =>
+        given ToExpr[a] = toExprType[a]
+        summon[ToExpr[scala.util.Try[a]]].asInstanceOf[ToExpr[A]]
       case _ =>
         val typeRepr = TypeRepr.of[A]
         typeRepr match
@@ -192,6 +210,24 @@ private[neotype] object TestMacros:
           }.toList)
         }*)
       }
+
+  given IterableToExpr[T: Type: ToExpr]: ToExpr[Iterable[T]] with
+    def apply(xs: Iterable[T])(using Quotes): Expr[Iterable[T]] =
+      '{ Iterable(${ Varargs(xs.map(summon[ToExpr[T]].apply).toSeq) }*) }
+
+  given IteratorToExpr[T: Type: ToExpr]: ToExpr[Iterator[T]] with
+    def apply(xs: Iterator[T])(using Quotes): Expr[Iterator[T]] =
+      '{ Iterator(${ Varargs(xs.map(summon[ToExpr[T]].apply).toSeq) }*) }
+
+  given TryToExpr[A: Type: ToExpr]: ToExpr[Try[A]] with
+    def apply(t: Try[A])(using Quotes): Expr[Try[A]] =
+      t match
+        case Success(a) => '{ scala.util.Success(${ summon[ToExpr[A]].apply(a) }) }
+        case Failure(e) => '{ scala.util.Failure(${ summon[ToExpr[Throwable]].apply(e) }) }
+
+  given ThrowableToExpr: ToExpr[Throwable] with
+    def apply(e: Throwable)(using Quotes): Expr[Throwable] =
+      '{ new Throwable(${ Expr(e.getMessage()) }) }
 
   def OrTypeToExpr[A: Type: ToExpr, B: Type: ToExpr]: ToExpr[A | B] = new:
     def apply(aOrB: A | B)(using Quotes): Expr[A | B] =

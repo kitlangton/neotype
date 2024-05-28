@@ -283,6 +283,15 @@ object Eval:
       case '{ type a; ${ CustomFromExpr.fromExprVector(vector) }: Vector[`a`] } => Some(Eval.Value(vector))
       case '{ type a; ${ CustomFromExpr.fromExprOption(option) }: Option[`a`] } => Some(Eval.Value(option))
 
+      // TODO: Fix other constructors in a similar manner
+      case '{ type e; type a; Right[`e`, `a`](${ Eval(expr) }): Either[`e`, `a`] } =>
+        Some(Eval.Apply0(expr, Right(_), nullary("Right")))
+      case '{ type e; type a; Left[`e`, `a`](${ Eval(expr) }): Either[`e`, `a`] } =>
+        Some(Eval.Apply0(expr, Left(_), nullary("Left")))
+
+      case '{ type a; scala.util.Try[`a`](${ Eval(expr) }): scala.util.Try[`a`] } =>
+        Some(Eval.Apply0(expr, scala.util.Try(_), nullary("Try")))
+
       // CONSTRUCTORS
       case '{ type a; List(${ Eval(elem) }) } =>
         Some(Eval.EvalConstruct(args => List(args*), List(elem)))
@@ -658,33 +667,148 @@ object Eval:
       case '{ type a; (${ Eval(list) }: Iterable[`a`]).inits } =>
         Some(Eval.Apply0(list, _.inits, nullary("inits")))
       //  iterable.knownSize
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).knownSize } =>
+        Some(Eval.Apply0(list, _.knownSize, nullary("knownSize")))
       //  iterable.isEmpty
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).isEmpty } =>
+        Some(Eval.Apply0(list, _.isEmpty, nullary("isEmpty")))
       //  iterable.last
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).last } =>
+        Some(Eval.Apply0(list, _.last, nullary("last")))
       //  iterable.lastOption
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).lastOption } =>
+        Some(Eval.Apply0(list, _.lastOption, nullary("lastOption")))
       //  iterable.map(a => a)
+      case '{ type a; type b; (${ Eval(list) }: Iterable[`a`]).map(${ Eval(f) }: `a` => `b`) } =>
+        Some(Eval.Apply1(list, f, _.map(_), call("map")))
       //  iterable.max
       case '{ type a; (${ Eval(list) }: Iterable[`a`]).max(using ${ MatchOrdering[`a`](ordering) }) } =>
         given Ordering[`a`] = ordering
         Some(Eval.Apply0(list, _.max, nullary("max")))
       //  iterable.maxOption
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).maxOption(using ${ MatchOrdering[`a`](ordering) }) } =>
+        given Ordering[`a`] = ordering
+        Some(Eval.Apply0(list, _.maxOption, nullary("maxOption")))
+
       //  iterable.maxBy(_ => 0)
+      case '{
+            type a; type b;
+            (${ Eval(list) }: Iterable[`a`]).maxBy(${ Eval(f) }: `a` => `b`)(using ${ MatchOrdering[`b`](ordering) })
+          } =>
+        given Ordering[`b`] = ordering
+        Some(Eval.Apply1(list, f, _.maxBy(_), call("maxBy")))
+
       //  iterable.maxByOption(_ => 0)
+      case '{
+            type a; type b;
+            (${ Eval(list) }: Iterable[`a`])
+              .maxByOption(${ Eval(f) }: `a` => `b`)(using ${ MatchOrdering[`b`](ordering) })
+          } =>
+        given Ordering[`b`] = ordering
+        Some(Eval.Apply1(list, f, _.maxByOption(_), call("maxByOption")))
+
       //  iterable.mkString
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).mkString } =>
+        Some(Eval.Apply0(list, _.mkString, nullary("mkString")))
+
       //  iterable.mkString(",")
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).mkString(${ Eval(sep) }: String) } =>
+        Some(Eval.Apply1(list, sep, _.mkString(_), call("mkString")))
+
       //  iterable.mkString("[", ",", "]")
+      case '{
+            type a;
+            (${ Eval(list) }: Iterable[`a`])
+              .mkString(${ Eval(start) }: String, ${ Eval(sep) }: String, ${ Eval(end) }: String)
+          } =>
+        Some(Eval.Apply3(list, start, sep, end, _.mkString(_, _, _), call3("mkString")))
+
       //  iterable.min
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).min(using ${ MatchOrdering[`a`](ordering) }) } =>
+        given Ordering[`a`] = ordering
+        Some(Eval.Apply0(list, _.min, nullary("min")))
+
       //  iterable.minOption
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).minOption(using ${ MatchOrdering[`a`](ordering) }) } =>
+        given Ordering[`a`] = ordering
+        Some(Eval.Apply0(list, _.minOption, nullary("minOption")))
       //  iterable.minBy(_ => 0)
+      case '{
+            type a; type b;
+            (${ Eval(list) }: Iterable[`a`]).minBy(${ Eval(f) }: `a` => `b`)(using ${ MatchOrdering[`b`](ordering) })
+          } =>
+        given Ordering[`b`] = ordering
+        Some(Eval.Apply1(list, f, _.minBy(_), call("minBy")))
+
       //  iterable.minByOption(_ => 0)
+      case '{
+            type a; type b;
+            (${ Eval(list) }: Iterable[`a`])
+              .minByOption(${ Eval(f) }: `a` => `b`)(using ${ MatchOrdering[`b`](ordering) })
+          } =>
+        given Ordering[`b`] = ordering
+        Some(Eval.Apply1(list, f, _.minByOption(_), call("minByOption")))
+
       //  iterable.nonEmpty
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).nonEmpty } =>
+        Some(Eval.Apply0(list, _.nonEmpty, nullary("nonEmpty")))
+
       //  iterable.partition(_ => true)
+      case '{
+            type a;
+            (${ Eval(list) }: Iterable[`a`]).partition(${ Eval(p) }: `a` => Boolean)
+          } =>
+        Some(Eval.Apply1(list, p, _.partition(_), call("partition")))
+
       //  iterable.partitionMap(a => Right(a))
+      case '{
+            type a; type b; type c;
+            (${ Eval(list) }: Iterable[`a`])
+              .partitionMap(${ Eval(f) }: `a` => Either[`b`, `c`])
+          } =>
+        Some(Eval.Apply1(list, f, _.partitionMap(_), call("partitionMap")))
+
       //  iterable.reduce(_ + _)
+      case '{
+            type a;
+            (${ Eval(list) }: Iterable[`a`]).reduce(${ Eval(op) }: (`a`, `a`) => `a`)
+          } =>
+        Some(Eval.Apply1(list, op, _.reduce(_), call("reduce")))
+
       //  iterable.reduceOption(_ + _)
+      case '{
+            type a;
+            (${ Eval(list) }: Iterable[`a`]).reduceOption(${ Eval(op) }: (`a`, `a`) => `a`)
+          } =>
+        Some(Eval.Apply1(list, op, _.reduceOption(_), call("reduceOption")))
+
       //  iterable.reduceLeft(_ + _)
+      case '{
+            type a;
+            (${ Eval(list) }: Iterable[`a`]).reduceLeft(${ Eval(op) }: (`a`, `a`) => `a`)
+          } =>
+        Some(Eval.Apply1(list, op, _.reduceLeft(_), call("reduceLeft")))
+
       //  iterable.reduceLeftOption(_ + _)
+      case '{
+            type a;
+            (${ Eval(list) }: Iterable[`a`]).reduceLeftOption(${ Eval(op) }: (`a`, `a`) => `a`)
+          } =>
+        Some(Eval.Apply1(list, op, _.reduceLeftOption(_), call("reduceLeftOption")))
+
       //  iterable.reduceRight(_ + _)
+      case '{
+            type a;
+            (${ Eval(list) }: Iterable[`a`]).reduceRight(${ Eval(op) }: (`a`, `a`) => `a`)
+          } =>
+        Some(Eval.Apply1(list, op, _.reduceRight(_), call("reduceRight")))
+
       //  iterable.reduceRightOption(_ + _)
+      case '{
+            type a;
+            (${ Eval(list) }: Iterable[`a`]).reduceRightOption(${ Eval(op) }: (`a`, `a`) => `a`)
+          } =>
+        Some(Eval.Apply1(list, op, _.reduceRightOption(_), call("reduceRightOption")))
       //  iterable.scan(0)(_ + _)
       //  iterable.scanLeft(0)(_ + _)
       //  iterable.scanRight(0)(_ + _)
@@ -709,11 +833,26 @@ object Eval:
       //  iterable.toBuffer
       //  iterable.toIndexedSeq
       //  iterable.toList
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).toList } =>
+        Some(Eval.Apply0(list, _.toList, nullary("toList")))
+      case '{ type a; (${ Eval(list) }: Iterator[`a`]).toList } =>
+        Some(Eval.Apply0(list, _.toList, nullary("toList")))
+
       //  // iterable.toMap
       //  iterable.toSeq
       //  iterable.toSet
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).toSet } =>
+        Some(Eval.Apply0(list, _.toSet, nullary("toSet")))
+      case '{ type a; (${ Eval(list) }: Iterator[`a`]).toSet } =>
+        Some(Eval.Apply0(list, _.toSet, nullary("toSet")))
       //  iterable.toVector
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).toVector } =>
+        Some(Eval.Apply0(list, _.toVector, nullary("toVector")))
+      case '{ type a; (${ Eval(list) }: Iterator[`a`]).toVector } =>
+        Some(Eval.Apply0(list, _.toVector, nullary("toVector")))
       //  // iterable.transpose
+      case '{ type a; (${ Eval(list) }: Iterable[Iterable[`a`]]).transpose } =>
+        Some(Eval.Apply0(list, _.transpose, nullary("transpose")))
       //  // iterable.unzip
       //  // iterable.unzip3
       //  iterable.view

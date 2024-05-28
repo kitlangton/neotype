@@ -71,6 +71,25 @@ object CustomFromExpr:
             case '{ None }                    => Some(None)
             case _                            => None
 
+  given fromExprEither[E, A]: FromExpr[Either[E, A]] with
+    def unapply(x: Expr[Either[E, A]])(using Quotes) =
+      import quotes.reflect.*
+      val aType = x.asTerm.tpe.widen.typeArgs.head.asType
+      val eType = x.asTerm.tpe.widen.typeArgs.tail.head.asType
+      (fromExprForType[A](aType), fromExprForType[E](eType)) match
+        case (Some(fromExprA), Some(fromExprE)) =>
+          given FromExpr[E] = fromExprE
+          given FromExpr[A] = fromExprA
+          @nowarn("msg=unused")
+          given Type[E] = eType.asInstanceOf[Type[E]]
+          @nowarn("msg=unused")
+          given Type[A] = aType.asInstanceOf[Type[A]]
+          x match
+            case '{ Right[E, A](${ Expr(a) }) } => Some(Right(a))
+            case '{ Left[E, A](${ Expr(a) }) }  => Some(Left(a))
+            case _                              => None
+        case (_, _) => None
+
   def fromExprForType[A](using Quotes)(tpe: Type[?]): Option[FromExpr[A]] =
     import quotes.reflect.*
     val result = tpe match
