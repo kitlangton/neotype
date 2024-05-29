@@ -915,13 +915,13 @@ object Eval:
 
       case other =>
         // DEV MODE
-        report.errorAndAbort(
-          s"""Eval parse failure:
-             |show: ${other.show}
-             | tpe: ${other.asTerm.tpe.show}
-             |term: ${other.asTerm}
-             |""".stripMargin
-        )
+        // report.errorAndAbort(
+        //   s"""Eval parse failure:
+        //      |show: ${other.show}
+        //      | tpe: ${other.asTerm.tpe.show}
+        //      |term: ${other.asTerm}
+        //      |""".stripMargin
+        // )
         None
 
     eval.asInstanceOf[Option[Eval[A]]]

@@ -13,7 +13,6 @@ import zio.schema.codec.DecodeError
 import zio.schema.codec.DecodeError.ReadError
 import zio.schema.codec.JsonCodec
 import zio.schema.codec.JsonCodec.JsonDecoder
-import zio.schema.codec.JsonCodec.JsonEncoder.charSequenceToByteChunk
 import zio.stream.ZStream
 import zio.test.*
 import zio.test.Assertion.*
