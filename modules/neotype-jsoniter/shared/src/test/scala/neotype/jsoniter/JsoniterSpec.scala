@@ -11,6 +11,7 @@ import zio.*
 import zio.test.*
 
 import scala.util.Try
+import com.github.plokhotnyuk.jsoniter_scala.macros.ConfiguredJsonValueCodec
 
 object JsoniterSpec extends ZIOSpecDefault:
 
@@ -36,8 +37,8 @@ object JsoniterSpec extends ZIOSpecDefault:
       )
     },
     test("use codec maker configuration") {
-      inline given codecMakerConfig: CodecMakerConfig = CodecMakerConfig.withIsStringified(true)
-      given JsonValueCodec[Composite]                 = JsonCodecMaker.make
+      inline given CodecMakerConfig   = CodecMakerConfig.withIsStringified(true)
+      given JsonValueCodec[Composite] = ConfiguredJsonValueCodec.derived
 
       val json =
         """{

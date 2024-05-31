@@ -55,6 +55,7 @@ lazy val zioSchemaVersion = "1.2.0"
 lazy val zioJsonVersion   = "0.6.2"
 lazy val chimneyVersion   = "1.0.0"
 lazy val calibanVersion   = "2.7.0"
+lazy val doobieVersion    = "1.0.0-RC5"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
@@ -94,7 +95,8 @@ lazy val root = (project in file("."))
     zioTest.jvm,
     chimney.js,
     chimney.jvm,
-    caliban.jvm
+    caliban.jvm,
+    doobie.jvm
   )
 
 lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
@@ -215,6 +217,17 @@ lazy val caliban = (crossProject(JVMPlatform) in file("modules/neotype-caliban")
     sharedSettings,
     libraryDependencies ++= Seq(
       "com.github.ghostdogpr" %% "caliban" % calibanVersion
+    )
+  )
+  .dependsOn(core % "compile->compile;test->test")
+
+lazy val doobie = (crossProject(JVMPlatform) in file("modules/neotype-doobie"))
+  .settings(
+    name := "neotype-doobie",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "org.tpolecat"  %% "doobie-core" % doobieVersion,
+      "com.h2database" % "h2"          % "2.2.224" % Test
     )
   )
   .dependsOn(core % "compile->compile;test->test")
