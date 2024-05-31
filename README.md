@@ -11,7 +11,7 @@
 A friendly newtype library for Scala 3.
 
 ```scala
-"io.github.kitlangton" %% "neotype" % "0.2.18"
+"io.github.kitlangton" %% "neotype" % "0.2.19"
 ```
 
 ## Features
