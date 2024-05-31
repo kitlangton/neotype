@@ -3,6 +3,7 @@ package neotype.jsoniter
 import com.github.plokhotnyuk.jsoniter_scala.core.JsonValueCodec
 import com.github.plokhotnyuk.jsoniter_scala.core.readFromString
 import com.github.plokhotnyuk.jsoniter_scala.macros.CodecMakerConfig
+import com.github.plokhotnyuk.jsoniter_scala.macros.ConfiguredJsonValueCodec
 import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import neotype.*
 import neotype.jsoniter.given
@@ -11,7 +12,6 @@ import zio.*
 import zio.test.*
 
 import scala.util.Try
-import com.github.plokhotnyuk.jsoniter_scala.macros.ConfiguredJsonValueCodec
 
 object JsoniterSpec extends ZIOSpecDefault:
 

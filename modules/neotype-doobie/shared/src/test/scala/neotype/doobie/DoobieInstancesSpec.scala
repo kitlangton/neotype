@@ -1,16 +1,15 @@
 package neotype.doobie
 
+import _root_.doobie.*
+import _root_.doobie.implicits.{*, given}
 import _root_.doobie.util.transactor.Transactor
-import _root_.doobie.implicits.{given, *}
+import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import neotype.Newtype
 import neotype.Subtype
 import neotype.test.definitions.*
-import zio.test.*
 import zio.*
-
-import cats.effect.IO
-import _root_.doobie.*
-import cats.effect.unsafe.implicits.global // Added this import
+import zio.test.* // Added this import
 
 object DoobieInstancesSpec extends ZIOSpecDefault:
 
