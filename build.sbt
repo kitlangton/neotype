@@ -226,8 +226,9 @@ lazy val doobie = (crossProject(JVMPlatform) in file("modules/neotype-doobie"))
     name := "neotype-doobie",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "org.tpolecat"  %% "doobie-core" % doobieVersion,
-      "com.h2database" % "h2"          % "2.2.224" % Test
+      "org.tpolecat"  %% "doobie-core"     % doobieVersion,
+      "org.tpolecat"  %% "doobie-postgres" % doobieVersion % Test,
+      "com.h2database" % "h2"              % "2.2.224"     % Test
     )
   )
   .dependsOn(core % "compile->compile;test->test")
