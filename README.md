@@ -84,7 +84,7 @@ Neotype integrates with the following libraries:
 
 ```scala
 import neotype.*
-import neotype.ziojson.given
+import neotype.interop.ziojson.given
 import zio.json.*
 
 type NonEmptyString = NonEmptyString.Type
