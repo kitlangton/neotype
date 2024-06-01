@@ -11,7 +11,7 @@
 A friendly newtype library for Scala 3.
 
 ```scala
-"io.github.kitlangton" %% "neotype" % "0.2.19"
+"io.github.kitlangton" %% "neotype" % "0.3.0"
 ```
 
 ## Features
@@ -62,19 +62,23 @@ Error: /src/main/scala/examples/Main.scala:9:16
 
 ## Integrations
 
-Neotype integrates with the following libraries.
+Neotype integrates with the following libraries:
 
-- zio-test `DeriveGen`
-- zio-json
-- zio-config
-- zio-schema
-- play-json
-- tapir
-- quill
-- circe
-- jsoniter
-- chimney
-- caliban
+- **JSON**
+  - [zio-json](https://github.com/zio/zio-json)
+  - [play-json](https://github.com/playframework/play-json)
+  - [jsoniter](https://github.com/plokhotnyuk/jsoniter-scala)
+  - [circe](https://github.com/circe/circe)
+- **DATABASE**
+  - [doobie](https://github.com/tpolecat/doobie)
+  - [quill](https://github.com/zio/zio-quill)
+- **MISCELLANEOUS**
+  - [zio-test](https://github.com/zio/zio) `DeriveGen`
+  - [zio-config](https://github.com/zio/zio-config)
+  - [zio-schema](https://github.com/zio/zio-schema)
+  - [tapir](https://github.com/softwaremill/tapir)
+  - [chimney](https://github.com/outr/chimney)
+  - [caliban](https://github.com/ghostdogpr/caliban)
 
 ### ZIO Json Example
 
