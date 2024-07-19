@@ -84,13 +84,16 @@ Neotype integrates with the following libraries:
 
 ```scala
 import neotype.*
-import neotype.interop.ziojson.given
-import zio.json.*
 
 type NonEmptyString = NonEmptyString.Type
 object NonEmptyString extends Newtype[String]:
   override inline def validate(value: String): Result =
     if value.nonEmpty then true else "String must not be empty"
+```
+
+```scala
+import neotype.interop.ziojson.given
+import zio.json.*
 
 case class Person(name: NonEmptyString, age: Int) derives JsonCodec
 
@@ -103,3 +106,5 @@ val failed = """{"name": "", "age": 30}""".fromJson[Person]
 
 By importing `neotype.ziojson.given`, we automatically generate a `JsonCodec` for `NonEmptyString`. Custom
 failure messages are also supported (by overriding `def failureMessage` in the Newtype definition).
+Note that `import neotype.interop.ziojson.given` needs to be in the same file as `Person`, *not* `NonEmptyString`.
+The generated `JsonCodec` is not made available to the entire project, but only to the file where it is imported.
