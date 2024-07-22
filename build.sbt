@@ -187,7 +187,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     libraryDependencies ++= Seq(
       "io.getquill"   %% "quill-jdbc-zio" % "4.8.5",
       "org.postgresql" % "postgresql"     % "42.7.3"  % Test,
-      "com.h2database" % "h2"             % "2.2.224" % Test
+      "com.h2database" % "h2"             % "2.3.230" % Test
     )
   )
   .dependsOn(core.jvm % "compile->compile;test->test")
@@ -228,7 +228,7 @@ lazy val doobie = (crossProject(JVMPlatform) in file("modules/neotype-doobie"))
     libraryDependencies ++= Seq(
       "org.tpolecat"  %% "doobie-core"     % doobieVersion,
       "org.tpolecat"  %% "doobie-postgres" % doobieVersion % Test,
-      "com.h2database" % "h2"              % "2.2.224"     % Test
+      "com.h2database" % "h2"              % "2.3.230"     % Test
     )
   )
   .dependsOn(core % "compile->compile;test->test")
