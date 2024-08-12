@@ -46,15 +46,15 @@ ThisBuild / githubWorkflowPublish := Seq(
 // Project Definitions //
 /////////////////////////
 
-lazy val jsoniterVersion  = "2.30.1"
-lazy val circeVersion     = "0.14.7"
-lazy val tapirVersion     = "1.10.8"
-lazy val zioVersion       = "2.1.3"
+lazy val jsoniterVersion  = "2.30.7"
+lazy val circeVersion     = "0.14.9"
+lazy val tapirVersion     = "1.11.1"
+lazy val zioVersion       = "2.1.7"
 lazy val zioConfigVersion = "4.0.2"
-lazy val zioSchemaVersion = "1.2.1"
-lazy val zioJsonVersion   = "0.7.0"
-lazy val chimneyVersion   = "1.1.0"
-lazy val calibanVersion   = "2.7.1"
+lazy val zioSchemaVersion = "1.3.0"
+lazy val zioJsonVersion   = "0.7.1"
+lazy val chimneyVersion   = "1.3.0"
+lazy val calibanVersion   = "2.8.1"
 lazy val doobieVersion    = "1.0.0-RC5"
 
 val sharedSettings = Seq(
@@ -132,7 +132,7 @@ lazy val playJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neot
     name := "neotype-play-json",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "org.playframework" %%% "play-json" % "3.0.3"
+      "org.playframework" %%% "play-json" % "3.0.4"
     )
   )
   .dependsOn(core % "compile->compile;test->test")
@@ -187,7 +187,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     libraryDependencies ++= Seq(
       "io.getquill"   %% "quill-jdbc-zio" % "4.8.5",
       "org.postgresql" % "postgresql"     % "42.7.3"  % Test,
-      "com.h2database" % "h2"             % "2.2.224" % Test
+      "com.h2database" % "h2"             % "2.3.232" % Test
     )
   )
   .dependsOn(core.jvm % "compile->compile;test->test")
@@ -228,7 +228,7 @@ lazy val doobie = (crossProject(JVMPlatform) in file("modules/neotype-doobie"))
     libraryDependencies ++= Seq(
       "org.tpolecat"  %% "doobie-core"     % doobieVersion,
       "org.tpolecat"  %% "doobie-postgres" % doobieVersion % Test,
-      "com.h2database" % "h2"              % "2.2.224"     % Test
+      "com.h2database" % "h2"              % "2.3.232"     % Test
     )
   )
   .dependsOn(core % "compile->compile;test->test")
