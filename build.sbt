@@ -53,7 +53,7 @@ lazy val zioVersion       = "2.1.7"
 lazy val zioConfigVersion = "4.0.2"
 lazy val zioSchemaVersion = "1.3.0"
 lazy val zioJsonVersion   = "0.7.1"
-lazy val chimneyVersion   = "1.3.0"
+lazy val chimneyVersion   = "1.4.0"
 lazy val calibanVersion   = "2.8.1"
 lazy val doobieVersion    = "1.0.0-RC5"
 
