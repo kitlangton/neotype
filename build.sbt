@@ -46,14 +46,14 @@ ThisBuild / githubWorkflowPublish := Seq(
 // Project Definitions //
 /////////////////////////
 
-lazy val jsoniterVersion  = "2.30.7"
+lazy val jsoniterVersion  = "2.30.8"
 lazy val circeVersion     = "0.14.9"
 lazy val tapirVersion     = "1.11.1"
-lazy val zioVersion       = "2.1.7"
+lazy val zioVersion       = "2.1.8"
 lazy val zioConfigVersion = "4.0.2"
-lazy val zioSchemaVersion = "1.3.0"
-lazy val zioJsonVersion   = "0.7.1"
-lazy val chimneyVersion   = "1.3.0"
+lazy val zioSchemaVersion = "1.4.1"
+lazy val zioJsonVersion   = "0.7.2"
+lazy val chimneyVersion   = "1.4.0"
 lazy val calibanVersion   = "2.8.1"
 lazy val doobieVersion    = "1.0.0-RC5"
 
@@ -186,7 +186,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     sharedSettings,
     libraryDependencies ++= Seq(
       "io.getquill"   %% "quill-jdbc-zio" % "4.8.5",
-      "org.postgresql" % "postgresql"     % "42.7.3"  % Test,
+      "org.postgresql" % "postgresql"     % "42.7.4"  % Test,
       "com.h2database" % "h2"             % "2.3.232" % Test
     )
   )
