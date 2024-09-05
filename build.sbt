@@ -1,11 +1,9 @@
 inThisBuild(
   List(
-    name           := "neotype",
-    normalizedName := "neotype",
-    organization   := "io.github.kitlangton",
-    scalaVersion   := "3.3.3",
-    homepage       := Some(url("https://github.com/kitlangton/neotype")),
-    licenses       := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
+    organization := "io.github.kitlangton",
+    scalaVersion := "3.3.3",
+    homepage     := Some(url("https://github.com/kitlangton/neotype")),
+    licenses     := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
     developers := List(
       Developer("kitlangton", "Kit Langton", "kit.langton@gmail.com", url("https://github.com/kitlangton"))
     ),
@@ -241,7 +239,7 @@ lazy val examples = (project in file("examples"))
   )
   .dependsOn(core.jvm, zioJson.jvm, zioQuill)
 
-addCommandAlias("prepare", "scalafixAll;scalafmtAll")
+addCommandAlias("prepare", "scalafixAll;scalafmtAll;githubWorkflowGenerate")
 
 welcomeMessage
 
