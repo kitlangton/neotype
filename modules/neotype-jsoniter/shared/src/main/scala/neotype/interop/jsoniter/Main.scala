@@ -11,36 +11,32 @@ import neotype.*
 inline given newtypeCodec[A, B](using
     newType: Newtype.WithType[A, B],
     inline config: CodecMakerConfig = CodecMakerConfig
-): JsonValueCodec[B] =
-  new JsonValueCodec[B]:
-    private val codec = JsonCodecMaker.make[A](config)
+): JsonValueCodec[B] = new NewtypeJsonValueCodec(JsonCodecMaker.make[A](config), newType)
 
-    override def decodeValue(in: JsonReader, default: B): B =
-      val decoded = codec.decodeValue(in, newType.unwrap(default))
-      newType.make(decoded) match
-        case Right(value) => value
-        case Left(value)  => in.decodeError(s"Failed to decode $value")
+private class NewtypeJsonValueCodec[A, B](aCodec: JsonValueCodec[A], newType: Newtype.WithType[A, B])
+    extends JsonValueCodec[B]:
+  override def decodeValue(in: JsonReader, default: B): B =
+    newType.make(aCodec.decodeValue(in, newType.unwrap(default))) match
+      case Right(value) => value
+      case Left(value)  => in.decodeError(s"Failed to decode $value")
 
-    override def encodeValue(x: B, out: JsonWriter): Unit =
-      codec.encodeValue(newType.unwrap(x), out)
+  override def encodeValue(x: B, out: JsonWriter): Unit = aCodec.encodeValue(newType.unwrap(x), out)
 
-    override def nullValue: B = null.asInstanceOf[B]
+  override def nullValue: B = null.asInstanceOf[B]
 
 // Subtype
 inline given subtypeCodec[A, B <: A](using
     subType: Subtype.WithType[A, B],
     inline config: CodecMakerConfig = CodecMakerConfig
-): JsonValueCodec[B] =
-  new JsonValueCodec[B]:
-    private val codec = JsonCodecMaker.make[A](config)
+): JsonValueCodec[B] = new SubtypeJsonValueCodec(JsonCodecMaker.make[A](config), subType)
 
-    override def decodeValue(in: JsonReader, default: B): B =
-      val decoded = codec.decodeValue(in, default)
-      subType.make(decoded) match
-        case Right(value) => value
-        case Left(value)  => in.decodeError(s"Failed to decode $value")
+private class SubtypeJsonValueCodec[A, B <: A](aCodec: JsonValueCodec[A], subType: Subtype.WithType[A, B])
+    extends JsonValueCodec[B]:
+  override def decodeValue(in: JsonReader, default: B): B =
+    subType.make(aCodec.decodeValue(in, default)) match
+      case Right(value) => value
+      case Left(value)  => in.decodeError(s"Failed to decode $value")
 
-    override def encodeValue(x: B, out: JsonWriter): Unit =
-      codec.encodeValue(x, out)
+  override def encodeValue(x: B, out: JsonWriter): Unit = aCodec.encodeValue(x, out)
 
-    override def nullValue: B = null.asInstanceOf[B]
+  override def nullValue: B = null.asInstanceOf[B]
