@@ -5,11 +5,6 @@ import neotype.*
 type Name = Name.Type
 object Name extends Newtype[String]
 
-type NonEmptyString = NonEmptyString.Type
-object NonEmptyString extends Newtype[String]:
-  override inline def validate(input: String): Boolean =
-    input.nonEmpty
-
 type Email = Email.Type
 object Email extends Newtype[String]:
   override inline def validate(value: String) =
