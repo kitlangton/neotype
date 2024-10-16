@@ -2,6 +2,7 @@ package examples
 
 import examples.types.*
 import neotype.*
+import neotype.common.*
 
 // Here's an example of a Newtype that wraps a String.
 
