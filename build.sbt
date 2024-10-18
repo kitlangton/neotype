@@ -44,14 +44,14 @@ ThisBuild / githubWorkflowPublish := Seq(
 // Project Definitions //
 /////////////////////////
 
-lazy val jsoniterVersion  = "2.30.14"
+lazy val jsoniterVersion  = "2.31.0"
 lazy val circeVersion     = "0.14.10"
-lazy val tapirVersion     = "1.11.5"
-lazy val zioVersion       = "2.1.9"
+lazy val tapirVersion     = "1.11.7"
+lazy val zioVersion       = "2.1.11"
 lazy val zioConfigVersion = "4.0.2"
 lazy val zioSchemaVersion = "1.5.0"
 lazy val zioJsonVersion   = "0.7.3"
-lazy val chimneyVersion   = "1.4.0"
+lazy val chimneyVersion   = "1.5.0"
 lazy val calibanVersion   = "2.9.0"
 lazy val doobieVersion    = "1.0.0-RC6"
 

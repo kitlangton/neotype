@@ -6,8 +6,6 @@ import scala.quoted.*
 import scala.util.matching.Regex
 
 import BinOpMatch.*
-import CustomFromExpr.given
-// import neotype.eval.Eval.closureToFunction
 
 enum EvalError extends Throwable:
   case MissingReference(name: String) extends EvalError

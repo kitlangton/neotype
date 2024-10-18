@@ -5,7 +5,6 @@ import neotype.Subtype
 import neotype.interop.zioschema.given_Schema_B
 import neotype.test.definitions.*
 import zio.*
-import zio.json.*
 import zio.json.DeriveJsonEncoder
 import zio.json.JsonEncoder
 import zio.schema.DeriveSchema
@@ -13,7 +12,6 @@ import zio.schema.Schema
 import zio.schema.codec.DecodeError
 import zio.schema.codec.DecodeError.ReadError
 import zio.schema.codec.JsonCodec
-import zio.schema.codec.JsonCodec.JsonDecoder
 import zio.stream.ZStream
 import zio.test.*
 import zio.test.Assertion.*
