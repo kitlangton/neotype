@@ -252,6 +252,11 @@ object Eval:
       case '{ BigDecimal(${ Expr(double) }: Double) } => Some(Eval.Value(BigDecimal(double)))
       case '{ (${ Expr(string) }: String).r }         => Some(Eval.Value(string.r))
 
+      case '{ type a; type b; (${ Eval(a) }: `a`, ${ Eval(b) }: `b`): (`a`, `b`) } =>
+        Some(Eval.ProductValue("Tuple2", Map("_1" -> a, "_2" -> b)))
+      case '{ type a; type b; type c; (${ Eval(a) }: `a`, ${ Eval(b) }: `b`, ${ Eval(c) }: `c`): (`a`, `b`, `c`) } =>
+        Some(Eval.ProductValue("Tuple3", Map("_1" -> a, "_2" -> b, "_3" -> c)))
+
       case Unseal(p @ Apply(Select(_, "apply"), Evals(args))) if p.tpe.typeSymbol.flags.is(Flags.Case) =>
         val typeName   = p.tpe.typeSymbol.name
         val fieldNames = p.tpe.typeSymbol.primaryConstructor.paramSymss.flatten.map(_.name)
@@ -398,6 +403,9 @@ object Eval:
         Some(Eval.Apply0(str, _.stripMargin, nullary("stripMargin")))
       case '{ StringContext(${ Varargs(Exprs[String](strings)) }*).s(${ Varargs(Evals(evals)) }*) } =>
         Some(Eval.EvalStringContext(strings.toList, evals.toList))
+      case '{ (${ Eval(str) }: String).zipWithIndex } =>
+        Some(Eval.Apply0(str, _.zipWithIndex, nullary("zipWithIndex")))
+
       // string * int
       case '{ (${ Eval(str) }: String) * (${ Eval(int) }: Int) } =>
         Some(Eval.Apply1(str, int, _ * _, infix("*")))
@@ -492,6 +500,26 @@ object Eval:
         Some(Eval.Apply1(set, other, _.subsetOf(_), call("subsetOf")))
       case '{ type a; (${ Eval(set) }: Set[`a`]).apply(${ Eval(elem) }: `a`) } =>
         Some(Eval.Apply1(set, elem, _.apply(_), (a, b) => s"$a($b)"))
+
+      // Tuple Operations
+      case '{ type a; type b; (${ Eval(tuple) }: (`a`, `b`))._1 } =>
+        Some(Eval.Apply0(tuple, _._1, nullary("_1")))
+      case '{ type a; type b; (${ Eval(tuple) }: (`a`, `b`))._2 } =>
+        Some(Eval.Apply0(tuple, _._2, nullary("_2")))
+      case '{ type a; type b; type c; (${ Eval(tuple) }: (`a`, `b`, `c`))._1 } =>
+        Some(Eval.Apply0(tuple, _._1, nullary("_1")))
+      case '{ type a; type b; type c; (${ Eval(tuple) }: (`a`, `b`, `c`))._2 } =>
+        Some(Eval.Apply0(tuple, _._2, nullary("_2")))
+      case '{ type a; type b; type c; (${ Eval(tuple) }: (`a`, `b`, `c`))._3 } =>
+        Some(Eval.Apply0(tuple, _._3, nullary("_3")))
+      case '{ type a; type b; type c; type d; (${ Eval(tuple) }: (`a`, `b`, `c`, `d`))._1 } =>
+        Some(Eval.Apply0(tuple, _._1, nullary("_1")))
+      case '{ type a; type b; type c; type d; (${ Eval(tuple) }: (`a`, `b`, `c`, `d`))._2 } =>
+        Some(Eval.Apply0(tuple, _._2, nullary("_2")))
+      case '{ type a; type b; type c; type d; (${ Eval(tuple) }: (`a`, `b`, `c`, `d`))._3 } =>
+        Some(Eval.Apply0(tuple, _._3, nullary("_3")))
+      case '{ type a; type b; type c; type d; (${ Eval(tuple) }: (`a`, `b`, `c`, `d`))._4 } =>
+        Some(Eval.Apply0(tuple, _._4, nullary("_4")))
 
       // List Operations
       case '{ type a; (${ Eval(list) }: List[`a`]).:+(${ Eval(elem) }: `a`) } =>
@@ -858,6 +886,8 @@ object Eval:
       //  iterable.zip(iterable)
       //  iterable.zipAll(iterable, 0, 0)
       //  iterable.zipWithIndex
+      case '{ type a; (${ Eval(list) }: Iterable[`a`]).zipWithIndex } =>
+        Some(Eval.Apply0(list, _.zipWithIndex, nullary("zipWithIndex")))
 
       // Iterable Operations
       // .mkString
