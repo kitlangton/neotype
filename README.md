@@ -77,7 +77,7 @@ Neotype integrates with the following libraries:
   - [zio-config](https://github.com/zio/zio-config)
   - [zio-schema](https://github.com/zio/zio-schema)
   - [tapir](https://github.com/softwaremill/tapir)
-  - [chimney](https://github.com/outr/chimney)
+  - [chimney](https://github.com/scalalandio/chimney)
   - [caliban](https://github.com/ghostdogpr/caliban)
 
 ### ZIO Json Example
