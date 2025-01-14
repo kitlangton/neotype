@@ -2,6 +2,7 @@ package neotype.eval
 
 import neotype.TestMacros.*
 import zio.test.*
+
 import scala.util.Try
 
 object PrimitiveTypesSpec extends ZIOSpecDefault:
