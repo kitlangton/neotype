@@ -69,6 +69,7 @@ Neotype integrates with the following libraries:
   - [play-json](https://github.com/playframework/play-json)
   - [jsoniter](https://github.com/plokhotnyuk/jsoniter-scala)
   - [circe](https://github.com/circe/circe)
+  - [upickle](https://github.com/lihaoyi/upickle)
 - **DATABASE**
   - [doobie](https://github.com/tpolecat/doobie)
   - [quill](https://github.com/zio/zio-quill)
@@ -106,5 +107,5 @@ val failed = """{"name": "", "age": 30}""".fromJson[Person]
 
 By importing `neotype.ziojson.given`, we automatically generate a `JsonCodec` for `NonEmptyString`. Custom
 failure messages are also supported (by overriding `def failureMessage` in the Newtype definition).
-Note that `import neotype.interop.ziojson.given` needs to be in the same file as `Person`, *not* `NonEmptyString`.
+Note that `import neotype.interop.ziojson.given` needs to be in the same file as `Person`, _not_ `NonEmptyString`.
 The generated `JsonCodec` is not made available to the entire project, but only to the file where it is imported.

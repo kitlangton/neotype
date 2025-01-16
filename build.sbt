@@ -54,6 +54,7 @@ lazy val zioJsonVersion   = "0.7.4"
 lazy val chimneyVersion   = "1.6.0"
 lazy val calibanVersion   = "2.9.1"
 lazy val doobieVersion    = "1.0.0-RC6"
+lazy val upickleVersion   = "4.1.0"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
@@ -94,7 +95,9 @@ lazy val root = (project in file("."))
     chimney.js,
     chimney.jvm,
     caliban.jvm,
-    doobie.jvm
+    doobie.jvm,
+    upickle.js,
+    upickle.jvm
   )
 
 lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
@@ -227,6 +230,16 @@ lazy val doobie = (crossProject(JVMPlatform) in file("modules/neotype-doobie"))
       "org.tpolecat"  %% "doobie-core"     % doobieVersion,
       "org.tpolecat"  %% "doobie-postgres" % doobieVersion % Test,
       "com.h2database" % "h2"              % "2.3.232"     % Test
+    )
+  )
+  .dependsOn(core % "compile->compile;test->test")
+
+lazy val upickle = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-upickle"))
+  .settings(
+    name := "neotype-upickle",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "upickle" % upickleVersion
     )
   )
   .dependsOn(core % "compile->compile;test->test")
