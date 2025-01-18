@@ -464,8 +464,7 @@ object Eval:
         Some(MatchExpr(expr, calcCaseDefs))
 
       case '{
-            if ${ Eval(cond) } then ${ Eval(trueCase) }
-            else ${ Eval(falseCase) }
+            if ${ Eval(cond) } then ${ Eval(trueCase) } else ${ Eval(falseCase) }
           } =>
         Some(Eval.IfThenElse(cond, trueCase, falseCase))
 
