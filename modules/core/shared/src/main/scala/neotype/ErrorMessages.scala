@@ -62,7 +62,9 @@ private[neotype] object ErrorMessages:
      |  $footer
      |""".stripMargin
 
-  def validateIsNotInlineMessage(using Quotes)(
+  def validateIsNotInlineMessage(using
+      Quotes
+  )(
       input: Expr[Any], //
       nt: quotes.reflect.TypeRepr,
       validatePosition: Option[quotes.reflect.Position]

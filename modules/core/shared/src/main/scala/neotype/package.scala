@@ -105,7 +105,9 @@ abstract class Newtype[A] extends TypeWrapper[A]:
 object Newtype:
   type WithType[A, B] = Newtype[A] { type Type = B }
 
-extension [A, B](value: B)(using newtype: Newtype.WithType[A, B]) //
+extension [A, B](value: B)(using
+    newtype: Newtype.WithType[A, B]
+) //
   /** Unwraps the newtype, returning the underlying value. */
   inline def unwrap = newtype.unwrap(value)
 
