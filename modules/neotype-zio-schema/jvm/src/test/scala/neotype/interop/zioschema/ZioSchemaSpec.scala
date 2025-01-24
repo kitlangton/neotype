@@ -5,7 +5,6 @@ import neotype.Subtype
 import neotype.interop.zioschema.given_Schema_B
 import neotype.test.definitions.*
 import zio.*
-import zio.json.DeriveJsonEncoder
 import zio.json.JsonEncoder
 import zio.schema.DeriveSchema
 import zio.schema.Schema
@@ -63,7 +62,7 @@ object ZioSchemaSpec extends ZIOSpecDefault:
       test("parse failure") {
         val json: CharSequence = JsonEncoder.string.encodeJson("hello", None)
         decode[SimpleNewtype](json).exit.map { result =>
-          assertTrue(result.is(_.failure) == readError("(expected a number, got h)"))
+          assertTrue(result.is(_.failure) == readError("(expected a number, got 'h')"))
         }
       }
     ),
