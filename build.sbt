@@ -1,7 +1,7 @@
 inThisBuild(
   List(
     organization := "io.github.kitlangton",
-    scalaVersion := "3.3.4",
+    scalaVersion := "3.3.5",
     homepage     := Some(url("https://github.com/kitlangton/neotype")),
     licenses     := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
     developers := List(
@@ -44,14 +44,14 @@ ThisBuild / githubWorkflowPublish := Seq(
 // Project Definitions //
 /////////////////////////
 
-lazy val jsoniterVersion  = "2.33.0"
+lazy val jsoniterVersion  = "2.33.1"
 lazy val circeVersion     = "0.14.10"
 lazy val tapirVersion     = "1.11.13"
-lazy val zioVersion       = "2.1.14"
+lazy val zioVersion       = "2.1.15"
 lazy val zioConfigVersion = "4.0.3"
 lazy val zioSchemaVersion = "1.6.1"
-lazy val zioJsonVersion   = "0.7.6"
-lazy val chimneyVersion   = "1.7.0"
+lazy val zioJsonVersion   = "0.7.15"
+lazy val chimneyVersion   = "1.7.2"
 lazy val calibanVersion   = "2.9.1"
 lazy val doobieVersion    = "1.0.0-RC6"
 lazy val upickleVersion   = "4.1.0"
