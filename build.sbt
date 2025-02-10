@@ -44,17 +44,19 @@ ThisBuild / githubWorkflowPublish := Seq(
 // Project Definitions //
 /////////////////////////
 
-lazy val jsoniterVersion  = "2.33.2"
-lazy val circeVersion     = "0.14.10"
-lazy val tapirVersion     = "1.11.14"
-lazy val zioVersion       = "2.1.15"
-lazy val zioConfigVersion = "4.0.3"
-lazy val zioSchemaVersion = "1.6.1"
-lazy val zioJsonVersion   = "0.7.16"
-lazy val chimneyVersion   = "1.7.3"
-lazy val calibanVersion   = "2.9.1"
-lazy val doobieVersion    = "1.0.0-RC7"
-lazy val upickleVersion   = "4.1.0"
+lazy val jsoniterVersion       = "2.33.2"
+lazy val circeVersion          = "0.14.10"
+lazy val tapirVersion          = "1.11.14"
+lazy val zioVersion            = "2.1.15"
+lazy val zioConfigVersion      = "4.0.3"
+lazy val zioSchemaVersion      = "1.6.1"
+lazy val zioJsonVersion        = "0.7.16"
+lazy val chimneyVersion        = "1.7.3"
+lazy val calibanVersion        = "2.9.1"
+lazy val doobieVersion         = "1.0.0-RC7"
+lazy val upickleVersion        = "4.1.0"
+lazy val cirisVersion          = "3.7.0"
+lazy val zioInteropCatsVersion = "23.1.0.3"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
@@ -240,6 +242,17 @@ lazy val upickle = (crossProject(JSPlatform, JVMPlatform) in file("modules/neoty
     sharedSettings,
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "upickle" % upickleVersion
+    )
+  )
+  .dependsOn(core % "compile->compile;test->test")
+
+lazy val ciris = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-ciris"))
+  .settings(
+    name := "neotype-ciris",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "is.cir"  %%% "ciris"            % cirisVersion,
+      "dev.zio" %%% "zio-interop-cats" % zioInteropCatsVersion % Test
     )
   )
   .dependsOn(core % "compile->compile;test->test")
