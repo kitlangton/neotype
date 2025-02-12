@@ -99,7 +99,9 @@ lazy val root = (project in file("."))
     caliban.jvm,
     doobie.jvm,
     upickle.js,
-    upickle.jvm
+    upickle.jvm,
+    ciris.js,
+    ciris.jvm
   )
 
 lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
