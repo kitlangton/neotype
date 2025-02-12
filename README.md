@@ -11,7 +11,7 @@
 A friendly newtype library for Scala 3.
 
 ```scala
-"io.github.kitlangton" %% "neotype" % "0.3.13"
+"io.github.kitlangton" %% "neotype" % "0.3.15"
 ```
 
 ## Features
@@ -80,6 +80,7 @@ Neotype integrates with the following libraries:
   - [tapir](https://github.com/softwaremill/tapir)
   - [chimney](https://github.com/scalalandio/chimney)
   - [caliban](https://github.com/ghostdogpr/caliban)
+  - [ciris](https://github.com/vlovgr/ciris)
 
 ### ZIO Json Example
 
