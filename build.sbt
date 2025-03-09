@@ -56,7 +56,7 @@ lazy val calibanVersion        = "2.9.2"
 lazy val doobieVersion         = "1.0.0-RC8"
 lazy val upickleVersion        = "4.1.0"
 lazy val cirisVersion          = "3.7.0"
-lazy val zioInteropCatsVersion = "23.1.0.3"
+lazy val zioInteropCatsVersion = "23.1.0.4"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
