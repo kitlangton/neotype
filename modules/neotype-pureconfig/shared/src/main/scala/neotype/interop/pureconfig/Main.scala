@@ -15,5 +15,9 @@ given [A, B](using newtype: Newtype.WithType[A, B], configReader: ConfigReader[A
 // Subtype
 
 // Read inner type into newtype
-given [A, B <: A](using subtype: Subtype.WithType[A, B], configReader: ConfigReader[A], tag: ClassTag[B]): ConfigReader[B] =
+given [A, B <: A](using
+    subtype: Subtype.WithType[A, B],
+    configReader: ConfigReader[A],
+    tag: ClassTag[B]
+): ConfigReader[B] =
   configReader.emap(a => subtype.make(a).left.map(error => CannotConvert(a.toString, tag.toString, error)))
