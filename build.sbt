@@ -103,8 +103,7 @@ lazy val root = (project in file("."))
     upickle.jvm,
     ciris.js,
     ciris.jvm,
-    pureconfig.js,
-    pureconfig.jvm
+    pureconfig
   )
 
 lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
@@ -262,7 +261,7 @@ lazy val ciris = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
   )
   .dependsOn(core % "compile->compile;test->test")
 
-lazy val pureconfig = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-pureconfig"))
+lazy val pureconfig = (project in file("modules/neotype-pureconfig"))
   .settings(
     name := "neotype-pureconfig",
     sharedSettings,
@@ -271,7 +270,7 @@ lazy val pureconfig = (crossProject(JSPlatform, JVMPlatform) in file("modules/ne
       "com.github.pureconfig" %% "pureconfig-generic-base" % pureconfigVersion,
     )
   )
-  .dependsOn(core % "compile->compile;test->test")
+  .dependsOn(core.jvm % "compile->compile;test->test")
 
 lazy val examples = (project in file("examples"))
   .settings(
