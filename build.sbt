@@ -58,6 +58,7 @@ lazy val upickleVersion        = "4.1.0"
 lazy val cirisVersion          = "3.7.0"
 lazy val zioInteropCatsVersion = "23.1.0.3"
 lazy val pureconfigVersion     = "0.17.8"
+lazy val scanamoVersion        = "3.0.0"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
@@ -103,7 +104,8 @@ lazy val root = (project in file("."))
     upickle.jvm,
     ciris.js,
     ciris.jvm,
-    pureconfig
+    pureconfig,
+    scanamo
   )
 
 lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
@@ -268,6 +270,16 @@ lazy val pureconfig = (project in file("modules/neotype-pureconfig"))
     libraryDependencies ++= Seq(
       "com.github.pureconfig" %% "pureconfig-core" % pureconfigVersion,
       "com.github.pureconfig" %% "pureconfig-generic-base" % pureconfigVersion,
+    )
+  )
+  .dependsOn(core.jvm % "compile->compile;test->test")
+
+lazy val scanamo = (project in file("modules/neotype-scanamo"))
+  .settings(
+    name := "neotype-scanamo",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "org.scanamo" %% "scanamo" % scanamoVersion
     )
   )
   .dependsOn(core.jvm % "compile->compile;test->test")
