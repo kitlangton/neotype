@@ -25,7 +25,7 @@ object ScanamoSpec extends ZIOSpecDefault:
       test("read validation failure") {
         val value = DynamoValue.fromString("")
         val result = DynamoFormat[ValidatedNewtype].read(value)
-        assertTrue(result.left.map(describe) == Left("could not be converted to desired type: java.lang.RuntimeException: String must not be empty"))
+        assertTrue(result.left.map(describe) == Left("could not be converted to desired type: String must not be empty"))
       },
       test("write success") {
         val value = ValidatedNewtype("hello")
