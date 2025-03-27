@@ -55,7 +55,7 @@ lazy val chimneyVersion        = "1.7.3"
 lazy val calibanVersion        = "2.10.0"
 lazy val doobieVersion         = "1.0.0-RC8"
 lazy val upickleVersion        = "4.1.0"
-lazy val cirisVersion          = "3.7.0"
+lazy val cirisVersion          = "3.8.0"
 lazy val zioInteropCatsVersion = "23.1.0.3"
 lazy val pureconfigVersion     = "0.17.8"
 
