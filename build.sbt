@@ -58,6 +58,7 @@ lazy val upickleVersion        = "4.1.0"
 lazy val cirisVersion          = "3.8.0"
 lazy val zioInteropCatsVersion = "23.1.0.3"
 lazy val pureconfigVersion     = "0.17.8"
+lazy val scanamoVersion        = "3.0.0"
 lazy val tethysVersion         = "0.29.4"
 
 val sharedSettings = Seq(
@@ -105,6 +106,7 @@ lazy val root = (project in file("."))
     ciris.js,
     ciris.jvm,
     pureconfig.jvm,
+    scanamo.jvm,
     tethys.jvm
   )
 
@@ -281,6 +283,16 @@ lazy val tethys = (crossProject(JVMPlatform) in file("modules/neotype-tethys"))
     libraryDependencies ++= Seq(
       "com.tethys-json" %% "tethys-core"       % tethysVersion,
       "com.tethys-json" %% "tethys-jackson213" % tethysVersion
+    )
+  )
+  .dependsOn(core % "compile->compile;test->test")
+
+lazy val scanamo = (crossProject(JVMPlatform) in file("modules/neotype-scanamo"))
+  .settings(
+    name := "neotype-scanamo",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "org.scanamo" %% "scanamo" % scanamoVersion
     )
   )
   .dependsOn(core % "compile->compile;test->test")

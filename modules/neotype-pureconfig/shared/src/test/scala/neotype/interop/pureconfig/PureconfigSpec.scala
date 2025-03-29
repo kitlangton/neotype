@@ -10,7 +10,7 @@ import zio.test.*
 object PureconfigSpec extends ZIOSpecDefault:
   case class Config[A](value: A)
 
-  def spec = suite("ChimneySpec")(
+  def spec = suite("PureconfigSpec")(
     suite("NonEmptyString")(
       test("read success") {
         val config = ConfigSource.string("value = \"hello\"")
