@@ -11,7 +11,7 @@ import zio.test.ZIOSpecDefault
 // no common native codec is provided by tethys
 final private case class TethysCodecStub[A](val reader: JsonReader[A], val writer: JsonWriter[A])
 object TethysCodecStub:
-  def instance[A](using reader: JsonReader[A], writer: JsonWriter[A]): TethysCodecStub[A] =
+  given [A](using reader: JsonReader[A], writer: JsonWriter[A]): TethysCodecStub[A] =
     TethysCodecStub(reader, writer)
 
 object TethysLibrary extends JsonLibrary[TethysCodecStub]:
@@ -26,28 +26,20 @@ object TethysLibrary extends JsonLibrary[TethysCodecStub]:
 
     value.asJson
 
-given TethysCodecStub[Composite] =
-  given JsonReader[Composite] =
-    JsonReader.builder
-      .addField[ValidatedNewtype]("newtype")
-      .addField[SimpleNewtype]("simpleNewtype")
-      .addField[ValidatedSubtype]("subtype")
-      .addField[SimpleSubtype]("simpleSubtype")
-      .buildReader(Composite.apply)
+given JsonReader[Composite] =
+  JsonReader.builder
+    .addField[ValidatedNewtype]("newtype")
+    .addField[SimpleNewtype]("simpleNewtype")
+    .addField[ValidatedSubtype]("subtype")
+    .addField[SimpleSubtype]("simpleSubtype")
+    .buildReader(Composite.apply)
 
-  given JsonWriter[Composite] =
-    JsonWriter
-      .obj[Composite]
-      .addField("newtype")(_.newtype)
-      .addField("simpleNewtype")(_.simpleNewtype)
-      .addField("subtype")(_.subtype)
-      .addField("simpleSubtype")(_.simpleSubtype)
-
-  TethysCodecStub.instance
-
-given TethysCodecStub[ValidatedNewtype] = TethysCodecStub.instance
-given TethysCodecStub[SimpleNewtype]    = TethysCodecStub.instance
-given TethysCodecStub[ValidatedSubtype] = TethysCodecStub.instance
-given TethysCodecStub[SimpleSubtype]    = TethysCodecStub.instance
+given JsonWriter[Composite] =
+  JsonWriter
+    .obj[Composite]
+    .addField("newtype")(_.newtype)
+    .addField("simpleNewtype")(_.simpleNewtype)
+    .addField("subtype")(_.subtype)
+    .addField("simpleSubtype")(_.simpleSubtype)
 
 object TethysSpec extends JsonLibrarySpec[TethysCodecStub]("Tethys", TethysLibrary)
