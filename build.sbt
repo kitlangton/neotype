@@ -55,10 +55,11 @@ lazy val chimneyVersion        = "1.7.3"
 lazy val calibanVersion        = "2.10.0"
 lazy val doobieVersion         = "1.0.0-RC8"
 lazy val upickleVersion        = "4.1.0"
-lazy val cirisVersion          = "3.7.0"
+lazy val cirisVersion          = "3.8.0"
 lazy val zioInteropCatsVersion = "23.1.0.3"
 lazy val pureconfigVersion     = "0.17.8"
 lazy val scanamoVersion        = "3.0.0"
+lazy val tethysVersion         = "0.29.4"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
@@ -104,8 +105,9 @@ lazy val root = (project in file("."))
     upickle.jvm,
     ciris.js,
     ciris.jvm,
-    pureconfig,
-    scanamo
+    pureconfig.jvm,
+    scanamo.jvm,
+    tethys.jvm
   )
 
 lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
@@ -263,18 +265,29 @@ lazy val ciris = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
   )
   .dependsOn(core % "compile->compile;test->test")
 
-lazy val pureconfig = (project in file("modules/neotype-pureconfig"))
+lazy val pureconfig = (crossProject(JVMPlatform) in file("modules/neotype-pureconfig"))
   .settings(
     name := "neotype-pureconfig",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "com.github.pureconfig" %% "pureconfig-core" % pureconfigVersion,
-      "com.github.pureconfig" %% "pureconfig-generic-base" % pureconfigVersion,
+      "com.github.pureconfig" %% "pureconfig-core"         % pureconfigVersion,
+      "com.github.pureconfig" %% "pureconfig-generic-base" % pureconfigVersion
     )
   )
-  .dependsOn(core.jvm % "compile->compile;test->test")
+  .dependsOn(core % "compile->compile;test->test")
 
-lazy val scanamo = (project in file("modules/neotype-scanamo"))
+lazy val tethys = (crossProject(JVMPlatform) in file("modules/neotype-tethys"))
+  .settings(
+    name := "neotype-tethys",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "com.tethys-json" %% "tethys-core"       % tethysVersion,
+      "com.tethys-json" %% "tethys-jackson213" % tethysVersion
+    )
+  )
+  .dependsOn(core % "compile->compile;test->test")
+
+lazy val scanamo = (crossProject(JVMPlatform) in file("modules/neotype-scanamo"))
   .settings(
     name := "neotype-scanamo",
     sharedSettings,
@@ -282,7 +295,7 @@ lazy val scanamo = (project in file("modules/neotype-scanamo"))
       "org.scanamo" %% "scanamo" % scanamoVersion
     )
   )
-  .dependsOn(core.jvm % "compile->compile;test->test")
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val examples = (project in file("examples"))
   .settings(
