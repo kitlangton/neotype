@@ -21,34 +21,17 @@ given [A, B](using
 ): PartialTransformer[A, B] =
   PartialTransformer(newType.make(_).asResult)
 
-// Transform Newtype to Newtype
-given [A, B, C, D](using
+// Transform from Newtype
+given [A, B, C](using
     newTypeSource: Newtype.WithType[A, B],
-    newTypeDestination: Newtype.WithType[C, D],
-    underlyingTransformer: Transformer[A, D]
-): Transformer[B, D] = (b: B) => underlyingTransformer.transform(newTypeSource.unwrap(b))
+    underlyingTransformer: Transformer[A, C]
+): Transformer[B, C] = (b: B) => underlyingTransformer.transform(newTypeSource.unwrap(b))
 
-// Transform Newtype to Subtype
-given [A, B, C, D <: C](using
+// Partially transform from Newtype
+given [A, B, C](using
     newTypeSource: Newtype.WithType[A, B],
-    subTypeDestination: neotype.Subtype.WithType[C, D],
-    underlyingTransformer: Transformer[A, D]
-): Transformer[B, D] = (b: B) => underlyingTransformer.transform(newTypeSource.unwrap(b))
-
-// Partially transform Newtype to Newtype
-given [A, B, C, D](using
-    newTypeSource: Newtype.WithType[A, B],
-    newTypeDestination: Newtype.WithType[C, D],
-    underlyingPartialTransformer: PartialTransformer[A, D]
-): PartialTransformer[B, D] = (b: B, failFast: Boolean) =>
-  underlyingPartialTransformer.transform(newTypeSource.unwrap(b), failFast)
-
-// Partially transform Newtype to Subtype
-given [A, B, C, D <: C](using
-    newTypeSource: Newtype.WithType[A, B],
-    subTypeDestination: Subtype.WithType[C, D],
-    underlyingPartialTransformer: PartialTransformer[A, D]
-): PartialTransformer[B, D] = (b: B, failFast: Boolean) =>
+    underlyingPartialTransformer: PartialTransformer[A, C]
+): PartialTransformer[B, C] = (b: B, failFast: Boolean) =>
   underlyingPartialTransformer.transform(newTypeSource.unwrap(b), failFast)
 
 // Subtype
@@ -67,30 +50,14 @@ given [A, B <: A](using
 ): PartialTransformer[A, B] =
   PartialTransformer(subtype.make(_).asResult)
 
-// Transform Subtype to Subtype
-given [A, B <: A, C, D <: C](using
+// Transform from Subtype
+given [A, B <: A, C](using
     subTypeSource: Subtype.WithType[A, B],
-    subTypeDestination: Subtype.WithType[C, D],
-    underlyingTransformer: Transformer[A, D]
-): Transformer[B, D] = (b: B) => underlyingTransformer.transform(b)
+    underlyingTransformer: Transformer[A, C]
+): Transformer[B, C] = (b: B) => underlyingTransformer.transform(b)
 
-// Transform Subtype to Newtype
-given [A, B <: A, C, D](using
+// Partially transform from Subtype
+given [A, B <: A, C](using
     subTypeSource: Subtype.WithType[A, B],
-    newTypeDestination: Newtype.WithType[C, D],
-    underlyingTransformer: Transformer[A, D]
-): Transformer[B, D] = (b: B) => underlyingTransformer.transform(b)
-
-// Partially transform Subtype to Subtype
-given [A, B <: A, C, D <: C](using
-    subTypeSource: Subtype.WithType[A, B],
-    subTypeDestination: Subtype.WithType[C, D],
-    underlyingPartialTransformer: PartialTransformer[A, D]
-): PartialTransformer[B, D] = (b: B, failFast: Boolean) => underlyingPartialTransformer.transform(b, failFast)
-
-// Partially transform Subtype to Newtype
-given [A, B <: A, C, D](using
-    subTypeSource: Subtype.WithType[A, B],
-    subTypeDestination: Newtype.WithType[C, D],
-    underlyingPartialTransformer: PartialTransformer[A, D]
-): PartialTransformer[B, D] = (b: B, failFast: Boolean) => underlyingPartialTransformer.transform(b, failFast)
+    underlyingPartialTransformer: PartialTransformer[A, C]
+): PartialTransformer[B, C] = (b: B, failFast: Boolean) => underlyingPartialTransformer.transform(b, failFast)
