@@ -244,7 +244,7 @@ lazy val doobie = (crossProject(JVMPlatform) in file("modules/neotype-doobie"))
       "com.h2database" % "h2"              % "2.3.232"     % Test
     )
   )
-  .dependsOn(core % "compile->compile;test->test")
+  .dependsOn(core % "compile->compile;test->test", cats % "compile->compile;test->test")
 
 lazy val upickle = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-upickle"))
   .settings(
