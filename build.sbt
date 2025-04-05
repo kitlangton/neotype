@@ -60,6 +60,7 @@ lazy val zioInteropCatsVersion = "23.1.0.3"
 lazy val pureconfigVersion     = "0.17.8"
 lazy val scanamoVersion        = "3.0.0"
 lazy val tethysVersion         = "0.29.4"
+lazy val catsVersion           = "2.13.0"
 
 val sharedSettings = Seq(
   scalacOptions ++= Seq(
@@ -107,7 +108,8 @@ lazy val root = (project in file("."))
     ciris.jvm,
     pureconfig.jvm,
     scanamo.jvm,
-    tethys.jvm
+    tethys.jvm,
+    cats.jvm
   )
 
 lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
@@ -293,6 +295,16 @@ lazy val scanamo = (crossProject(JVMPlatform) in file("modules/neotype-scanamo")
     sharedSettings,
     libraryDependencies ++= Seq(
       "org.scanamo" %% "scanamo" % scanamoVersion
+    )
+  )
+  .dependsOn(core % "compile->compile;test->test")
+
+lazy val cats = (crossProject(JVMPlatform) in file("modules/neotype-cats"))
+  .settings(
+    name := "neotype-cats",
+    sharedSettings,
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-core" % catsVersion
     )
   )
   .dependsOn(core % "compile->compile;test->test")
