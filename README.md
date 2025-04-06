@@ -81,6 +81,7 @@ Neotype integrates with the following libraries:
   - [chimney](https://github.com/scalalandio/chimney)
   - [caliban](https://github.com/ghostdogpr/caliban)
   - [ciris](https://github.com/vlovgr/ciris)
+  - [cats](https://github.com/typelevel/cats) `Show`, `Eq`
 
 ### ZIO Json Example
 
