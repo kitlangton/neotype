@@ -1,7 +1,9 @@
 package neotype.interop.chimney
 
 import io.scalaland.chimney.dsl.*
-import neotype.{Newtype, PositiveIntNewtype, Subtype}
+import neotype.Newtype
+import neotype.PositiveIntNewtype
+import neotype.Subtype
 import neotype.test.definitions.*
 import zio.test.*
 

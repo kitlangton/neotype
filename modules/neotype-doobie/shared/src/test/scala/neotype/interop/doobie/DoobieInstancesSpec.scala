@@ -9,6 +9,7 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import neotype.Newtype
 import neotype.Subtype
+import neotype.common.NonEmptyString
 import neotype.interop.doobie.newtypeArrayGet
 import neotype.interop.doobie.newtypeGet
 import neotype.interop.doobie.subtypeArrayGet
@@ -116,5 +117,60 @@ object DoobieInstancesSpec extends ZIOSpecDefault:
         )
         assertTrue(result.isFailure)
       }
+    ),
+    suite("Stacked Types")(
+      test("stacked newtype success") {
+        val result = sql"SELECT 'Bob'".query[NonEmptyName].unique.transact(transactor).unsafeRunSync()
+        assertTrue(result == NonEmptyName(NonEmptyString("Bob")))
+      },
+      test("stacked newtype fail") {
+        val result = scala.util.Try(
+          sql"SELECT ''".query[NonEmptyName].unique.transact(transactor).unsafeRunSync()
+        )
+        assertTrue(result.isFailure, result.failed.get.getMessage.contains("NonEmptyString cannot be empty"))
+      },
+      test("stacked subtype success") {
+        val result = sql"SELECT 'Bob Smith'".query[LongNonEmptyString].unique.transact(transactor).unsafeRunSync()
+        assertTrue(result == LongNonEmptyString.unsafeMake(NonEmptyString("Bob Smith")))
+      },
+      test("stacked subtype fail - inner validation") {
+        val result = scala.util.Try(
+          sql"SELECT ''".query[LongNonEmptyString].unique.transact(transactor).unsafeRunSync()
+        )
+        assertTrue(result.isFailure, result.failed.get.getMessage.contains("NonEmptyString cannot be empty"))
+      },
+      test("stacked subtype fail - outer validation") {
+        val result = scala.util.Try(
+          sql"SELECT 'Short'".query[LongNonEmptyString].unique.transact(transactor).unsafeRunSync()
+        )
+        assertTrue(result.isFailure, result.failed.get.getMessage.contains("String must be longer than 5 characters"))
+      },
+      test("nested composite success") {
+        val result = sql"SELECT 42, 'user@example.com'".query[User].unique.transact(transactor).unsafeRunSync()
+        assertTrue(result == User(UserId(42), EmailAddress(NonEmptyString("user@example.com"))))
+      },
+      test("nested composite fail") {
+        val result = scala.util.Try(
+          sql"SELECT 42, ''".query[User].unique.transact(transactor).unsafeRunSync()
+        )
+        assertTrue(result.isFailure, result.failed.get.getMessage.contains("NonEmptyString cannot be empty"))
+      }
     )
   )
+
+  // Test types for stacked types
+  type NonEmptyName = NonEmptyName.Type
+  object NonEmptyName extends Newtype[NonEmptyString]
+
+  type LongNonEmptyString = LongNonEmptyString.Type
+  object LongNonEmptyString extends Subtype[NonEmptyString]:
+    override inline def validate(input: NonEmptyString): Boolean | String =
+      if input.length > 5 then true else "String must be longer than 5 characters"
+
+  type UserId = UserId.Type
+  object UserId extends Newtype[Int]
+
+  type EmailAddress = EmailAddress.Type
+  object EmailAddress extends Newtype[NonEmptyString]
+
+  case class User(id: UserId, email: EmailAddress)
