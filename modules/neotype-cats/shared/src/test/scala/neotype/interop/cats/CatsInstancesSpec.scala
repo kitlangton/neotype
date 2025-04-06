@@ -1,8 +1,10 @@
 package neotype.interop.cats
 
-import cats.{Eq, Show}
+import cats.Eq
+import cats.Show
 import cats.implicits.*
-import neotype.{Newtype, Subtype}
+import neotype.Newtype
+import neotype.Subtype
 import neotype.common.NonEmptyString
 import neotype.test.definitions.*
 import zio.test.*

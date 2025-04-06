@@ -1,7 +1,9 @@
 package neotype.interop.cats
 
-import cats.{Eq, Show}
-import neotype.{Newtype, Subtype}
+import cats.Eq
+import cats.Show
+import neotype.Newtype
+import neotype.Subtype
 
 /////////////
 // NEWTYPE //
