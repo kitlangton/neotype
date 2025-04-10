@@ -4,6 +4,7 @@ import cats.Show
 import cats.implicits.*
 import doobie.*
 import neotype.*
+
 import scala.reflect.ClassTag
 
 // Helps resolve Get instances for stacked Newtypes
