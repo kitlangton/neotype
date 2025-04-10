@@ -1,6 +1,7 @@
 package neotype.interop.cats
 
 import cats.Eq
+import cats.Order
 import cats.Show
 import cats.implicits.*
 import neotype.Newtype
@@ -56,6 +57,38 @@ object CatsInstancesSpec extends ZIOSpecDefault:
         assertTrue(
           Eq[FullName].eqv(fullName1, fullName2),
           Eq[FullName].neqv(fullName1, fullName3)
+        )
+      }
+    ),
+    suite("Order instances")(
+      test("Order for simple newtype") {
+        val simple1 = SimpleNewtype(42)
+        val simple2 = SimpleNewtype(42)
+        val simple3 = SimpleNewtype(43)
+        assertTrue(
+          Order[SimpleNewtype].compare(simple1, simple2) == 0,
+          Order[SimpleNewtype].compare(simple1, simple3) < 0,
+          Order[SimpleNewtype].compare(simple3, simple1) > 0
+        )
+      },
+      test("Order for subtype") {
+        val subtype1 = SimpleSubtype(10)
+        val subtype2 = SimpleSubtype(10)
+        val subtype3 = SimpleSubtype(20)
+        assertTrue(
+          Order[SimpleSubtype].compare(subtype1, subtype2) == 0,
+          Order[SimpleSubtype].compare(subtype1, subtype3) < 0,
+          Order[SimpleSubtype].compare(subtype3, subtype1) > 0
+        )
+      },
+      test("Order for stacked newtype") {
+        val fullName1 = FullName(NonEmptyString("Bob Smith"))
+        val fullName2 = FullName(NonEmptyString("Bob Smith"))
+        val fullName3 = FullName(NonEmptyString("Alice Jones"))
+        assertTrue(
+          Order[FullName].compare(fullName1, fullName2) == 0,
+          Order[FullName].compare(fullName3, fullName1) < 0,
+          Order[FullName].compare(fullName1, fullName3) > 0
         )
       }
     )
