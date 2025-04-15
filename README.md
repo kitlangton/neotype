@@ -70,6 +70,7 @@ Neotype integrates with the following libraries:
   - [jsoniter](https://github.com/plokhotnyuk/jsoniter-scala)
   - [circe](https://github.com/circe/circe)
   - [upickle](https://github.com/lihaoyi/upickle)
+  - [tethys](https://github.com/tethys-json/tethys)
 - **DATABASE**
   - [doobie](https://github.com/tpolecat/doobie)
   - [quill](https://github.com/zio/zio-quill)
