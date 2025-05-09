@@ -1,7 +1,7 @@
 inThisBuild(
   List(
     organization := "io.github.kitlangton",
-    scalaVersion := "3.3.5",
+    scalaVersion := "3.3.6",
     homepage     := Some(url("https://github.com/kitlangton/neotype")),
     licenses     := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
     developers := List(
