@@ -91,21 +91,31 @@ import neotype.*
 
 type NonEmptyString = NonEmptyString.Type
 object NonEmptyString extends Newtype[String]:
-  override inline def validate(value: String): Result =
+  override inline def validate(value: String): Boolean | String =
     if value.nonEmpty then true else "String must not be empty"
+
+type Age = Age.Type
+object Age extends NewType[Int]:
+  override inline def validate(value: Int): Boolean | String =
+    ensureOrError("Age must be between 0 and 125 inclusive") {
+      value >= 0 && value <= 125
+    }
 ```
 
 ```scala
 import neotype.interop.ziojson.given
 import zio.json.*
 
-case class Person(name: NonEmptyString, age: Int) derives JsonCodec
+case class Person(name: NonEmptyString, age: Age) derives JsonCodec
 
 val parsed = """{"name": "Kit", "age": 30}""".fromJson[Person]
-// Right(Person(NonEmptyString("Kit"), 30))
+// Right(Person(NonEmptyString("Kit"), Age(30)))
 
-val failed = """{"name": "", "age": 30}""".fromJson[Person]
+val failedName = """{"name": "", "age": 30}""".fromJson[Person]
 // Left(".name(String must not be empty)")
+
+val failedAge = """{"name": "Kit", "age": -2}""".fromJson[Person]
+// Left(".age(Age must be between 0 and 125 inclusive)")
 ```
 
 By importing `neotype.ziojson.given`, we automatically generate a `JsonCodec` for `NonEmptyString`. Custom
