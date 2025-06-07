@@ -74,6 +74,18 @@ object NewtypeSpec extends ZIOSpecDefault:
     }
     // test error messages when cannot parse at compile-time
 
+    suiteAll("ensureOrError sugar") {
+      test("fails with custom message") {
+        val res = typeCheckErrors("""EnsureOrErrorNewType("lowercase")""").head
+        assertTrue(res.message contains "String must be all uppercase")
+      }
+
+      test("success") {
+        val res = EnsureOrErrorNewType("SUCCESS")
+        assertTrue(res.unwrap == "SUCCESS")
+      }
+    }
+
     suiteAll(".make") {
       test("success") {
         val res = PositiveIntNewtype.make(1)

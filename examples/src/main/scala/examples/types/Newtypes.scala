@@ -10,6 +10,13 @@ object Email extends Newtype[String]:
   override inline def validate(value: String) =
     if value.contains("@") && value.contains(".") then true else "Invalid email"
 
+type Port = Port.Type
+object Port extends Newtype[Int]:
+  override inline def validate(value: Int) =
+    ensureOrError("Port number must be between 0 and 65535 inclusive") {
+      value >= 0 && value <= 65535
+    }
+
 type FourSeasons = FourSeasons.Type
 object FourSeasons extends Newtype[String]:
   override inline def validate(value: String): Boolean =

@@ -133,3 +133,6 @@ abstract class Subtype[A] extends TypeWrapper[A]:
 
 object Subtype:
   type WithType[A, B <: A] = Subtype[A] { type Type = B }
+
+inline def ensureOrError(message: String)(condition: Boolean): Boolean | String =
+  if condition then true else message

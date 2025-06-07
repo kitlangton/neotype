@@ -50,3 +50,9 @@ object VariousStringNewtype extends Newtype[String]:
   override inline def validate(string: String): Boolean =
     string.startsWith("a") && string.endsWith("z") &&
       string.length > 0 && string.contains("b")
+
+object EnsureOrErrorNewType extends Newtype[String]:
+  override inline def validate(input: String): Boolean | String =
+    ensureOrError("String must be all uppercase") {
+      input.forall(_.isUpper)
+    }
