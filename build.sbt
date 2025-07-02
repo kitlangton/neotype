@@ -1,7 +1,7 @@
 inThisBuild(
   List(
     organization := "io.github.kitlangton",
-    scalaVersion := "3.3.5",
+    scalaVersion := "3.3.6",
     homepage     := Some(url("https://github.com/kitlangton/neotype")),
     licenses     := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
     developers := List(
@@ -44,18 +44,18 @@ ThisBuild / githubWorkflowPublish := Seq(
 // Project Definitions //
 /////////////////////////
 
-lazy val jsoniterVersion       = "2.36.1"
-lazy val circeVersion          = "0.14.13"
-lazy val tapirVersion          = "1.11.29"
-lazy val zioVersion            = "2.1.18"
+lazy val jsoniterVersion       = "2.36.6"
+lazy val circeVersion          = "0.14.14"
+lazy val tapirVersion          = "1.11.35"
+lazy val zioVersion            = "2.1.19"
 lazy val zioConfigVersion      = "4.0.4"
-lazy val zioSchemaVersion      = "1.7.2"
-lazy val zioJsonVersion        = "0.7.43"
-lazy val chimneyVersion        = "1.8.0"
-lazy val calibanVersion        = "2.10.0"
+lazy val zioSchemaVersion      = "1.7.3"
+lazy val zioJsonVersion        = "0.7.44"
+lazy val chimneyVersion        = "1.8.1"
+lazy val calibanVersion        = "2.10.1"
 lazy val doobieVersion         = "1.0.0-RC9"
 lazy val upickleVersion        = "4.2.1"
-lazy val cirisVersion          = "3.8.0"
+lazy val cirisVersion          = "3.9.0"
 lazy val zioInteropCatsVersion = "23.1.0.3"
 lazy val pureconfigVersion     = "0.17.9"
 lazy val scanamoVersion        = "3.0.0"
@@ -199,7 +199,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     sharedSettings,
     libraryDependencies ++= Seq(
       "io.getquill"   %% "quill-jdbc-zio" % "4.8.6",
-      "org.postgresql" % "postgresql"     % "42.7.5"  % Test,
+      "org.postgresql" % "postgresql"     % "42.7.7"  % Test,
       "com.h2database" % "h2"             % "2.3.232" % Test
     )
   )
