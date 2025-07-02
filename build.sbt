@@ -109,9 +109,7 @@ lazy val root = (project in file("."))
     pureconfig.jvm,
     scanamo.jvm,
     tethys.jvm,
-    cats.jvm,
-    experimental.js,
-    experimental.jvm
+    cats.jvm
   )
 
 lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
@@ -318,13 +316,6 @@ lazy val examples = (project in file("examples"))
     publish / skip := true
   )
   .dependsOn(core.jvm, zioJson.jvm, zioQuill)
-
-lazy val experimental = (crossProject(JSPlatform, JVMPlatform) in file("modules/experimental"))
-  .settings(
-    name := "neotype-experimental",
-    sharedSettings
-  )
-  .dependsOn(core % "compile->compile;test->test")
 
 addCommandAlias("prepare", "scalafixAll;scalafmtAll;githubWorkflowGenerate")
 
