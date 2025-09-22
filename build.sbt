@@ -44,21 +44,21 @@ ThisBuild / githubWorkflowPublish := Seq(
 // Project Definitions //
 /////////////////////////
 
-lazy val jsoniterVersion       = "2.36.6"
+lazy val jsoniterVersion       = "2.37.11"
 lazy val circeVersion          = "0.14.14"
-lazy val tapirVersion          = "1.11.39"
-lazy val zioVersion            = "2.1.19"
-lazy val zioConfigVersion      = "4.0.4"
-lazy val zioSchemaVersion      = "1.7.3"
+lazy val tapirVersion          = "1.11.44"
+lazy val zioVersion            = "2.1.21"
+lazy val zioConfigVersion      = "4.0.5"
+lazy val zioSchemaVersion      = "1.7.5"
 lazy val zioJsonVersion        = "0.7.44"
-lazy val chimneyVersion        = "1.8.1"
-lazy val calibanVersion        = "2.10.1"
-lazy val doobieVersion         = "1.0.0-RC9"
-lazy val upickleVersion        = "4.2.1"
-lazy val cirisVersion          = "3.9.0"
+lazy val chimneyVersion        = "1.8.2"
+lazy val calibanVersion        = "2.11.1"
+lazy val doobieVersion         = "1.0.0-RC10"
+lazy val upickleVersion        = "4.3.2"
+lazy val cirisVersion          = "3.10.0"
 lazy val zioInteropCatsVersion = "23.1.0.3"
 lazy val pureconfigVersion     = "0.17.9"
-lazy val scanamoVersion        = "3.0.0"
+lazy val scanamoVersion        = "4.0.0"
 lazy val tethysVersion         = "0.29.5"
 lazy val catsVersion           = "2.13.0"
 
@@ -145,7 +145,7 @@ lazy val playJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neot
     name := "neotype-play-json",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "org.playframework" %%% "play-json" % "3.1.0-M1"
+      "org.playframework" %%% "play-json" % "3.1.0-M3"
     )
   )
   .dependsOn(core % "compile->compile;test->test")
@@ -199,7 +199,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     sharedSettings,
     libraryDependencies ++= Seq(
       "io.getquill"   %% "quill-jdbc-zio" % "4.8.6",
-      "org.postgresql" % "postgresql"     % "42.7.7"  % Test,
+      "org.postgresql" % "postgresql"     % "42.7.8"  % Test,
       "com.h2database" % "h2"             % "2.3.232" % Test
     )
   )
