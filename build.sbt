@@ -44,7 +44,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 // Project Definitions //
 /////////////////////////
 
-lazy val jsoniterVersion       = "2.37.11"
+lazy val jsoniterVersion       = "2.38.0"
 lazy val circeVersion          = "0.14.14"
 lazy val tapirVersion          = "1.11.44"
 lazy val zioVersion            = "2.1.21"
