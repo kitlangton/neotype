@@ -1,7 +1,7 @@
 inThisBuild(
   List(
     organization := "io.github.kitlangton",
-    scalaVersion := "3.3.6",
+    scalaVersion := "3.3.7",
     homepage     := Some(url("https://github.com/kitlangton/neotype")),
     licenses     := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
     developers := List(
@@ -44,9 +44,9 @@ ThisBuild / githubWorkflowPublish := Seq(
 // Project Definitions //
 /////////////////////////
 
-lazy val jsoniterVersion       = "2.37.11"
-lazy val circeVersion          = "0.14.14"
-lazy val tapirVersion          = "1.11.44"
+lazy val jsoniterVersion       = "2.38.3"
+lazy val circeVersion          = "0.14.15"
+lazy val tapirVersion          = "1.11.49"
 lazy val zioVersion            = "2.1.21"
 lazy val zioConfigVersion      = "4.0.5"
 lazy val zioSchemaVersion      = "1.7.5"
@@ -55,7 +55,7 @@ lazy val chimneyVersion        = "1.8.2"
 lazy val calibanVersion        = "2.11.1"
 lazy val doobieVersion         = "1.0.0-RC10"
 lazy val upickleVersion        = "4.3.2"
-lazy val cirisVersion          = "3.10.0"
+lazy val cirisVersion          = "3.11.1"
 lazy val zioInteropCatsVersion = "23.1.0.3"
 lazy val pureconfigVersion     = "0.17.9"
 lazy val scanamoVersion        = "4.0.0"
@@ -145,7 +145,7 @@ lazy val playJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neot
     name := "neotype-play-json",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "org.playframework" %%% "play-json" % "3.1.0-M3"
+      "org.playframework" %%% "play-json" % "3.1.0-M4"
     )
   )
   .dependsOn(core % "compile->compile;test->test")
@@ -200,7 +200,7 @@ lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
     libraryDependencies ++= Seq(
       "io.getquill"   %% "quill-jdbc-zio" % "4.8.6",
       "org.postgresql" % "postgresql"     % "42.7.8"  % Test,
-      "com.h2database" % "h2"             % "2.3.232" % Test
+      "com.h2database" % "h2"             % "2.4.240" % Test
     )
   )
   .dependsOn(core.jvm % "compile->compile;test->test")
@@ -241,7 +241,7 @@ lazy val doobie = (crossProject(JVMPlatform) in file("modules/neotype-doobie"))
     libraryDependencies ++= Seq(
       "org.tpolecat"  %% "doobie-core"     % doobieVersion,
       "org.tpolecat"  %% "doobie-postgres" % doobieVersion % Test,
-      "com.h2database" % "h2"              % "2.3.232"     % Test
+      "com.h2database" % "h2"              % "2.4.240"     % Test
     )
   )
   .dependsOn(core % "compile->compile;test->test", cats % "compile->compile;test->test")
