@@ -59,7 +59,7 @@ lazy val cirisVersion          = "3.11.1"
 lazy val zioInteropCatsVersion = "23.1.0.3"
 lazy val pureconfigVersion     = "0.17.9"
 lazy val scanamoVersion        = "4.0.0"
-lazy val tethysVersion         = "0.29.5"
+lazy val tethysVersion         = "0.29.6"
 lazy val catsVersion           = "2.13.0"
 
 val sharedSettings = Seq(
