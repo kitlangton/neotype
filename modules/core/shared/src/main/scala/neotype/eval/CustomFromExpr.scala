@@ -66,10 +66,10 @@ object CustomFromExpr:
           @nowarn("msg=unused")
           given Type[A] = aType.asInstanceOf[Type[A]]
           x match
-            case '{ Option[A](${ Expr(a) }) } => Some(Some(a))
-            case '{ Some[A](${ Expr(a) }) }   => Some(Some(a))
-            case '{ None }                    => Some(None)
-            case _                            => None
+            case '{ Option[A](${ Expr(a) }: A) } => Some(Some(a))
+            case '{ Some[A](${ Expr(a) }) }      => Some(Some(a))
+            case '{ None }                       => Some(None)
+            case _                               => None
 
   given fromExprEither[E, A]: FromExpr[Either[E, A]] with
     def unapply(x: Expr[Either[E, A]])(using Quotes) =
