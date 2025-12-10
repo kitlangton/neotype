@@ -45,22 +45,22 @@ ThisBuild / githubWorkflowPublish := Seq(
 // Project Definitions //
 /////////////////////////
 
-lazy val jsoniterVersion       = "2.38.3"
+lazy val jsoniterVersion       = "2.38.5"
 lazy val circeVersion          = "0.14.15"
-lazy val tapirVersion          = "1.11.49"
-lazy val zioVersion            = "2.1.22"
-lazy val zioConfigVersion      = "4.0.5"
+lazy val tapirVersion          = "1.13.1"
+lazy val zioVersion            = "2.1.23"
+lazy val zioConfigVersion      = "4.0.6"
 lazy val zioSchemaVersion      = "1.7.5"
-lazy val zioJsonVersion        = "0.7.44"
+lazy val zioJsonVersion        = "0.7.45"
 lazy val chimneyVersion        = "1.8.2"
 lazy val calibanVersion        = "2.11.1"
-lazy val doobieVersion         = "1.0.0-RC10"
-lazy val upickleVersion        = "4.3.2"
+lazy val doobieVersion         = "1.0.0-RC11"
+lazy val upickleVersion        = "4.4.1"
 lazy val cirisVersion          = "3.11.1"
 lazy val zioInteropCatsVersion = "23.1.0.3"
 lazy val pureconfigVersion     = "0.17.9"
-lazy val scanamoVersion        = "4.0.0"
-lazy val tethysVersion         = "0.29.6"
+lazy val scanamoVersion        = "5.0.0"
+lazy val tethysVersion         = "0.29.7"
 lazy val catsVersion           = "2.13.0"
 
 val sharedSettings = Seq(
