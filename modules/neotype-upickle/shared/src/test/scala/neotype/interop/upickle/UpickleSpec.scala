@@ -9,7 +9,10 @@ import zio.test.*
 object UpickleLibrary extends JsonLibrary[ReadWriter]:
   def decode[A](json: String)(using rw: ReadWriter[A]): Either[String, A] =
     try Right(read[A](json))
-    catch case e: Exception => Left(e.getMessage)
+    catch
+      case e: upickle.core.TraceVisitor.TraceException =>
+        Left(Option(e.getCause).map(_.getMessage).getOrElse(e.getMessage))
+      case e: Exception => Left(e.getMessage)
 
   def encode[A](value: A)(using rw: ReadWriter[A]): String =
     write(value)
