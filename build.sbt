@@ -1,10 +1,10 @@
 inThisBuild(
   List(
-    organization := "io.github.kitlangton",
-    scalaVersion := "3.3.7",
+    organization  := "io.github.kitlangton",
+    scalaVersion  := "3.3.7",
     versionScheme := Some("early-semver"),
-    homepage     := Some(url("https://github.com/kitlangton/neotype")),
-    licenses     := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
+    homepage      := Some(url("https://github.com/kitlangton/neotype")),
+    licenses      := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
     developers := List(
       Developer("kitlangton", "Kit Langton", "kit.langton@gmail.com", url("https://github.com/kitlangton"))
     ),
@@ -59,7 +59,7 @@ lazy val upickleVersion        = "4.4.1"
 lazy val cirisVersion          = "3.11.1"
 lazy val zioInteropCatsVersion = "23.1.0.3"
 lazy val pureconfigVersion     = "0.17.9"
-lazy val scanamoVersion        = "5.0.0"
+lazy val scanamoVersion        = "6.0.0"
 lazy val tethysVersion         = "0.29.7"
 lazy val catsVersion           = "2.13.0"
 
