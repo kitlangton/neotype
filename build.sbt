@@ -1,10 +1,10 @@
 inThisBuild(
   List(
-    organization := "io.github.kitlangton",
-    scalaVersion := "3.3.7",
+    organization  := "io.github.kitlangton",
+    scalaVersion  := "3.3.7",
     versionScheme := Some("early-semver"),
-    homepage     := Some(url("https://github.com/kitlangton/neotype")),
-    licenses     := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
+    homepage      := Some(url("https://github.com/kitlangton/neotype")),
+    licenses      := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
     developers := List(
       Developer("kitlangton", "Kit Langton", "kit.langton@gmail.com", url("https://github.com/kitlangton"))
     ),
@@ -48,7 +48,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 lazy val jsoniterVersion       = "2.38.5"
 lazy val circeVersion          = "0.14.15"
 lazy val tapirVersion          = "1.13.1"
-lazy val zioVersion            = "2.1.23"
+lazy val zioVersion            = "2.1.24"
 lazy val zioConfigVersion      = "4.0.6"
 lazy val zioSchemaVersion      = "1.7.5"
 lazy val zioJsonVersion        = "0.7.45"
