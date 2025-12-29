@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object MacroEntry:
+private[comptime] object MacroEntry:
   /** Compile-time evaluation macro.
     *
     * All failures become compile errors:
@@ -50,7 +50,7 @@ object MacroEntry:
 
       Compiler.compileTerm(termIR) match
         case Left(err) =>
-          report.errorAndAbort(ComptimeFailure.format(err))
+          report.errorAndAbort(ComptimeError.format(err))
 
         case Right(eval) =>
           val value = Eval.run(eval)
@@ -58,12 +58,12 @@ object MacroEntry:
             case Some(te) =>
               te.asInstanceOf[ToExpr[Any]].apply(value).asExprOf[A]
             case None =>
-              val failure = ComptimeFailure.CannotLift(Type.show[A])
-              report.errorAndAbort(ComptimeFailure.format(failure))
+              val failure = ComptimeError.CannotLift(Type.show[A])
+              report.errorAndAbort(ComptimeError.format(failure))
     catch
       case e: ComptimeAbort =>
-        val failure = ComptimeFailure.UserAbort(e.message, callSiteInfo)
-        report.errorAndAbort(ComptimeFailure.format(failure))
+        val failure = ComptimeError.UserAbort(e.message, callSiteInfo)
+        report.errorAndAbort(ComptimeError.format(failure))
       case e: Throwable =>
-        val failure = ComptimeFailure.EvalException(e.getClass.getSimpleName, e.getMessage)
-        report.errorAndAbort(ComptimeFailure.format(failure))
+        val failure = ComptimeError.EvalException(e.getClass.getSimpleName, e.getMessage)
+        report.errorAndAbort(ComptimeError.format(failure))

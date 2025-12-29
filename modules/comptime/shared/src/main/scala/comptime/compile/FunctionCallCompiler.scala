@@ -1,6 +1,6 @@
 package comptime
 
-object FunctionCallCompiler:
+private[comptime] object FunctionCallCompiler:
   def compileFunctionCall(
       call: CallIR,
       env: Map[String, Eval],

@@ -3,7 +3,7 @@ package comptime.util
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
 
-object ReflectionInvoke:
+private[comptime] object ReflectionInvoke:
   def paramOk(param: Class[?], value: Any): Boolean =
     if value == null then !param.isPrimitive
     else if param.isPrimitive then

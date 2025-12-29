@@ -3,7 +3,7 @@ package comptime
 import scala.quoted.*
 
 /** Helpers for working with ToExpr in macros. */
-object MacroExprsHelpers:
+private[comptime] object MacroExprsHelpers:
   /** Cast a ToExpr[T] to ToExpr[A] after a type pattern match.
     *
     * This is safe when used immediately after matching `case '[T] =>` because

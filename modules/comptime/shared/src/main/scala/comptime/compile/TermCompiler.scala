@@ -1,6 +1,6 @@
 package comptime
 
-object TermCompiler:
+private[comptime] object TermCompiler:
   // Common exception types that can be reconstructed from EvalException
   private val exceptionConstructors: Map[String, String => Throwable] = Map(
     "NumberFormatException"           -> (msg => new NumberFormatException(msg)),
@@ -77,10 +77,10 @@ object TermCompiler:
           }
         case TermIR.Try(expr, cases, finalizer) =>
           // Helper to convert exception to EvalException
-          def toEvalException(e: Throwable): ComptimeFailure.EvalException =
+          def toEvalException(e: Throwable): ComptimeError.EvalException =
             val exType = e.getClass.getSimpleName
             val msg    = if e.getMessage != null then e.getMessage else ""
-            ComptimeFailure.EvalException(exType, msg, None, None)
+            ComptimeError.EvalException(exType, msg, None, None)
 
           // Run the finalizer - throws if finally block throws
           def runFinally(): Unit =
@@ -88,7 +88,7 @@ object TermCompiler:
               loop(fin, env, fold) match
                 case Right(finEval) =>
                   Eval.run(finEval) // May throw - that's intentional
-                case Left(ComptimeFailure.EvalException(exType, msg, _, _)) =>
+                case Left(ComptimeError.EvalException(exType, msg, _, _)) =>
                   // Finally compilation threw - reconstruct and throw
                   reconstructException(exType, msg).foreach(throw _)
                 case Left(_) =>
@@ -122,7 +122,7 @@ object TermCompiler:
                         // Handler threw - propagate handler's exception (not original)
                         Left(toEvalException(handlerEx))
                   }
-                case Left(ComptimeFailure.MatchError(_)) =>
+                case Left(ComptimeError.MatchError(_)) =>
                   // No catch case matched - run finally, propagate original exception
                   withFinally(Left(toEvalException(e)))
                 case Left(other) =>
@@ -141,14 +141,14 @@ object TermCompiler:
                 // Body succeeded - run finally with protection
                 withFinally(Right(Eval.Value(result)))
               catch case e: Throwable => handleException(e)
-            case Left(ComptimeFailure.EvalException(exType, msg, _, _)) =>
+            case Left(ComptimeError.EvalException(exType, msg, _, _)) =>
               // Exception during compilation - try to reconstruct and catch
               if ComptimeDebug.enabled then ComptimeDebug.log(s"[try/catch] reconstructing: $exType")
               reconstructException(exType, msg) match
                 case Some(e) => handleException(e)
-                case None    => withFinally(Left(ComptimeFailure.EvalException(exType, msg, None, None)))
+                case None    => withFinally(Left(ComptimeError.EvalException(exType, msg, None, None)))
             case Left(other) =>
               withFinally(Left(other))
-        case other => Left(ComptimeFailure.UnsupportedTerm(other.getClass.getSimpleName, other.toString))
+        case other => Left(ComptimeError.UnsupportedTerm(other.getClass.getSimpleName, other.toString))
 
     loop(term, env, fold)

@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object ScalaAstBridgeTypes:
+private[comptime] object ScalaAstBridgeTypes:
   def typeToIR[Q <: Quotes](using quotes: Q)(tpe: quotes.reflect.TypeRepr): TypeIR =
     import quotes.reflect.*
     val sym = tpe.typeSymbol

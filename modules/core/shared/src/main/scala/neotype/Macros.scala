@@ -2,7 +2,6 @@ package neotype
 
 import comptime.Compiler as ComptimeCompiler
 import comptime.ComptimeError
-import comptime.ComptimeFailure
 import comptime.Eval as ComptimeEval
 import comptime.MacroExprs
 import comptime.ScalaAstBridge
@@ -60,7 +59,7 @@ private[neotype] object Macros:
 
     def compileTerm(term: quotes.reflect.Term): Either[ComptimeError, ComptimeEval] =
       try ComptimeCompiler.compileTerm(ScalaAstBridge.termToIR(term))
-      catch case e: Throwable => Left(ComptimeFailure.EvalException(e.getClass.getSimpleName, e.getMessage))
+      catch case e: Throwable => Left(ComptimeError.EvalException(e.getClass.getSimpleName, e.getMessage))
 
     lazy val nt = TypeRepr.of[NT].widenTermRefByName match
       case Refinement(t, _, _) => t
@@ -193,7 +192,7 @@ private[neotype] object Macros:
 
     def compileTerm(term: quotes.reflect.Term): Either[ComptimeError, ComptimeEval] =
       try ComptimeCompiler.compileTerm(ScalaAstBridge.termToIR(term))
-      catch case e: Throwable => Left(ComptimeFailure.EvalException(e.getClass.getSimpleName, e.getMessage))
+      catch case e: Throwable => Left(ComptimeError.EvalException(e.getClass.getSimpleName, e.getMessage))
 
     def unwrap(tpe: TypeRepr): TypeRepr =
       tpe.widenTermRefByName match
@@ -258,7 +257,7 @@ private[neotype] object Macros:
                 te.asInstanceOf[ToExpr[Any]].apply(value).asExprOf[Out]
               case None =>
                 report.errorAndAbort(
-                  ComptimeFailure.format(ComptimeFailure.CannotLift(Type.show[Out]))
+                  ComptimeError.format(ComptimeError.CannotLift(Type.show[Out]))
                 )
 
           case Success(Left(message: String)) =>

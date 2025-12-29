@@ -4,7 +4,7 @@ import comptime.ComptimeError
 import comptime.Eval
 import comptime.TermIR
 
-object Args:
+private[comptime] object Args:
   def compileArgsList(
       args: List[TermIR],
       compile: TermIR => Either[ComptimeError, Eval]

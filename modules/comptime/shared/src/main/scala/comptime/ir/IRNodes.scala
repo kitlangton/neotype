@@ -1,10 +1,10 @@
 package comptime
 
-final case class CaseIR(pattern: PatternIR, guard: Option[TermIR], body: TermIR)
+private[comptime] final case class CaseIR(pattern: PatternIR, guard: Option[TermIR], body: TermIR)
 
-final case class ParamIR(name: String, tpe: TypeIR)
+private[comptime] final case class ParamIR(name: String, tpe: TypeIR)
 
-final case class CallIR(
+private[comptime] final case class CallIR(
     recv: TermIR,
     owner: String,
     name: String,

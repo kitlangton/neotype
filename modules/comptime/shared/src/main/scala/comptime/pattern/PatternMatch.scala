@@ -1,6 +1,6 @@
 package comptime
 
-object PatternMatch:
+private[comptime] object PatternMatch:
   def merge(a: Map[String, Any], b: Map[String, Any]): Option[Map[String, Any]] =
     val keysOk = a.keySet.intersect(b.keySet).forall(k => a(k) == b(k))
     if keysOk then Some(a ++ b) else None

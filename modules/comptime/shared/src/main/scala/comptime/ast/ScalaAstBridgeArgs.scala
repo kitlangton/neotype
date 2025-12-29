@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object ScalaAstBridgeArgs:
+private[comptime] object ScalaAstBridgeArgs:
   def reorderNamedArgs[Q <: Quotes](using
       quotes: Q
   )(args: List[quotes.reflect.Term], paramNames: List[String]): List[quotes.reflect.Term] =

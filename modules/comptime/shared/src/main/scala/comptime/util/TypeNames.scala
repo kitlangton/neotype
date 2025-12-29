@@ -1,6 +1,6 @@
 package comptime.util
 
-object TypeNames:
+private[comptime] object TypeNames:
   def stripModule(name: String): String =
     if name.endsWith("$") then name.dropRight(1) else name
 

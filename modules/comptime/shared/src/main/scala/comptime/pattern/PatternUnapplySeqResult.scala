@@ -1,6 +1,6 @@
 package comptime
 
-object PatternUnapplySeqResult:
+private[comptime] object PatternUnapplySeqResult:
   def handleResult(
       result: Any,
       args: List[PatternIR],
@@ -18,10 +18,10 @@ object PatternUnapplySeqResult:
           case Some(value) =>
             PatternUnapplySeqMatch.valuesFromUnapplySeq(value) match
               case Some(values) => matchSeqValues(values.values, values.fixedPrefix)
-              case None         => Left(ComptimeFailure.UnsupportedPattern("unapplySeq", s"result: ${value.getClass.getName}"))
+              case None         => Left(ComptimeError.UnsupportedPattern("unapplySeq", s"result: ${value.getClass.getName}"))
           case None =>
             Right(None)
       case otherValue =>
         PatternUnapplySeqMatch.valuesFromUnapplySeq(otherValue) match
           case Some(values) => matchSeqValues(values.values, values.fixedPrefix)
-          case None         => Left(ComptimeFailure.UnsupportedPattern("unapplySeq", s"result: ${otherValue.getClass.getName}"))
+          case None         => Left(ComptimeError.UnsupportedPattern("unapplySeq", s"result: ${otherValue.getClass.getName}"))

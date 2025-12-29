@@ -371,10 +371,6 @@ private[comptime] object StdlibNumericHelpers:
       "%" -> ((a: Any, b: Any) => withPromotion(a, b)(_ % _, _ % _, _ % _, _ % _))
     )
 
-  // DEPRECATED: These old functions had bugs (narrowing instead of widening).
-  // Use comparisonsPromoted and arithOpsPromoted instead.
-  // Keeping temporarily for reference, can be removed in future cleanup.
-
 private[comptime] object StdlibNumericBasicRules:
   private def charBasics(rule: RulesFor[Char]): List[CallRule] =
     RuleHelpers.concat(
@@ -462,7 +458,7 @@ private[comptime] object StdlibBigNumCtorRules:
       )
     )
 
-object StdlibNumericRules:
+private[comptime] object StdlibNumericRules:
   private val intRule       = RulesFor[Int](RuleDsl.int)
   private val longRule      = RulesFor[Long](RuleDsl.long)
   private val floatRule     = RulesFor[Float](RuleDsl.float)

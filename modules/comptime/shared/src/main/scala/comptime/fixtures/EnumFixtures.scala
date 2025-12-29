@@ -8,14 +8,14 @@ import _root_.comptime.comptimeError
 // These must be in main/ (not test/) so they're compiled before macro expansion
 // ══════════════════════════════════════════════════════════════════════════════
 
-enum Row:
+private[comptime] enum Row:
   case Top, Middle, Bottom
 
-enum Col:
+private[comptime] enum Col:
   case Left, Center, Right
 
-final case class GridPos(row: Row, col: Col)
-object GridPos:
+private[comptime] final case class GridPos(row: Row, col: Col)
+private[comptime] object GridPos:
   inline def parse(inline s: String): GridPos = comptime {
     val parts = s.split("-")
     val row = parts(0).toLowerCase match
@@ -32,7 +32,7 @@ object GridPos:
   }
 
 // Enum with overridden toString
-enum ColorWithToString:
+private[comptime] enum ColorWithToString:
   case Red, Green, Blue
 
   override def toString: String = this match
@@ -40,8 +40,8 @@ enum ColorWithToString:
     case Green => "COLOR_GREEN"
     case Blue  => "COLOR_BLUE"
 
-final case class ColorBox(color: ColorWithToString)
-object ColorBox:
+private[comptime] final case class ColorBox(color: ColorWithToString)
+private[comptime] object ColorBox:
   inline def make(inline c: String): ColorBox = comptime {
     val color = c.toLowerCase match
       case "red"   => ColorWithToString.Red
@@ -52,13 +52,13 @@ object ColorBox:
   }
 
 // Parameterized enum
-enum HttpStatus(val code: Int):
+private[comptime] enum HttpStatus(val code: Int):
   case Ok          extends HttpStatus(200)
   case NotFound    extends HttpStatus(404)
   case ServerError extends HttpStatus(500)
 
-final case class StatusBox(status: HttpStatus)
-object StatusBox:
+private[comptime] final case class StatusBox(status: HttpStatus)
+private[comptime] object StatusBox:
   inline def make(inline c: String): StatusBox = comptime {
     val status = c.toLowerCase match
       case "ok"       => HttpStatus.Ok

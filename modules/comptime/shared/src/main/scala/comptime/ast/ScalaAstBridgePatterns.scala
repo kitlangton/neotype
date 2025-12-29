@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object ScalaAstBridgePatterns:
+private[comptime] object ScalaAstBridgePatterns:
   def patternToIR[Q <: Quotes](using
       quotes: Q
   )(

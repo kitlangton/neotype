@@ -16,7 +16,7 @@ private[comptime] object RuleOpsSupport:
     names.toList.map(f)
 
 // === Ops helpers (by-value) ===
-trait RulesForOps[A]:
+private[comptime] trait RulesForOps[A]:
   self: RulesFor[A] =>
 
   import RuleOpsSupport.{mapNames, mapPairs}
@@ -244,7 +244,7 @@ trait RulesForOps[A]:
     anyArityOps1Fn(pairs*)
 
 // === Ops helpers (by-name) ===
-trait RulesForByName[A](using ClassTag[A]):
+private[comptime] trait RulesForByName[A](using ClassTag[A]):
   self: RulesFor[A] =>
 
   import RuleOpsSupport.{mapPairs, mapTriples}
@@ -453,7 +453,7 @@ trait RulesForByName[A](using ClassTag[A]):
     byNameCond_SLL_Any(pairs*)
 
 // === RulesFor entrypoint ===
-final case class RulesFor[A: ClassTag](recv: RecvPred) extends RulesForOps[A], RulesForByName[A]:
+private[comptime] final case class RulesFor[A: ClassTag](recv: RecvPred) extends RulesForOps[A], RulesForByName[A]:
   def rule[R](name: String)(f: A => R): CallRule =
     rule0(name)(f)
   def rule[B: ClassTag, R](name: String)(f: (A, B) => R): CallRule =
@@ -498,7 +498,7 @@ final case class RulesFor[A: ClassTag](recv: RecvPred) extends RulesForOps[A], R
     RuleHelpersCore.ruleRecv1_1_1Or3[A, B, C, D, R](recv, name)(f)
 
 // === Typed constructors ===
-object RulesFor:
+private[comptime] object RulesFor:
   def any(recv: RecvPred): RulesFor[Any]                    = RulesFor[Any](recv)
   def string: RulesFor[String]                              = RulesFor[String](RuleDsl.string)
   def option(recv: RecvPred): RulesFor[Option[Any]]         = RulesFor[Option[Any]](recv)

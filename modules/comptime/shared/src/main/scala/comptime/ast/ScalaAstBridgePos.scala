@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object ScalaAstBridgePos:
+private[comptime] object ScalaAstBridgePos:
   private val ContextLines = 1 // Number of lines before/after to include
 
   def extractPos[Q <: Quotes](using quotes: Q)(term: quotes.reflect.Term): Option[SourcePos] =

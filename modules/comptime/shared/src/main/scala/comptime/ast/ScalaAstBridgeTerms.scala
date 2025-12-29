@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object ScalaAstBridgeTerms:
+private[comptime] object ScalaAstBridgeTerms:
   def termToIR[Q <: Quotes](using quotes: Q)(term0: quotes.reflect.Term): TermIR =
     import quotes.reflect.*
 

@@ -44,7 +44,7 @@ private[comptime] object StdlibTryCtorRules:
     )
   // Failure.apply is not supported - requires Throwable at compile time
 
-object StdlibTryRules:
+private[comptime] object StdlibTryRules:
   private val tryRecv      = Recv.moduleOnly("scala.util.Try")
   private val successRecv  = Recv.moduleOnly("scala.util.Success")
   private val tryValueRecv = Recv.modules("scala.util.Try", "scala.util.Success", "scala.util.Failure")

@@ -4,7 +4,7 @@ import scala.quoted.*
 
 import MacroExprs.castToExpr
 
-object MacroExprsPrimitive:
+private[comptime] object MacroExprsPrimitive:
   // Helper for primitives with existing ToExpr instances
   private inline def primitive[T: ToExpr, A]: Option[ToExpr[A]] =
     Some(castToExpr[T, A](summon[ToExpr[T]]))

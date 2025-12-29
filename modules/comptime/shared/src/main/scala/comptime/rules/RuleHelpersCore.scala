@@ -6,7 +6,7 @@ import scala.reflect.ClassTag
 import RuleHelperFold.*
 
 // === Receiver predicates ===
-object Recv:
+private[comptime] object Recv:
   private def moduleNames(name: String): Set[String] =
     if name.endsWith("$") then Set(name, name.dropRight(1))
     else Set(name, name + "$")
@@ -19,7 +19,7 @@ object Recv:
   def union(names: String*): RecvPred =
     UnionRecv(names.toSet)
 
-object RuleHelperRecv:
+private[comptime] object RuleHelperRecv:
   def recvPredOf[A: ClassTag]: RecvPred =
     val cls = summon[ClassTag[A]].runtimeClass
     if cls == classOf[String] then RuleDsl.string
@@ -29,7 +29,7 @@ object RuleHelperRecv:
         .getOrElse(TypeRecv(cls.getName))
 
 // === Constant folding helpers ===
-object RuleHelperFold:
+private[comptime] object RuleHelperFold:
   // Numeric conversion helpers - handle Scala's implicit widening (Char → Int → Long → Float → Double)
   private def toNumeric[A](value: Any, fromNumber: Number => A, fromChar: Char => A, fallback: => A): A =
     value match
@@ -104,7 +104,7 @@ object RuleHelperFold:
         )
 
 // === Core rule builders (by arity) ===
-object RuleHelpersCore:
+private[comptime] object RuleHelpersCore:
   private def buildRule(recv: RecvPred, name: String, arity: Arity)(f: CallCompiler): CallRule =
     RuleDsl
       .rule(name)
@@ -122,7 +122,7 @@ object RuleHelpersCore:
   def rule0Recv[R](recv: RecvPred, name: String)(value: => R): CallRule =
     buildRule(recv, name, A0) { (call, _) =>
       if call.args0 then Right(Eval.Value(value))
-      else Left(ComptimeFailure.UnsupportedArity(name, ""))
+      else Left(ComptimeError.UnsupportedArity(name, ""))
     }
 
   def ruleStatic1[A, R](recv: RecvPred, name: String)(f: A => R): CallRule =
@@ -137,7 +137,7 @@ object RuleHelpersCore:
                 Eval.BuildList(List(argEval), values => f(values.head.asInstanceOf[A]))
           }
         case None =>
-          Left(ComptimeFailure.UnsupportedArity(name, ""))
+          Left(ComptimeError.UnsupportedArity(name, ""))
     }
 
   def ruleStatic1Id[A](recv: RecvPred, name: String): CallRule =
@@ -196,7 +196,7 @@ object RuleHelpersCore:
         fold1(ctx, recvEval, argEval)(f)
       } match
         case Right(v) => Right(v)
-        case Left(_: ComptimeFailure.UnsupportedArity) =>
+        case Left(_: ComptimeError.UnsupportedArity) =>
           ComptimeDebug.log(
             s"[comptime] ruleRecv1AnyArity: trying fallbacks for $name, args1_1=${call.args1_1.isDefined}, args2=${call.args2.isDefined}"
           )
@@ -219,7 +219,7 @@ object RuleHelpersCore:
                   yield fold1(ctx, recvEval, argEval)(f)
                 case None =>
                   ComptimeDebug.log(s"[comptime] ruleRecv1AnyArity: no fallback for $name")
-                  Left(ComptimeFailure.UnsupportedArity(name, ""))
+                  Left(ComptimeError.UnsupportedArity(name, ""))
         case Left(err) => Left(err)
     }
 
@@ -245,7 +245,7 @@ object RuleHelpersCore:
         fold2(ctx, recvEval, bEval, cEval)(f)
       } match
         case Right(value) => Right(value)
-        case Left(_: ComptimeFailure.UnsupportedArity) =>
+        case Left(_: ComptimeError.UnsupportedArity) =>
           call.compileRecv2(ctx, name) { (recvEval, bEval, cEval) =>
             fold2(ctx, recvEval, bEval, cEval)(f)
           }
@@ -344,7 +344,7 @@ object RuleHelpersCore:
         fold3(ctx, recvEval, bEval, cEval, dEval)(f)
       } match
         case Right(value) => Right(value)
-        case Left(_: ComptimeFailure.UnsupportedArity) =>
+        case Left(_: ComptimeError.UnsupportedArity) =>
           call.compileRecv3(ctx, name) { (recvEval, bEval, cEval, dEval) =>
             fold3(ctx, recvEval, bEval, cEval, dEval)(f)
           }
@@ -352,7 +352,7 @@ object RuleHelpersCore:
     }
 
 // === Varargs helpers ===
-object RuleHelpersVarargs:
+private[comptime] object RuleHelpersVarargs:
   def ruleVarargsRecv[R](recv: RecvPred, name: String)(build: List[Any] => R): CallRule =
     RuleDsl
       .rule(name)
@@ -368,7 +368,7 @@ object RuleHelpersVarargs:
 
   def ruleVarargsRecvWithReceiver[R](recv: RecvPred, name: String)(
       build: (Any, List[Any]) => R,
-      missing: => ComptimeError = ComptimeFailure.UnsupportedArity(name, "")
+      missing: => ComptimeError = ComptimeError.UnsupportedArity(name, "")
   ): CallRule =
     RuleDsl
       .rule(name)
@@ -398,7 +398,7 @@ object RuleHelpersVarargs:
       }
 
 // === Constructor helpers (companions / tuples) ===
-object RuleHelpersConstructors:
+private[comptime] object RuleHelpersConstructors:
   def companionRules[R](
       recv: RecvPred,
       empty: => R,
@@ -428,7 +428,7 @@ object RuleHelpersConstructors:
     )
 
 // === By-name evaluation helpers ===
-object RuleHelperByName:
+private[comptime] object RuleHelperByName:
   private def thunkEval(eval: Eval): Eval =
     Eval.Value(() => Eval.run(eval))
 
@@ -572,7 +572,7 @@ object RuleHelperByName:
           applyEval
 
 // === By-name rule builders ===
-object RuleHelpersByName:
+private[comptime] object RuleHelpersByName:
   import RuleHelperByName.*
   import RuleHelperRecv.*
 
@@ -581,7 +581,7 @@ object RuleHelpersByName:
   ): Either[ComptimeError, Eval] =
     args match
       case Some(value) => f(value)
-      case None        => Left(ComptimeFailure.UnsupportedArity(name, ""))
+      case None        => Left(ComptimeError.UnsupportedArity(name, ""))
 
   private def buildRule(recv: RecvPred, name: String, arity: Arity)(f: CallCompiler): CallRule =
     RuleDsl
@@ -734,7 +734,7 @@ object RuleHelpersByName:
     }
 
 // === Public re-exports ===
-object RuleHelpers:
+private[comptime] object RuleHelpers:
   type RulesFor[A] = _root_.comptime.RulesFor[A]
   val RulesFor = _root_.comptime.RulesFor
   val Recv     = _root_.comptime.Recv

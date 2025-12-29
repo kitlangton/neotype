@@ -125,7 +125,7 @@ private[neotype] object NeotypeError:
   private def indent(str: String): String =
     str.linesIterator.map(line => s"  $line".blue).mkString("\n")
 
-/** Helper methods for backward compatibility with Macros.scala */
+/** Helper methods used by Macros.scala */
 private[neotype] object ErrorMessages:
   def inputParseFailureMessage(using Quotes)(input: Expr[Any], nt: quotes.reflect.TypeRepr): String =
     val ctx     = MessageContext.from(input, nt)

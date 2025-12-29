@@ -1,7 +1,7 @@
 // Math static methods (java.lang.Math and scala.math)
 package comptime
 
-object StdlibMathRules:
+private[comptime] object StdlibMathRules:
   import RuleHelpers.*
 
   // scala.math package object methods dispatch to java.lang.Math

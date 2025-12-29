@@ -158,7 +158,7 @@ private[comptime] object StdlibOptionHelpers:
       )
     )
 
-object StdlibOptionRules:
+private[comptime] object StdlibOptionRules:
   private val optionRecv          = Recv.module("scala.Option")
   private val someRecv            = Recv.module("scala.Some")
   private val noneRecv            = Recv.module("scala.None")

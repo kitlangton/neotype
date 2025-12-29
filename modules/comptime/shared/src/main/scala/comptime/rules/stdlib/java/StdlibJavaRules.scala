@@ -17,7 +17,7 @@ private[comptime] object StdlibJavaCtorRules:
       RulesFor[java.util.UUID](recv).rules("toString")(_.toString)
     )
 
-object StdlibJavaRules:
+private[comptime] object StdlibJavaRules:
   private val uriRecv  = Recv.union("java.net.URI")
   private val uuidRecv = Recv.union("java.util.UUID")
 

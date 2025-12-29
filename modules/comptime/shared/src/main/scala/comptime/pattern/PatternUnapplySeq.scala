@@ -3,7 +3,7 @@ package comptime
 import PatternNames.*
 import PatternReflection.*
 
-object PatternUnapplySeq:
+private[comptime] object PatternUnapplySeq:
   def unapplySeqPattern(
       fullName: String,
       recv: Option[TermIR],
@@ -43,4 +43,4 @@ object PatternUnapplySeq:
                   case Right(Some(result)) =>
                     PatternUnapplySeqResult.handleResult(result, args, evalTerm, matchesFn)
                   case Right(None) =>
-                    Left(ComptimeFailure.UnsupportedPattern("unapplySeq", normalized))
+                    Left(ComptimeError.UnsupportedPattern("unapplySeq", normalized))

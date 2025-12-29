@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object MacroExprsCaseClass:
+private[comptime] object MacroExprsCaseClass:
   def summonExprOpt[A: Type](using Quotes): Option[ToExpr[A]] =
     import quotes.reflect.*
     val tpe = TypeRepr.of[A]

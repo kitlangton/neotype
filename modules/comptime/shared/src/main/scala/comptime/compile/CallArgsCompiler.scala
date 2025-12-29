@@ -1,6 +1,6 @@
 package comptime
 
-object CallArgsCompiler:
+private[comptime] object CallArgsCompiler:
   def compileArgs(
       terms: List[TermIR],
       env: Map[String, Eval],

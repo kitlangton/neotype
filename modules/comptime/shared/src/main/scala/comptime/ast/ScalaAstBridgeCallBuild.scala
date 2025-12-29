@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object ScalaAstBridgeCallBuild:
+private[comptime] object ScalaAstBridgeCallBuild:
   def buildCall[Q <: Quotes](using
       quotes: Q
   )(

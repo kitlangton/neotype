@@ -2,7 +2,7 @@ package comptime
 
 import util.ReflectionLookup
 
-object PatternUnapplyFallback:
+private[comptime] object PatternUnapplyFallback:
   def moduleOrClassFallback(
       normalized: String,
       fullName: String,
@@ -26,4 +26,4 @@ object PatternUnapplyFallback:
           case Some(_) =>
             Right(None)
           case None =>
-            Left(ComptimeFailure.UnsupportedPattern("unapply", fullName))
+            Left(ComptimeError.UnsupportedPattern("unapply", fullName))

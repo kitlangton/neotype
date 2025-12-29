@@ -2,15 +2,15 @@ package comptime
 
 import util.TypeNames
 
-final case class RuleContext(
+private[comptime] final case class RuleContext(
     foldConstants: Boolean,
     compileTerm: TermIR => Either[ComptimeError, Eval],
     compileTermLazy: TermIR => Either[ComptimeError, Eval]
 )
 
-sealed trait RuleSpec
+private[comptime] sealed trait RuleSpec
 
-final case class CallRule(
+private[comptime] final case class CallRule(
     id: String,
     recv: RecvPred,
     name: NamePred,
@@ -19,39 +19,39 @@ final case class CallRule(
     compile: CallCompiler
 ) extends RuleSpec
 
-sealed trait RecvPred
-case object AnyRecv                                extends RecvPred
-final case class TypeRecv(fullName: String)        extends RecvPred
-final case class UnionRecv(fullNames: Set[String]) extends RecvPred
+private[comptime] sealed trait RecvPred
+private[comptime] case object AnyRecv                                extends RecvPred
+private[comptime] final case class TypeRecv(fullName: String)        extends RecvPred
+private[comptime] final case class UnionRecv(fullNames: Set[String]) extends RecvPred
 
-sealed trait NamePred
-case object AnyName                          extends NamePred
-final case class NameIs(value: String)       extends NamePred
-final case class NameIn(values: Set[String]) extends NamePred
+private[comptime] sealed trait NamePred
+private[comptime] case object AnyName                          extends NamePred
+private[comptime] final case class NameIs(value: String)       extends NamePred
+private[comptime] final case class NameIn(values: Set[String]) extends NamePred
 
-sealed trait Arity
-case object A0                            extends Arity
-case object A1                            extends Arity
-case object A2                            extends Arity
-case object A3                            extends Arity
-case object A4                            extends Arity
-case object A5                            extends Arity
-case object A1_1                          extends Arity
-case object A1_1_1                        extends Arity
-case object A1_2                          extends Arity
-final case class ASet(values: Set[Arity]) extends Arity
+private[comptime] sealed trait Arity
+private[comptime] case object A0                            extends Arity
+private[comptime] case object A1                            extends Arity
+private[comptime] case object A2                            extends Arity
+private[comptime] case object A3                            extends Arity
+private[comptime] case object A4                            extends Arity
+private[comptime] case object A5                            extends Arity
+private[comptime] case object A1_1                          extends Arity
+private[comptime] case object A1_1_1                        extends Arity
+private[comptime] case object A1_2                          extends Arity
+private[comptime] final case class ASet(values: Set[Arity]) extends Arity
 
-sealed trait ArgShape
-case object ByValue                extends ArgShape
-final case class ByName(idx: Int)  extends ArgShape
-final case class Varargs(idx: Int) extends ArgShape
+private[comptime] sealed trait ArgShape
+private[comptime] case object ByValue                extends ArgShape
+private[comptime] final case class ByName(idx: Int)  extends ArgShape
+private[comptime] final case class Varargs(idx: Int) extends ArgShape
 
 // Compiler signatures
 // NOTE: keep them in RuleSpec to avoid circular dependencies.
-type CallCompiler = (CallIR, RuleContext) => Either[ComptimeError, Eval]
+private[comptime] type CallCompiler = (CallIR, RuleContext) => Either[ComptimeError, Eval]
 
-object RuleDsl:
-  final case class RuleBuilder(
+private[comptime] object RuleDsl:
+  private[comptime] final case class RuleBuilder(
       names: Set[String],
       recv: RecvPred = AnyRecv,
       arity: Arity = ASet(Set.empty),

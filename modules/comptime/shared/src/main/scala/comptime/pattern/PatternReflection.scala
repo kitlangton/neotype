@@ -70,7 +70,7 @@ private[comptime] object PatternReflection:
           case e: Throwable =>
             val cause = Option(e.getCause).getOrElse(e)
             Left(
-              ComptimeFailure.UnsupportedPattern(
+              ComptimeError.UnsupportedPattern(
                 "unapply",
                 s"$throwLabel.$method threw: ${cause.toString}"
               )
@@ -84,7 +84,7 @@ private[comptime] object PatternReflection:
           module,
           method,
           arg,
-          missingError = ComptimeFailure.UnsupportedPattern("unapply", s"$fullName.$method"),
+          missingError = ComptimeError.UnsupportedPattern("unapply", s"$fullName.$method"),
           throwLabel = fullName
         )
 
@@ -100,9 +100,9 @@ private[comptime] object PatternReflection:
           target,
           method,
           arg,
-          missingError = ComptimeFailure.UnsupportedPattern("unapply", s"${target.getClass.getName}.$method"),
+          missingError = ComptimeError.UnsupportedPattern("unapply", s"${target.getClass.getName}.$method"),
           throwLabel = target.getClass.getName
         )
       case other =>
-        Left(ComptimeFailure.UnsupportedPattern("unapply", s"receiver: ${other.getClass.getName}"))
+        Left(ComptimeError.UnsupportedPattern("unapply", s"receiver: ${other.getClass.getName}"))
     }

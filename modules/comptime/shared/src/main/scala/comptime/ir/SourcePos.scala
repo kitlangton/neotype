@@ -17,7 +17,7 @@ package comptime
   * @param contextAfter
   *   Lines after the error line
   */
-final case class SourcePos(
+private[comptime] final case class SourcePos(
     file: String,
     line: Int,
     startCol: Int,

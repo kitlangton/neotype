@@ -1,6 +1,6 @@
 package comptime
 
-object LambdaCompiler:
+private[comptime] object LambdaCompiler:
   def compileLambda(
       params: List[ParamIR],
       body: TermIR,
@@ -34,21 +34,21 @@ object LambdaCompiler:
                 val env2 = env.updated(name, Eval.Value(arg))
                 compileMatch(arg, cases, env2, true) match
                   case Right(eval) => Eval.run(eval)
-                  case Left(err)   => throw new RuntimeException(ComptimeFailure.format(err))
+                  case Left(err)   => throw new RuntimeException(ComptimeError.format(err))
             Right(Eval.Value(pf))
           case _ =>
             val fn: Any => Any = (arg: Any) =>
               val env2 = env.updated(name, Eval.Value(arg))
               compileTerm(body, env2, true) match
                 case Right(eval) => Eval.run(eval)
-                case Left(err)   => throw new RuntimeException(ComptimeFailure.format(err))
+                case Left(err)   => throw new RuntimeException(ComptimeError.format(err))
             Right(Eval.Value(fn))
       case ParamIR(n1, _) :: ParamIR(n2, _) :: Nil =>
         val fn: (Any, Any) => Any = (a: Any, b: Any) =>
           val env2 = env.updated(n1, Eval.Value(a)).updated(n2, Eval.Value(b))
           compileTerm(body, env2, true) match
             case Right(eval) => Eval.run(eval)
-            case Left(err)   => throw new RuntimeException(ComptimeFailure.format(err))
+            case Left(err)   => throw new RuntimeException(ComptimeError.format(err))
         Right(Eval.Value(fn))
       case ParamIR(n1, _) :: ParamIR(n2, _) :: ParamIR(n3, _) :: Nil =>
         val fn: (Any, Any, Any) => Any = (a: Any, b: Any, c: Any) =>
@@ -59,13 +59,13 @@ object LambdaCompiler:
               .updated(n3, Eval.Value(c))
           compileTerm(body, env2, true) match
             case Right(eval) => Eval.run(eval)
-            case Left(err)   => throw new RuntimeException(ComptimeFailure.format(err))
+            case Left(err)   => throw new RuntimeException(ComptimeError.format(err))
         Right(Eval.Value(fn))
       case Nil =>
         val thunk: () => Any = () =>
           compileTerm(body, env, true) match
             case Right(eval) => Eval.run(eval)
-            case Left(err)   => throw new RuntimeException(ComptimeFailure.format(err))
+            case Left(err)   => throw new RuntimeException(ComptimeError.format(err))
         Right(Eval.Value(thunk))
       case _ =>
-        Left(ComptimeFailure.UnsupportedLambda(params.size, 3))
+        Left(ComptimeError.UnsupportedLambda(params.size, 3))

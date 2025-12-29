@@ -1,6 +1,6 @@
 package comptime.util
 
-object ReflectionLookup:
+private[comptime] object ReflectionLookup:
   private val moduleCache = scala.collection.concurrent.TrieMap.empty[String, Option[AnyRef]]
   private val classCache  = scala.collection.concurrent.TrieMap.empty[String, Option[Class[?]]]
 

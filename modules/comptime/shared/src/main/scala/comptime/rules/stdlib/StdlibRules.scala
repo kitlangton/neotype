@@ -1,7 +1,7 @@
 // Stdlib rules (hand-maintained).
 package comptime
 
-object StdlibRules:
+private[comptime] object StdlibRules:
   val rules: List[RuleSpec] =
     RuleHelpers.concat(
       StdlibPredefRules.rules,

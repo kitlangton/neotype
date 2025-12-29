@@ -9,7 +9,7 @@ import scala.quoted.*
 
 import MacroExprs.castToExpr
 
-object MacroExprsJavaTime:
+private[comptime] object MacroExprsJavaTime:
   // Helper for custom ToExpr definitions
   private inline def custom[T, A](te: ToExpr[T]): Option[ToExpr[A]] =
     Some(castToExpr[T, A](te))

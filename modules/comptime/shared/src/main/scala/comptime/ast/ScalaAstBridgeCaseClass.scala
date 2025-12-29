@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object ScalaAstBridgeCaseClass:
+private[comptime] object ScalaAstBridgeCaseClass:
   def fromBase[Q <: Quotes](using
       quotes: Q
   )(

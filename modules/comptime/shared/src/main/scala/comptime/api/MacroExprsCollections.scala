@@ -4,7 +4,7 @@ import scala.quoted.*
 
 import MacroExprs.castToExprOpt
 
-object MacroExprsCollections:
+private[comptime] object MacroExprsCollections:
   def summonExprOpt[A: Type](using Quotes): Option[ToExpr[A]] =
     Type.of[A] match
       // Tuples (can't use collectionToExpr helper - need multiple element types)

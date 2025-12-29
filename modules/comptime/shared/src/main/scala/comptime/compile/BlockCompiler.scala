@@ -1,6 +1,6 @@
 package comptime
 
-object BlockCompiler:
+private[comptime] object BlockCompiler:
   def compileBlock(
       stats: List[TermIR],
       expr: TermIR,

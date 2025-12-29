@@ -1,8 +1,8 @@
 package comptime
 
-sealed trait PatternIR
+private[comptime] sealed trait PatternIR
 
-object PatternIR:
+private[comptime] object PatternIR:
   final case class Wildcard()                         extends PatternIR
   final case class Literal(value: Any)                extends PatternIR
   final case class Bind(name: String, pat: PatternIR) extends PatternIR

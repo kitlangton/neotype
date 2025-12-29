@@ -1,6 +1,6 @@
 package comptime
 
-final case class CaseClassValue(fullName: String, fields: Vector[(String, Any)]) extends Product:
+private[comptime] final case class CaseClassValue(fullName: String, fields: Vector[(String, Any)]) extends Product:
   override def canEqual(that: Any): Boolean =
     that match
       case CaseClassValue(otherName, _) => otherName == fullName

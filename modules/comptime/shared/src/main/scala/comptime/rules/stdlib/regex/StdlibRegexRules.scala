@@ -41,7 +41,7 @@ private[comptime] object StdlibRegexBasicRules:
   def ops2StringString(rule: RulesFor[Regex]): List[CallRule] =
     rule.ops2List[String, String](StdlibRegexTables.ops2StringString)
 
-object StdlibRegexRules:
+private[comptime] object StdlibRegexRules:
   // Regex receiver - matches scala.util.matching.Regex
   private val regexRecv = Recv.union("scala.util.matching.Regex")
   private val regexRule = RulesFor[Regex](regexRecv)

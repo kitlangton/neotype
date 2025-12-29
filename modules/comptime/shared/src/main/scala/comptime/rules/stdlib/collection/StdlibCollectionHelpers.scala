@@ -1050,7 +1050,7 @@ private[comptime] object StdlibCollectionCompanionRules:
             catch
               case _: Throwable =>
                 elems,
-      missing = ComptimeFailure.UnsupportedArity("IterableFactory.apply", "")
+      missing = ComptimeError.UnsupportedArity("IterableFactory.apply", "")
     )
 
 private[comptime] object StdlibCollectionHelpers:
@@ -1157,7 +1157,7 @@ private[comptime] object StdlibLazyListRules:
       lazyListConcat(lazyListRule)
     )
 
-object StdlibCollectionRules:
+private[comptime] object StdlibCollectionRules:
   private val listRecv           = Recv.module("scala.collection.immutable.List")
   private val vectorRecv         = Recv.module("scala.collection.immutable.Vector")
   private val tuple2Recv         = Recv.moduleOnly("scala.Tuple2")

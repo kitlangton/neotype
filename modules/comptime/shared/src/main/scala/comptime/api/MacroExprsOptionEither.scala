@@ -7,7 +7,7 @@ import scala.util.Try
 
 import MacroExprs.castToExprOpt
 
-object MacroExprsOptionEither:
+private[comptime] object MacroExprsOptionEither:
   def summonExprOpt[A: Type](using Quotes): Option[ToExpr[A]] =
     Type.of[A] match
       case '[Option[t]] =>

@@ -1,6 +1,6 @@
 package comptime
 
-object PatternUnapplySeqMatch:
+private[comptime] object PatternUnapplySeqMatch:
   final case class SeqValues(values: List[Any], fixedPrefix: Int)
   private val seqValuesCache = scala.collection.concurrent.TrieMap.empty[AnyRef, Option[SeqValues]]
 

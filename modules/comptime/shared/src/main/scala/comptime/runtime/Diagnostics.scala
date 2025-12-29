@@ -3,7 +3,7 @@ package comptime
 import neotype.internal.AnsiFormatting.*
 
 /** Context for where a comptime block was called from. */
-final case class CallSiteInfo(
+private[comptime] final case class CallSiteInfo(
     file: String,
     line: Int,
     exprText: String
@@ -14,13 +14,13 @@ final case class CallSiteInfo(
   * Each case carries relevant context for error reporting.
   *
   * TODO: Enhance error messages with source position highlighting:
-  *   - Carry source Position through ComptimeFailure cases
+  *   - Carry source Position through ComptimeError cases
   *   - Highlight/underline the specific failing subexpression in red
   *   - For EvalException, show which part of the expression threw
   *   - For UnsupportedCall, highlight the unsupported method call
   *   - Use Quotes.reflect.Position to get source ranges
   */
-enum ComptimeFailure:
+enum ComptimeError:
   // ═══════════════════════════════════════════════════════════════════════════
   // Compilation phase failures (converting AST to Eval)
   // ═══════════════════════════════════════════════════════════════════════════
@@ -68,17 +68,17 @@ enum ComptimeFailure:
   /** Cannot convert runtime value to compile-time Expr */
   case CannotLift(typeName: String)
 
-object ComptimeFailure:
+object ComptimeError:
   private val header: String =
     "—— Comptime Error ——————————————————————————————————————————————————————————".red
   private val footer: String =
     "————————————————————————————————————————————————————————————————————————————".red
 
-  def format(failure: ComptimeFailure): String =
+  def format(failure: ComptimeError): String =
     val body = formatBody(failure)
     s"\n$header\n$body\n$footer\n"
 
-  private def formatBody(failure: ComptimeFailure): String = failure match
+  private def formatBody(failure: ComptimeError): String = failure match
     case UnsupportedCall(owner, method, details) =>
       val shortOwner = shortenOwner(owner)
       val lines      = List.newBuilder[String]
@@ -223,11 +223,7 @@ object ComptimeFailure:
   private def shortenOwner(owner: String): String =
     owner.split('.').lastOption.getOrElse(owner).stripSuffix("$")
 
-// Type alias for backwards compatibility
-type ComptimeError = ComptimeFailure
-val ComptimeError = ComptimeFailure
-
-object ComptimeDebug:
+private[comptime] object ComptimeDebug:
   inline val enabled = false
   inline def log(msg: => String): Unit =
     if enabled then println(msg)

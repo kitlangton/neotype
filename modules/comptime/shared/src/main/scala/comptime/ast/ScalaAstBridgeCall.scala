@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object ScalaAstBridgeCall:
+private[comptime] object ScalaAstBridgeCall:
   def callOwner[Q <: Quotes](using quotes: Q)(fun: quotes.reflect.Term, recvOpt: Option[quotes.reflect.Term]): String =
     import quotes.reflect.*
     recvOpt match

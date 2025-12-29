@@ -1,6 +1,6 @@
 package comptime
 
-final class RuleEngine(rules: List[RuleSpec]):
+private[comptime] final class RuleEngine(rules: List[RuleSpec]):
   private val callRules: List[CallRule]           = rules.collect { case r: CallRule => r }
   private val callIndex: CallRuleEngine.RuleIndex = CallRuleEngine.index(callRules)
 

@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object ScalaAstBridgeWrapper:
+private[comptime] object ScalaAstBridgeWrapper:
   def unwrapTypeWrapperApply[Q <: Quotes](using
       quotes: Q
   )(

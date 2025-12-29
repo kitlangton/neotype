@@ -1,8 +1,8 @@
 package comptime
 
-object CallRuleEngine:
+private[comptime] object CallRuleEngine:
   // === Name-based rule index (preserves original rule order) ===
-  final case class RuleIndex(
+  private[comptime] final case class RuleIndex(
       byName: Map[String, Vector[CallRule]],
       anyName: Vector[CallRule]
   ):
@@ -35,7 +35,7 @@ object CallRuleEngine:
     )
 
   // === Call dispatch ===
-  // Wraps all rule compilation to ensure exceptions become Left(ComptimeFailure.EvalException)
+  // Wraps all rule compilation to ensure exceptions become Left(ComptimeError.EvalException)
   // This catches exceptions from constant folding in fold0/fold1/etc during compilation
   def compileCall(call: CallIR, ctx: RuleContext, index: RuleIndex): Either[ComptimeError, Eval] =
     try
@@ -46,7 +46,7 @@ object CallRuleEngine:
           if ComptimeDebug.enabled then ComptimeDebug.log(s"[comptime] rule: ${rule.id}")
           rule.compile(call, ctx) match
             case Left(err) =>
-              if ComptimeDebug.enabled then ComptimeDebug.log(s"[comptime] rule failed: ${ComptimeFailure.format(err)}")
+              if ComptimeDebug.enabled then ComptimeDebug.log(s"[comptime] rule failed: ${ComptimeError.format(err)}")
               Left(err)
             case right => right
         case Nil =>
@@ -61,14 +61,14 @@ object CallRuleEngine:
                   "rules" -> index.candidates(call.name).map(_.id).mkString(", ")
                 )
               else Map.empty
-            Left(ComptimeFailure.UnsupportedCall(call.owner, call.name, details))
+            Left(ComptimeError.UnsupportedCall(call.owner, call.name, details))
           }
     catch
       case e: ComptimeAbort =>
-        Left(ComptimeFailure.UserAbort(e.message))
+        Left(ComptimeError.UserAbort(e.message))
       case e: Throwable =>
         val ctx = s"${shortenOwner(call.owner)}.${call.name}"
-        Left(ComptimeFailure.EvalException(e.getClass.getSimpleName, e.getMessage, Some(ctx), call.pos))
+        Left(ComptimeError.EvalException(e.getClass.getSimpleName, e.getMessage, Some(ctx), call.pos))
 
   private def shortenOwner(owner: String): String =
     owner.split('.').lastOption.getOrElse(owner).stripSuffix("$")
@@ -105,7 +105,7 @@ object CallRuleEngine:
             case Eval.Value(value) =>
               accessorValue(value, call.name) match
                 case Some(result) => Right(Eval.Value(result))
-                case None         => Left(ComptimeFailure.UnsupportedCall(call.owner, call.name))
+                case None         => Left(ComptimeError.UnsupportedCall(call.owner, call.name))
             case _ =>
               Right(
                 Eval.Apply1(

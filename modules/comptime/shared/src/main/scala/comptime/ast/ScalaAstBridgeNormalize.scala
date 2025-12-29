@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object ScalaAstBridgeNormalize:
+private[comptime] object ScalaAstBridgeNormalize:
   private def castTypedLiteral[Q <: Quotes](using
       quotes: Q
   )(value: Any, tpe: quotes.reflect.TypeRepr): Option[Any] =

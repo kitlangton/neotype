@@ -1,7 +1,7 @@
 package comptime
 
 import PatternNames.*
-object PatternEngine:
+private[comptime] object PatternEngine:
   def matches(
       pat: PatternIR,
       value: Any,

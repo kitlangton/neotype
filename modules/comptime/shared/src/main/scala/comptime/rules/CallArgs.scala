@@ -46,10 +46,10 @@ extension (call: CallIR)
                     yield f(recvEval, argEvals)
                   case _ =>
                     ComptimeDebug.log(s"[comptime] arity mismatch for $name: ${call.args.map(_.size)}")
-                    Left(ComptimeFailure.UnsupportedArity(name, ""))
+                    Left(ComptimeError.UnsupportedArity(name, ""))
               case _ =>
                 ComptimeDebug.log(s"[comptime] arity mismatch for $name: ${call.args.map(_.size)}")
-                Left(ComptimeFailure.UnsupportedArity(name, ""))
+                Left(ComptimeError.UnsupportedArity(name, ""))
 
   private def normalizedArgs: List[List[TermIR]] =
     call.args.filter(_.nonEmpty)
@@ -59,7 +59,7 @@ extension (call: CallIR)
       case args :: _ => util.Args.compileArgsList(args, ctx.compileTerm)
       case Nil =>
         ComptimeDebug.log(s"[comptime] arity mismatch for $name: ${call.args.map(_.size)}")
-        Left(ComptimeFailure.UnsupportedArity(name, ""))
+        Left(ComptimeError.UnsupportedArity(name, ""))
 
   def compileArgsAll(ctx: RuleContext): Either[ComptimeError, List[Eval]] =
     util.Args.compileArgsList(call.args.flatten, ctx.compileTerm)
@@ -82,10 +82,10 @@ extension (call: CallIR)
               yield f(recvEval)
             case None =>
               ComptimeDebug.log(s"[comptime] arity mismatch for $name: ${call.args.map(_.size)}")
-              Left(ComptimeFailure.UnsupportedArity(name, ""))
+              Left(ComptimeError.UnsupportedArity(name, ""))
         case _ =>
           ComptimeDebug.log(s"[comptime] arity mismatch for $name: ${call.args.map(_.size)}")
-          Left(ComptimeFailure.UnsupportedArity(name, ""))
+          Left(ComptimeError.UnsupportedArity(name, ""))
 
   def compileRecv1(
       ctx: RuleContext,

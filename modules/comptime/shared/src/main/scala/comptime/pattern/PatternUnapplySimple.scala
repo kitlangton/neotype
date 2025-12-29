@@ -3,7 +3,7 @@ package comptime
 import PatternNames.*
 import PatternReflection.*
 
-object PatternUnapplySimple:
+private[comptime] object PatternUnapplySimple:
   def unapplyPattern(
       fullName: String,
       recv: Option[TermIR],

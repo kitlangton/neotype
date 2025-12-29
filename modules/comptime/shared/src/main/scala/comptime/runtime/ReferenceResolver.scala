@@ -2,7 +2,7 @@ package comptime
 
 import util.ReflectionLookup
 
-object ReferenceResolver:
+private[comptime] object ReferenceResolver:
   val globalRefs: Map[String, Eval] = Map(
     "None"            -> Eval.Value(None),
     "Nil"             -> Eval.Value(Nil),
@@ -44,7 +44,7 @@ object ReferenceResolver:
               "globals"  -> globalRefs.keys.toList.sorted.mkString(", ")
             )
           else Map.empty
-        ComptimeFailure.UnresolvedReference(name, fullName, details.get("env").map(_.split(", ").toList).getOrElse(Nil))
+        ComptimeError.UnresolvedReference(name, fullName, details.get("env").map(_.split(", ").toList).getOrElse(Nil))
       }
 
   def resolveModule(fullName: String): Option[Eval] =

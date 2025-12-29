@@ -1,6 +1,6 @@
 package comptime
 
-object PatternUnapply:
+private[comptime] object PatternUnapply:
   def unapplyPattern(
       fullName: String,
       recv: Option[TermIR],

@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object MacroExprsEnum:
+private[comptime] object MacroExprsEnum:
   def summonExprOpt[A: Type](using Quotes): Option[ToExpr[A]] =
     import quotes.reflect.*
     val tpe = TypeRepr.of[A]

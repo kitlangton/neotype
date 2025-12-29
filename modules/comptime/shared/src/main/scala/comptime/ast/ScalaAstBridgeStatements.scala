@@ -2,7 +2,7 @@ package comptime
 
 import scala.quoted.*
 
-object ScalaAstBridgeStatements:
+private[comptime] object ScalaAstBridgeStatements:
   def statementToIR[Q <: Quotes](using
       quotes: Q
   )(

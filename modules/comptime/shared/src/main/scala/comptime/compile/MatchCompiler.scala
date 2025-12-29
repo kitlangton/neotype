@@ -1,6 +1,6 @@
 package comptime
 
-object MatchCompiler:
+private[comptime] object MatchCompiler:
   def compileMatch(
       value: Any,
       cases: List[CaseIR],
@@ -12,7 +12,7 @@ object MatchCompiler:
     def loop(remaining: List[CaseIR]): Either[ComptimeError, Eval] =
       remaining match
         case Nil =>
-          Left(ComptimeFailure.MatchError("no cases matched"))
+          Left(ComptimeError.MatchError("no cases matched"))
         case CaseIR(pattern, guard, body) :: tail =>
           val evalPatternTerm: TermIR => Either[ComptimeError, Any] =
             term => compileTerm(term, env, fold).map(Eval.run)

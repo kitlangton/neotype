@@ -145,7 +145,7 @@ private[comptime] object StdlibLeftProjectionTables:
     )
   )
 
-object StdlibEitherRules:
+private[comptime] object StdlibEitherRules:
   private val rightRecv           = Recv.module("scala.util.Right")
   private val leftRecv            = Recv.module("scala.util.Left")
   private val eitherValueRecv     = Recv.modules("scala.util.Either", "scala.util.Left", "scala.util.Right")

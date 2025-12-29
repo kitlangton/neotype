@@ -26,7 +26,7 @@ private[comptime] object StdlibTimeHelpers:
       case v: Byte  => v.toInt
       case other    => throw new RuntimeException(s"Unsupported numeric value for time ops: $other")
 
-object StdlibTimeRules:
+private[comptime] object StdlibTimeRules:
   // === Receiver definitions ===
   private val localDateRecv = Recv.union("java.time.LocalDate")
   private val localTimeRecv = Recv.union("java.time.LocalTime")
