@@ -17,5 +17,12 @@ object UpickleLibrary extends JsonLibrary[ReadWriter]:
   def encode[A](value: A)(using rw: ReadWriter[A]): String =
     write(value)
 
-given compositeCodec: ReadWriter[Composite] = macroRW
-object UpickleSpec extends JsonLibrarySpec[ReadWriter]("Upickle", UpickleLibrary)
+given ReadWriter[Composite]      = macroRW
+given ReadWriter[OptionalHolder] = macroRW
+given ReadWriter[ListHolder]     = macroRW
+
+object UpickleSpec extends JsonLibrarySpec[ReadWriter]("Upickle", UpickleLibrary):
+  override protected def optionalHolderCodec: Option[ReadWriter[OptionalHolder]] =
+    Some(summon[ReadWriter[OptionalHolder]])
+  override protected def listHolderCodec: Option[ReadWriter[ListHolder]] =
+    Some(summon[ReadWriter[ListHolder]])

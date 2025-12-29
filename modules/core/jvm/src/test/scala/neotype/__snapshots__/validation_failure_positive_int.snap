@@ -1,0 +1,5 @@
+—— Neotype Error ——————————————————————————————————————————————————————————
+  PositiveIntNewtype was called with an INVALID Int.  
+  input: -1
+  check: validate(INPUT)
+  ———————————————————————————————————————————————————————————————————————————

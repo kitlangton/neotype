@@ -1,19 +1,35 @@
 package neotype
 
-import neotype.eval.Eval
-import neotype.eval.EvalError
-import neotype.eval.Seal
-import neotype.eval.Uninlined
-import neotype.eval.Unseal
+import comptime.Compiler as ComptimeCompiler
+import comptime.ComptimeError
+import comptime.ComptimeFailure
+import comptime.Eval as ComptimeEval
+import comptime.MacroExprs
+import comptime.ScalaAstBridge
 
 import scala.quoted.*
 import scala.util.Failure
 import scala.util.Success
-import scala.util.Try
-
-import StringFormatting.*
 
 private[neotype] object Macros:
+  private object Uninlined:
+    def unapply(using Quotes)(term: quotes.reflect.Term): Option[quotes.reflect.Term] =
+      import quotes.reflect.*
+      term match
+        case Inlined(_, bindings, t) => Some(Block(bindings, t))
+        case t                       => Some(t)
+
+  private def peel(using Quotes)(term: quotes.reflect.Term): quotes.reflect.Term =
+    import quotes.reflect.*
+    term match
+      case Inlined(_, _, t) =>
+        peel(t)
+      case Typed(t, _) =>
+        peel(t)
+      case Block(Nil, t) =>
+        peel(t)
+      case other =>
+        other
 
   def applyImpl[Input: Type, T: Type, NT <: TypeWrapper[Input] { type Type = T }: Type](
       inputExpr: Expr[Input],
@@ -21,11 +37,51 @@ private[neotype] object Macros:
   )(using Quotes): Expr[T] =
     import quotes.reflect.*
 
+    def isTypeWrapper(tpe: TypeRepr): Boolean =
+      tpe.baseClasses.exists { sym =>
+        sym.fullName == "neotype.TypeWrapper" ||
+        sym.fullName == "neotype.Newtype" ||
+        sym.fullName == "neotype.Subtype"
+      } ||
+        tpe.typeSymbol.methodMembers.exists(_.name == "validate")
+
+    def stripNeotypeWrappers(term: Term): Term =
+      peel(term) match
+        case Apply(fun, List(arg)) =>
+          fun match
+            case Select(recv, "apply") if isTypeWrapper(recv.tpe) =>
+              stripNeotypeWrappers(arg)
+            case id: Ident if isTypeWrapper(id.tpe) =>
+              stripNeotypeWrappers(arg)
+            case _ =>
+              term
+        case _ =>
+          term
+
+    def compileTerm(term: quotes.reflect.Term): Either[ComptimeError, ComptimeEval] =
+      try ComptimeCompiler.compileTerm(ScalaAstBridge.termToIR(term))
+      catch case e: Throwable => Left(ComptimeFailure.EvalException(e.getClass.getSimpleName, e.getMessage))
+
     lazy val nt = TypeRepr.of[NT].widenTermRefByName match
       case Refinement(t, _, _) => t
       case t                   => t
 
-    val validateMethod = nt.typeSymbol.declaredMethods.find(_.name == "validate") match
+    // Find validate method that overrides TypeWrapper.validate in the hierarchy.
+    // This supports the pattern where validate is defined in a parent trait.
+    // Uses allOverriddenSymbols to ensure we find the actual override, not an unrelated method.
+    def findValidateOverride(sym: Symbol): Option[Symbol] =
+      def isTypeWrapperValidate(s: Symbol): Boolean =
+        s.owner.fullName == "neotype.TypeWrapper" && s.name == "validate"
+
+      def overridesTypeWrapperValidate(method: Symbol): Boolean =
+        method.name == "validate" && method.allOverriddenSymbols.exists(isTypeWrapperValidate)
+
+      // Check this type and all its base classes for a validate override
+      (sym :: sym.typeRef.baseClasses).iterator
+        .flatMap(_.declaredMethods.find(overridesTypeWrapperValidate))
+        .nextOption()
+
+    val validateMethod = findValidateOverride(nt.typeSymbol) match
       case None        => return inputExpr.asExprOf[T]
       case Some(value) => value
 
@@ -39,29 +95,35 @@ private[neotype] object Macros:
       try validateMethod.tree.pos.sourceCode
       catch case _: Throwable => None
 
-    inputExpr match
-      case Eval(eval) =>
-        scala.util.Try(eval.result(using Map.empty)) match
+    val inputCompile =
+      val normalized = stripNeotypeWrappers(inputExpr.asTerm)
+      compileTerm(normalized) match
+        case right @ Right(_) => right
+        case Left(_) =>
+          val normalizedArg = stripNeotypeWrappers(inputExpr.asTerm.underlyingArgument)
+          compileTerm(normalizedArg)
+
+    inputCompile match
+      case Right(eval) =>
+        scala.util.Try(ComptimeEval.run(eval)) match
           case Failure(_) =>
             report.errorAndAbort(ErrorMessages.inputParseFailureMessage(inputExpr, nt))
           case Success(_) =>
             ()
-      case _ =>
+      case Left(_) =>
         report.errorAndAbort(ErrorMessages.inputParseFailureMessage(inputExpr, nt))
 
     val validateApplied = Expr.betaReduce('{ $validate($inputExpr) })
-    validateApplied match
-      case Eval(eval) =>
-        scala.util.Try(eval.result(using Map.empty)) match
-          case Failure(exception) =>
-            val missingReference = exception match
-              case EvalError.MissingReference(name) => Some(name)
-              case _                                => None
 
-            // throw exception
-            // TODO: Add fatal exception error message
-            // TODO: Have more specific errors for unknown method calls, functions, etc.
-            report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, missingReference))
+    val validateEvalE = compileTerm(validateApplied.asTerm)
+
+    validateEvalE match
+      case Right(eval) =>
+        scala.util.Try(ComptimeEval.run(eval)) match
+          case Failure(exception) =>
+            report.errorAndAbort(
+              ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, None, Some(exception.toString))
+            )
 
           case Success(true) =>
             inputExpr.asExprOf[T]
@@ -69,8 +131,8 @@ private[neotype] object Macros:
           case Success(false) =>
             lazy val expressionSource: Option[String] =
               validate.asTerm match
-                case Uninlined(Block(_, Lambda(_, Seal(Eval(eval))))) =>
-                  Some(eval.render(using Map("INPUT" -> "input".blue)))
+                case Uninlined(Block(_, Lambda(_, body))) =>
+                  body.pos.sourceCode
                 case _ =>
                   None
 
@@ -79,8 +141,15 @@ private[neotype] object Macros:
           case Success(errorMessage: String) =>
             report.errorAndAbort(ErrorMessages.validationFailureMessage(inputExpr, nt, None, Some(errorMessage)))
 
-      case other =>
-        report.errorAndAbort(ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, None))
+          case Success(_) =>
+            report.errorAndAbort(
+              ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, None, None)
+            )
+
+      case Left(err) =>
+        report.errorAndAbort(
+          ErrorMessages.failedToParseValidateMethod(inputExpr, nt, treeSource, None, Some(ComptimeError.format(err)))
+        )
 
   def applyAllImpl[A: Type, T: Type, NT <: TypeWrapper[A] { type Type = T }: Type](
       as: Expr[Seq[A]],
@@ -97,142 +166,115 @@ private[neotype] object Macros:
     as match
       case Varargs(args) =>
         processArgs(args)
-      case Unseal(Uninlined(Typed(Apply(_, List(Seal(Varargs(args)))), _))) =>
-        processArgs(args.asInstanceOf[Seq[Expr[A]]])
-      case other =>
-        report.errorAndAbort(s"Could not parse input at compile time: ${other.show}")
-
-private[neotype] object TestMacros:
-  inline def eval[A](inline expr: A): A      = ${ evalImpl[A]('expr) }
-  inline def evalDebug[A](inline expr: A): A = ${ evalDebugImpl[A]('expr) }
-
-  def evalDebugImpl[A: Type](using Quotes)(expr: Expr[A]): Expr[A] =
-    import quotes.reflect.*
-    report.info(s"expr: ${expr.show}\nterm: ${expr.asTerm.underlyingArgument}")
-    evalImpl(expr)
-
-  def evalImpl[A: Type](using Quotes)(expr: Expr[A]): Expr[A] =
-    import quotes.reflect.*
-    expr match
-      case Eval[A](eval) =>
-        // try
-        val result      = eval.result(using Map.empty)
-        given ToExpr[A] = toExprType[A]
-        Expr(result)
-//         catch
-//           case e: Throwable =>
-//             report.errorAndAbort(s"""
-// --------------
-// error: ${e}
-// Failed to evaluate expression at compile time
-// SHOW: ${expr.show}
-
-// TERM: ${expr.asTerm}
-
-// EVAL: ${eval}
-// --------------
-//               """)
       case _ =>
-        report.errorAndAbort(s"Could not parse input at compile time: ${expr.show}\n\n${expr.asTerm.toString.blue}")
-        ???
+        peel(as.asTerm).asExprOf[Seq[A]] match
+          case Varargs(args) =>
+            processArgs(args)
+          case other =>
+            report.errorAndAbort(s"Could not parse input at compile time: ${other.show}")
 
-  def toExprType[A: Type](using Quotes): ToExpr[A] =
+  def parserNameImpl[P: Type](using Quotes): Expr[String] =
     import quotes.reflect.*
-    Type.of[A] match
-      case '[Int]        => summon[ToExpr[Int]].asInstanceOf[ToExpr[A]]
-      case '[String]     => summon[ToExpr[String]].asInstanceOf[ToExpr[A]]
-      case '[Boolean]    => summon[ToExpr[Boolean]].asInstanceOf[ToExpr[A]]
-      case '[Long]       => summon[ToExpr[Long]].asInstanceOf[ToExpr[A]]
-      case '[Double]     => summon[ToExpr[Double]].asInstanceOf[ToExpr[A]]
-      case '[Float]      => summon[ToExpr[Float]].asInstanceOf[ToExpr[A]]
-      case '[Char]       => summon[ToExpr[Char]].asInstanceOf[ToExpr[A]]
-      case '[Byte]       => summon[ToExpr[Byte]].asInstanceOf[ToExpr[A]]
-      case '[Short]      => summon[ToExpr[Short]].asInstanceOf[ToExpr[A]]
-      case '[BigInt]     => summon[ToExpr[BigInt]].asInstanceOf[ToExpr[A]]
-      case '[BigDecimal] => summon[ToExpr[BigDecimal]].asInstanceOf[ToExpr[A]]
-      case '[Unit]       => summon[ToExpr[Unit]].asInstanceOf[ToExpr[A]]
-      case '[Set[a]] =>
-        given ToExpr[a] = toExprType[a]
-        summon[ToExpr[Set[a]]].asInstanceOf[ToExpr[A]]
-      case '[List[a]] =>
-        given ToExpr[a] = toExprType[a]
-        summon[ToExpr[List[a]]].asInstanceOf[ToExpr[A]]
-      case '[Vector[a]] =>
-        given ToExpr[a] = toExprType[a]
-        summon[ToExpr[Vector[a]]].asInstanceOf[ToExpr[A]]
-      case '[Option[a]] =>
-        given ToExpr[a] = toExprType[a]
-        summon[ToExpr[Option[a]]].asInstanceOf[ToExpr[A]]
-      case '[Either[e, a]] =>
-        given ToExpr[e] = toExprType[e]
-        given ToExpr[a] = toExprType[a]
-        summon[ToExpr[Either[e, a]]].asInstanceOf[ToExpr[A]]
-      case '[Map[k, v]] =>
-        given ToExpr[k] = toExprType[k]
-        given ToExpr[v] = toExprType[v]
-        summon[ToExpr[Map[k, v]]].asInstanceOf[ToExpr[A]]
-      case '[(a, b)] =>
-        given ToExpr[a] = toExprType[a]
-        given ToExpr[b] = toExprType[b]
-        summon[ToExpr[(a, b)]].asInstanceOf[ToExpr[A]]
-      case '[Iterator[a]] =>
-        given ToExpr[a] = toExprType[a]
-        summon[ToExpr[Iterator[a]]].asInstanceOf[ToExpr[A]]
-      case '[Iterable[a]] =>
-        given ToExpr[a] = toExprType[a]
-        summon[ToExpr[Iterable[a]]].asInstanceOf[ToExpr[A]]
-      case '[scala.util.Try[a]] =>
-        given ToExpr[a] = toExprType[a]
-        summon[ToExpr[scala.util.Try[a]]].asInstanceOf[ToExpr[A]]
-      case _ =>
-        val typeRepr = TypeRepr.of[A]
-        typeRepr match
-          // A | B
-          case OrType(left, right) =>
-            (left.asType, right.asType) match
-              case ('[a], '[b]) =>
-                given ToExpr[a] = toExprType[a]
-                given ToExpr[b] = toExprType[b]
-                OrTypeToExpr[a, b].asInstanceOf[ToExpr[A]]
-          case _ =>
-            report.errorAndAbort(s"toExprType failed for: ${typeRepr.show}")
+    def unwrap(tpe: TypeRepr): TypeRepr =
+      tpe.widenTermRefByName match
+        case Refinement(t, _, _) => unwrap(t)
+        case t                   => t
+    val name = unwrap(TypeRepr.of[P]).typeSymbol.name.replaceAll("\\$$", "")
+    Expr(name)
 
-  given VectorToExpr[T: Type: ToExpr]: ToExpr[Vector[T]] with
-    def apply(xs: Vector[T])(using Quotes): Expr[Vector[T]] =
-      '{ Vector(${ Varargs(xs.map(summon[ToExpr[T]].apply)) }*) }
+  def parseApplyImpl[In: Type, Out: Type, P <: ParsedFrom[In, Out]: Type](
+      inputExpr: Expr[In],
+      parse: Expr[In => Either[String, Out]]
+  )(using Quotes): Expr[Out] =
+    import quotes.reflect.*
 
-  given MapToExpr[K: Type: ToExpr, V: Type: ToExpr]: ToExpr[Map[K, V]] with
-    def apply(m: Map[K, V])(using Quotes): Expr[Map[K, V]] =
-      '{
-        Map(${
-          Varargs(m.map { case (k, v) =>
-            '{ ${ summon[ToExpr[K]].apply(k) } -> ${ summon[ToExpr[V]].apply(v) } }
-          }.toList)
-        }*)
-      }
+    def peelTerm(term: Term): Term =
+      peel(term)
 
-  given IterableToExpr[T: Type: ToExpr]: ToExpr[Iterable[T]] with
-    def apply(xs: Iterable[T])(using Quotes): Expr[Iterable[T]] =
-      '{ Iterable(${ Varargs(xs.map(summon[ToExpr[T]].apply).toSeq) }*) }
+    def compileTerm(term: quotes.reflect.Term): Either[ComptimeError, ComptimeEval] =
+      try ComptimeCompiler.compileTerm(ScalaAstBridge.termToIR(term))
+      catch case e: Throwable => Left(ComptimeFailure.EvalException(e.getClass.getSimpleName, e.getMessage))
 
-  given IteratorToExpr[T: Type: ToExpr]: ToExpr[Iterator[T]] with
-    def apply(xs: Iterator[T])(using Quotes): Expr[Iterator[T]] =
-      '{ Iterator(${ Varargs(xs.map(summon[ToExpr[T]].apply).toSeq) }*) }
+    def unwrap(tpe: TypeRepr): TypeRepr =
+      tpe.widenTermRefByName match
+        case Refinement(t, _, _) => unwrap(t)
+        case t                   => t
 
-  given TryToExpr[A: Type: ToExpr]: ToExpr[Try[A]] with
-    def apply(t: Try[A])(using Quotes): Expr[Try[A]] =
-      t match
-        case Success(a) => '{ scala.util.Success(${ summon[ToExpr[A]].apply(a) }) }
-        case Failure(e) => '{ scala.util.Failure(${ summon[ToExpr[Throwable]].apply(e) }) }
+    val parserTpe  = unwrap(TypeRepr.of[P])
+    val parserName = parserTpe.typeSymbol.name.replaceAll("\\$$", "")
 
-  given ThrowableToExpr: ToExpr[Throwable] with
-    def apply(e: Throwable)(using Quotes): Expr[Throwable] =
-      '{ new Throwable(${ Expr(e.getMessage()) }) }
+    def findParseOverride(sym: Symbol): Option[Symbol] =
+      def isParsedFromParse(s: Symbol): Boolean =
+        s.owner.fullName == "neotype.ParsedFrom" && s.name == "parse"
 
-  def OrTypeToExpr[A: Type: ToExpr, B: Type: ToExpr]: ToExpr[A | B] = new:
-    def apply(aOrB: A | B)(using Quotes): Expr[A | B] =
-      try Expr(aOrB.asInstanceOf[A])
-      catch case _ => Expr(aOrB.asInstanceOf[B])
+      def overridesParsedFromParse(method: Symbol): Boolean =
+        method.name == "parse" && method.allOverriddenSymbols.exists(isParsedFromParse)
 
-  given UnitToExpr: ToExpr[Unit] with
-    def apply(x: Unit)(using Quotes): Expr[Unit] = '{ () }
+      (sym :: sym.typeRef.baseClasses).iterator
+        .flatMap(_.declaredMethods.find(overridesParsedFromParse))
+        .nextOption()
+
+    val parseMethod = findParseOverride(parserTpe.typeSymbol).getOrElse {
+      report.errorAndAbort(s"$parserName has no parse method")
+    }
+
+    if !parseMethod.flags.is(Flags.Inline) then
+      report.errorAndAbort(
+        ErrorMessages.parseNotInlineMessage(inputExpr, parserName, parseMethod.pos)
+      )
+
+    val inputCompile =
+      val normalized = peelTerm(inputExpr.asTerm)
+      compileTerm(normalized) match
+        case right @ Right(_) => right
+        case Left(_) =>
+          val normalizedArg = peelTerm(inputExpr.asTerm.underlyingArgument)
+          compileTerm(normalizedArg)
+
+    inputCompile match
+      case Right(eval) =>
+        scala.util.Try(ComptimeEval.run(eval)) match
+          case Failure(_) =>
+            report.errorAndAbort(ErrorMessages.parseInputNotConstantMessage(inputExpr, parserName))
+          case Success(_) =>
+            ()
+      case Left(_) =>
+        report.errorAndAbort(ErrorMessages.parseInputNotConstantMessage(inputExpr, parserName))
+
+    val parseApplied = Expr.betaReduce('{ $parse($inputExpr) })
+    val parseEvalE   = compileTerm(parseApplied.asTerm)
+
+    parseEvalE match
+      case Right(eval) =>
+        scala.util.Try(ComptimeEval.run(eval)) match
+          case Failure(exception) =>
+            report.errorAndAbort(
+              ErrorMessages.parseMethodFailedMessage(parserName, Some(exception.toString))
+            )
+
+          case Success(Right(value)) =>
+            MacroExprs.summonExprOpt[Out] match
+              case Some(te) =>
+                te.asInstanceOf[ToExpr[Any]].apply(value).asExprOf[Out]
+              case None =>
+                report.errorAndAbort(
+                  ComptimeFailure.format(ComptimeFailure.CannotLift(Type.show[Out]))
+                )
+
+          case Success(Left(message: String)) =>
+            report.errorAndAbort(
+              ErrorMessages.parseFailureMessage(inputExpr, parserName, message)
+            )
+
+          case Success(other) =>
+            report.errorAndAbort(
+              ErrorMessages.parseMethodFailedMessage(
+                parserName,
+                Some(s"Expected Either[String, ${Type.show[Out]}], got: ${other}")
+              )
+            )
+
+      case Left(err) =>
+        report.errorAndAbort(
+          ErrorMessages.parseMethodFailedMessage(parserName, Some(ComptimeError.format(err)))
+        )

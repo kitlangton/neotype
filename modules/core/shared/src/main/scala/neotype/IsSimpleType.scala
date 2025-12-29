@@ -52,4 +52,18 @@ private def hasValidateMethod[A: Type](using Quotes): (String, Boolean) =
     case t                   => t
 
   lazy val nt = getNewtype(TypeRepr.of[A])
-  (nt.show, nt.typeSymbol.declaredMethods.exists(_.name == "validate"))
+
+  // Check if validate is overridden anywhere in the hierarchy.
+  // Uses allOverriddenSymbols to ensure we find the actual override of TypeWrapper.validate,
+  // not an unrelated method that happens to be named "validate".
+  def hasValidateOverride(sym: Symbol): Boolean =
+    def isTypeWrapperValidate(s: Symbol): Boolean =
+      s.owner.fullName == "neotype.TypeWrapper" && s.name == "validate"
+
+    def overridesTypeWrapperValidate(method: Symbol): Boolean =
+      method.name == "validate" && method.allOverriddenSymbols.exists(isTypeWrapperValidate)
+
+    // Check this type and all its base classes for a validate override
+    (sym :: sym.typeRef.baseClasses).exists(_.declaredMethods.exists(overridesTypeWrapperValidate))
+
+  (nt.show, hasValidateOverride(nt.typeSymbol))

@@ -9,3 +9,5 @@ target
 project/project
 .metals
 metals.sbt
+.scala-build
+.claude

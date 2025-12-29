@@ -10,10 +10,7 @@ import cats.effect.unsafe.implicits.global
 import neotype.Newtype
 import neotype.Subtype
 import neotype.common.NonEmptyString
-import neotype.interop.doobie.newtypeArrayGet
-import neotype.interop.doobie.newtypeGet
-import neotype.interop.doobie.subtypeArrayGet
-import neotype.interop.doobie.subtypeGet
+import neotype.interop.doobie.given
 import neotype.test.definitions.*
 import zio.*
 import zio.test.*

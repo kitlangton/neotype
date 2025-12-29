@@ -1,8 +1,6 @@
 package neotype.interop.pureconfig
 
-import neotype.Newtype
 import neotype.test.definitions.*
-import neotype.test.definitions.SimpleNewtype
 import pureconfig.ConfigReader
 import pureconfig.ConfigSource
 import zio.test.*

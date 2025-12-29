@@ -1,0 +1,5 @@
+—— Neotype Error ——————————————————————————————————————————————————————————
+  UuidStringNewtype was called with an INVALID String.  
+  Must be a valid UUID
+  input: "not-a-uuid"
+  ———————————————————————————————————————————————————————————————————————————

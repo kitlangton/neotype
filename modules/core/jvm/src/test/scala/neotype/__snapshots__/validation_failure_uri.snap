@@ -1,0 +1,5 @@
+—— Neotype Error ——————————————————————————————————————————————————————————
+  UriStringNewtype was called with an INVALID String.  
+  Must be a valid URI
+  input: "hello world"
+  ———————————————————————————————————————————————————————————————————————————

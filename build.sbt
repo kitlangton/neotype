@@ -45,21 +45,21 @@ ThisBuild / githubWorkflowPublish := Seq(
 // Project Definitions //
 /////////////////////////
 
-lazy val jsoniterVersion       = "2.38.5"
+lazy val jsoniterVersion       = "2.38.7"
 lazy val circeVersion          = "0.14.15"
-lazy val tapirVersion          = "1.13.1"
-lazy val zioVersion            = "2.1.23"
+lazy val tapirVersion          = "1.13.4"
+lazy val zioVersion            = "2.1.24"
 lazy val zioConfigVersion      = "4.0.6"
-lazy val zioSchemaVersion      = "1.7.5"
-lazy val zioJsonVersion        = "0.7.45"
+lazy val zioSchemaVersion      = "1.7.6"
+lazy val zioJsonVersion        = "0.8.0"
 lazy val chimneyVersion        = "1.8.2"
-lazy val calibanVersion        = "2.11.1"
+lazy val calibanVersion        = "2.11.2"
 lazy val doobieVersion         = "1.0.0-RC11"
-lazy val upickleVersion        = "4.4.1"
-lazy val cirisVersion          = "3.11.1"
+lazy val upickleVersion        = "4.4.2"
+lazy val cirisVersion          = "3.12.0"
 lazy val zioInteropCatsVersion = "23.1.0.3"
 lazy val pureconfigVersion     = "0.17.9"
-lazy val scanamoVersion        = "5.0.0"
+lazy val scanamoVersion        = "6.0.0"
 lazy val tethysVersion         = "0.29.7"
 lazy val catsVersion           = "2.13.0"
 
@@ -80,46 +80,93 @@ lazy val root = (project in file("."))
     name := "neotype"
   )
   .aggregate(
-    circe.js,
-    circe.jvm,
-    core.js,
-    core.jvm,
-    jsoniter.js,
-    jsoniter.jvm,
-    playJson.js,
-    playJson.jvm,
-    examples,
-    tapir.js,
-    tapir.jvm,
-    zioConfig,
-    zioJson.js,
-    zioJson.jvm,
-    zioQuill,
-    zioSchema.js,
-    zioSchema.jvm,
-    zioTest.js,
-    zioTest.jvm,
-    chimney.js,
-    chimney.jvm,
+    // JVM
     caliban.jvm,
-    doobie.jvm,
-    upickle.js,
-    upickle.jvm,
-    ciris.js,
+    cats.jvm,
+    chimney.jvm,
+    circe.jvm,
     ciris.jvm,
+    comptime.jvm,
+    core.jvm,
+    doobie.jvm,
+    internal.jvm,
+    jsoniter.jvm,
+    playJson.jvm,
     pureconfig.jvm,
     scanamo.jvm,
+    tapir.jvm,
     tethys.jvm,
-    cats.jvm
+    upickle.jvm,
+    zioConfig,
+    zioJson.jvm,
+    zioQuill,
+    zioSchema.jvm,
+    zioTest.jvm,
+    // JS
+    cats.js,
+    chimney.js,
+    circe.js,
+    ciris.js,
+    comptime.js,
+    core.js,
+    internal.js,
+    jsoniter.js,
+    playJson.js,
+    tapir.js,
+    upickle.js,
+    zioJson.js,
+    zioSchema.js,
+    zioTest.js,
+    // Native (use `testNative` to run tests)
+    cats.native,
+    chimney.native,
+    circe.native,
+    comptime.native,
+    core.native,
+    internal.native,
+    upickle.native,
+    zioJson.native,
+    zioSchema.native,
+    // Other
+    examples
   )
 
-lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("modules/core"))
+// Skip Native tests by default (use `testNative` to run them, or CI)
+lazy val skipNativeTests = Seq(
+  (Test / test) := {
+    if (sys.env.contains("CI")) (Test / test).value
+    else ()
+  }
+)
+
+lazy val internal = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file("modules/internal"))
+  .settings(
+    name := "neotype-internal",
+    sharedSettings,
+    publish / skip := true
+  )
+  .nativeSettings(skipNativeTests)
+
+lazy val core = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file("modules/core"))
   .settings(
     name := "neotype",
     sharedSettings
   )
+  .nativeSettings(skipNativeTests)
+  .dependsOn(
+    internal % "compile->compile;test->test",
+    comptime % "compile->compile;test->test"
+  )
 
-lazy val circe = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-circe"))
+lazy val comptime = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file("modules/comptime"))
+  .settings(
+    name := "comptime",
+    sharedSettings
+  )
+  .nativeSettings(skipNativeTests)
+  .dependsOn(internal % "compile->compile;test->test")
+
+lazy val circe = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file("modules/neotype-circe"))
   .settings(
     name := "neotype-circe",
     sharedSettings,
@@ -128,6 +175,7 @@ lazy val circe = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype
       "io.circe" %%% "circe-parser" % circeVersion
     )
   )
+  .nativeSettings(skipNativeTests)
   .dependsOn(core % "compile->compile;test->test")
 
 lazy val jsoniter = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-jsoniter"))
@@ -173,7 +221,7 @@ lazy val zioConfig = (project in file("modules/neotype-zio-config"))
   )
   .dependsOn(core.jvm % "compile->compile;test->test")
 
-lazy val zioSchema = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio-schema"))
+lazy val zioSchema = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file("modules/neotype-zio-schema"))
   .settings(
     name := "neotype-zio-schema",
     sharedSettings,
@@ -182,9 +230,10 @@ lazy val zioSchema = (crossProject(JSPlatform, JVMPlatform) in file("modules/neo
       "dev.zio" %%% "zio-schema-json" % zioSchemaVersion % Test
     )
   )
+  .nativeSettings(skipNativeTests)
   .dependsOn(core % "compile->compile;test->test")
 
-lazy val zioJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-zio-json"))
+lazy val zioJson = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file("modules/neotype-zio-json"))
   .settings(
     name := "neotype-zio-json",
     sharedSettings,
@@ -192,6 +241,7 @@ lazy val zioJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neoty
       "dev.zio" %%% "zio-json" % zioJsonVersion
     )
   )
+  .nativeSettings(skipNativeTests)
   .dependsOn(core % "compile->compile;test->test")
 
 lazy val zioQuill = (project in file("modules/neotype-zio-quill"))
@@ -217,12 +267,13 @@ lazy val zioTest = (crossProject(JSPlatform, JVMPlatform) in file("modules/neoty
   )
   .dependsOn(core % "compile->compile;test->test")
 
-lazy val chimney = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-chimney"))
+lazy val chimney = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file("modules/neotype-chimney"))
   .settings(
     name := "neotype-chimney",
     sharedSettings,
     libraryDependencies ++= Seq("io.scalaland" %%% "chimney" % chimneyVersion)
   )
+  .nativeSettings(skipNativeTests)
   .dependsOn(core % "compile->compile;test->test")
 
 lazy val caliban = (crossProject(JVMPlatform) in file("modules/neotype-caliban"))
@@ -247,7 +298,7 @@ lazy val doobie = (crossProject(JVMPlatform) in file("modules/neotype-doobie"))
   )
   .dependsOn(core % "compile->compile;test->test", cats % "compile->compile;test->test")
 
-lazy val upickle = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-upickle"))
+lazy val upickle = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file("modules/neotype-upickle"))
   .settings(
     name := "neotype-upickle",
     sharedSettings,
@@ -255,6 +306,7 @@ lazy val upickle = (crossProject(JSPlatform, JVMPlatform) in file("modules/neoty
       "com.lihaoyi" %%% "upickle" % upickleVersion
     )
   )
+  .nativeSettings(skipNativeTests)
   .dependsOn(core % "compile->compile;test->test")
 
 lazy val ciris = (crossProject(JSPlatform, JVMPlatform) in file("modules/neotype-ciris"))
@@ -300,7 +352,7 @@ lazy val scanamo = (crossProject(JVMPlatform) in file("modules/neotype-scanamo")
   )
   .dependsOn(core % "compile->compile;test->test")
 
-lazy val cats = (crossProject(JVMPlatform) in file("modules/neotype-cats"))
+lazy val cats = (crossProject(JVMPlatform, JSPlatform, NativePlatform) in file("modules/neotype-cats"))
   .settings(
     name := "neotype-cats",
     sharedSettings,
@@ -308,17 +360,32 @@ lazy val cats = (crossProject(JVMPlatform) in file("modules/neotype-cats"))
       "org.typelevel" %%% "cats-core" % catsVersion
     )
   )
+  .nativeSettings(skipNativeTests)
   .dependsOn(core % "compile->compile;test->test")
 
 lazy val examples = (project in file("examples"))
   .settings(
     name := "neotype-examples",
     sharedSettings,
-    publish / skip := true
+    publish / skip := true,
+    // Allow zio-json version mismatch (quill uses older version)
+    evictionErrorLevel := Level.Warn
   )
-  .dependsOn(core.jvm, zioJson.jvm, zioQuill)
+  .dependsOn(core.jvm, comptime.jvm, zioJson.jvm, zioQuill)
 
 addCommandAlias("prepare", "scalafixAll;scalafmtAll;githubWorkflowGenerate")
+addCommandAlias(
+  "testNative",
+  List(
+    "coreNative/test",
+    "circeNative/test",
+    "zioJsonNative/test",
+    "zioSchemaNative/test",
+    "chimneyNative/test",
+    "upickleNative/test",
+    "catsNative/test"
+  ).mkString(";")
+)
 
 welcomeMessage
 

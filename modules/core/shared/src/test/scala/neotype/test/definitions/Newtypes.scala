@@ -18,6 +18,15 @@ object ValidatedSubtype extends Subtype[String]:
 type SimpleSubtype = SimpleSubtype.Type
 object SimpleSubtype extends Subtype[Int]
 
+// Option-wrapped newtypes for testing null/absent handling
+type OptionalString = OptionalString.Type
+object OptionalString extends Newtype[Option[String]]
+
+case class OptionalHolder(value: OptionalString)
+
+// Collection test type
+case class ListHolder(items: List[ValidatedNewtype])
+
 case class Composite(
     newtype: ValidatedNewtype,
     simpleNewtype: SimpleNewtype,

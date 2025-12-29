@@ -1,9 +1,6 @@
 package neotype.interop.playjson
 
-import neotype.interop.playjson.newtypeFormat
-import neotype.interop.playjson.simpleNewtypeFormat
-import neotype.interop.playjson.simpleSubtypeFormat
-import neotype.interop.playjson.subtypeFormat
+import neotype.interop.playjson.given
 import neotype.test.*
 import neotype.test.definitions.*
 import play.api.libs.json.*
@@ -35,4 +32,22 @@ given Format[Composite] with
       simpleSubtype <- (json \ "simpleSubtype").validate[SimpleSubtype]
     yield Composite(newtype, simpleNewtype, subtype, simpleSubtype)
 
-object PlayJsonSpec extends JsonLibrarySpec[Format]("ZioJson", PlayJsonLibrary)
+given Format[OptionalHolder] with
+  override def writes(o: OptionalHolder): JsValue =
+    Json.obj("value" -> Json.toJson(o.value))
+
+  override def reads(json: JsValue): JsResult[OptionalHolder] =
+    (json \ "value").validateOpt[String].map(v => OptionalHolder(OptionalString(v)))
+
+given Format[ListHolder] with
+  override def writes(o: ListHolder): JsValue =
+    Json.obj("items" -> Json.toJson(o.items))
+
+  override def reads(json: JsValue): JsResult[ListHolder] =
+    (json \ "items").validate[List[ValidatedNewtype]].map(ListHolder.apply)
+
+object PlayJsonSpec extends JsonLibrarySpec[Format]("PlayJson", PlayJsonLibrary):
+  override protected def optionalHolderCodec: Option[Format[OptionalHolder]] =
+    Some(summon[Format[OptionalHolder]])
+  override protected def listHolderCodec: Option[Format[ListHolder]] =
+    Some(summon[Format[ListHolder]])

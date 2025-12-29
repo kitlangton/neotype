@@ -1,0 +1,5 @@
+—— Neotype Error ——————————————————————————————————————————————————————————
+  NonEmptyStringNewtype was called with an INVALID String.  
+  input: ""
+  check: validate(INPUT)
+  ———————————————————————————————————————————————————————————————————————————

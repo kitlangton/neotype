@@ -1,63 +1,64 @@
 package neotype.interop.circe
 
 import io.circe.*
-import io.circe.parser.*
-import neotype.Newtype
-import neotype.Subtype
-import neotype.interop.circe.given_Decoder_B
+import io.circe.syntax.*
+import neotype.interop.circe.given
+import neotype.test.*
 import neotype.test.definitions.*
-import zio.test.*
 
-object CirceJsonSpec extends ZIOSpecDefault:
-  def spec = suite("CirceJsonSpec")(
-    suite("NonEmptyString")(
-      test("parse success") {
-        val json   = """ "hello" """
-        val parsed = decode[ValidatedNewtype](json)
-        assertTrue(parsed == Right(ValidatedNewtype("hello")))
-      },
-      test("parse failure") {
-        val json   = """ "" """
-        val parsed = decode[ValidatedNewtype](json)
-        assertTrue(parsed.left.map(_.getMessage) == Left("DecodingFailure at : String must not be empty"))
-      }
-    ),
-    suite("SubtypeLongString")(
-      test("parse success") {
-        val json   = """ "hello world" """
-        val parsed = decode[ValidatedSubtype](json)
-        assertTrue(parsed == Right(ValidatedSubtype("hello world")))
-      },
-      test("parse failure") {
-        val json   = """ "hello" """
-        val parsed = decode[ValidatedSubtype](json)
-        assertTrue(
-          parsed.left.map(_.getMessage) == Left("DecodingFailure at : String must be longer than 10 characters")
-        )
-      }
-    ),
-    suite("SimpleNewtype")(
-      test("parse success") {
-        val json   = """123"""
-        val parsed = decode[SimpleNewtype](json)
-        assertTrue(parsed == Right(SimpleNewtype(123)))
-      },
-      test("parse failure") {
-        val json   = """ "hello" """
-        val parsed = decode[SimpleNewtype](json)
-        assertTrue(parsed.isLeft)
-      }
-    ),
-    suite("SimpleSubtype")(
-      test("parse success") {
-        val json   = """ 123 """
-        val parsed = decode[SimpleSubtype](json)
-        assertTrue(parsed == Right(SimpleSubtype(123)))
-      },
-      test("parse failure") {
-        val json   = """ "hello" """
-        val parsed = decode[SimpleSubtype](json)
-        assertTrue(parsed.isLeft)
-      }
-    )
+// Circe doesn't have a unified Codec type that's commonly used,
+// so we create a stub combining Decoder and Encoder
+final case class CirceCodec[A](decoder: Decoder[A], encoder: Encoder[A])
+object CirceCodec:
+  given [A](using d: Decoder[A], e: Encoder[A]): CirceCodec[A] = CirceCodec(d, e)
+
+object CirceLibrary extends JsonLibrary[CirceCodec]:
+  def decode[A](json: String)(using codec: CirceCodec[A]): Either[String, A] =
+    given Decoder[A] = codec.decoder
+    io.circe.parser.decode[A](json).left.map(_.getMessage)
+
+  def encode[A](value: A)(using codec: CirceCodec[A]): String =
+    given Encoder[A] = codec.encoder
+    value.asJson.noSpaces
+
+// Manual codec definitions (circe-generic not available)
+given Decoder[Composite] = Decoder.instance { c =>
+  for
+    newtype       <- c.get[ValidatedNewtype]("newtype")
+    simpleNewtype <- c.get[SimpleNewtype]("simpleNewtype")
+    subtype       <- c.get[ValidatedSubtype]("subtype")
+    simpleSubtype <- c.get[SimpleSubtype]("simpleSubtype")
+  yield Composite(newtype, simpleNewtype, subtype, simpleSubtype)
+}
+
+given Encoder[Composite] = Encoder.instance { c =>
+  Json.obj(
+    "newtype"       -> c.newtype.asJson,
+    "simpleNewtype" -> c.simpleNewtype.asJson,
+    "subtype"       -> c.subtype.asJson,
+    "simpleSubtype" -> c.simpleSubtype.asJson
   )
+}
+
+given Decoder[OptionalHolder] = Decoder.instance { c =>
+  c.get[OptionalString]("value").map(OptionalHolder.apply)
+}
+
+given Encoder[OptionalHolder] = Encoder.instance { h =>
+  Json.obj("value" -> h.value.asJson)
+}
+
+given Decoder[ListHolder] = Decoder.instance { c =>
+  c.get[List[ValidatedNewtype]]("items").map(ListHolder.apply)
+}
+
+given Encoder[ListHolder] = Encoder.instance { h =>
+  Json.obj("items" -> h.items.asJson)
+}
+
+object CirceJsonSpec extends JsonLibrarySpec[CirceCodec]("Circe", CirceLibrary):
+  override protected def optionalHolderCodec: Option[CirceCodec[OptionalHolder]] =
+    Some(summon[CirceCodec[OptionalHolder]])
+
+  override protected def listHolderCodec: Option[CirceCodec[ListHolder]] =
+    Some(summon[CirceCodec[ListHolder]])

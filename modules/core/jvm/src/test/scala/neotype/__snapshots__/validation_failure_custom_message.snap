@@ -1,0 +1,5 @@
+—— Neotype Error ——————————————————————————————————————————————————————————
+  CustomFailureNewtype was called with an INVALID String.  
+  Must be the secret string!
+  input: "hello"
+  ———————————————————————————————————————————————————————————————————————————
