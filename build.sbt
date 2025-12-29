@@ -20,7 +20,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 ////////////////////////
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"))
 
-ThisBuild / githubWorkflowEnv := Map("JAVA_OPTS" -> "-Xmx4g")
+ThisBuild / githubWorkflowEnv := Map("JAVA_OPTS" -> "-Xmx6g")
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches :=
   Seq(

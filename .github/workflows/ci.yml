@@ -15,7 +15,7 @@ on:
     tags: [v*]
 
 env:
-  JAVA_OPTS: '-Xmx4g'
+  JAVA_OPTS: '-Xmx6g'
 
 jobs:
   build:
