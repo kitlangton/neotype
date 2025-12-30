@@ -25,7 +25,7 @@ ThisBuild / Test / parallelExecution := !isCI
 ////////////////////////
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"))
 
-ThisBuild / githubWorkflowEnv := Map("JAVA_OPTS" -> "-Xmx6g")
+ThisBuild / githubWorkflowEnv := Map("JAVA_OPTS" -> "-Xmx8g")
 
 // Only test JVM in CI to reduce memory pressure (JS/Native tested locally)
 ThisBuild / githubWorkflowBuild := Seq(
