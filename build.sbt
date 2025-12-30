@@ -15,11 +15,9 @@ inThisBuild(
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-// CI memory optimization: fork tests to separate JVM, disable parallel execution
+// CI memory optimization: disable parallel execution (fork only works for JVM, not JS/Native)
 // Only apply in CI to keep local dev fast
 val isCI = sys.env.get("CI").contains("true")
-ThisBuild / Test / fork := isCI
-ThisBuild / Test / javaOptions ++= (if (isCI) Seq("-Xmx3g") else Seq.empty)
 ThisBuild / Test / parallelExecution := !isCI
 
 ////////////////////////
