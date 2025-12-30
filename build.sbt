@@ -26,6 +26,19 @@ ThisBuild / Test / parallelExecution := !isCI
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"))
 
 ThisBuild / githubWorkflowEnv := Map("JAVA_OPTS" -> "-Xmx6g")
+
+// Only test JVM in CI to reduce memory pressure (JS/Native tested locally)
+ThisBuild / githubWorkflowBuild := Seq(
+  WorkflowStep.Sbt(
+    commands = List("compile", "Test/compile"),
+    name = Some("Compile all")
+  ),
+  WorkflowStep.Sbt(
+    commands = List("coreJVM/test", "comptimeJVM/test"),
+    name = Some("Test JVM core modules")
+  )
+)
+
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches :=
   Seq(
