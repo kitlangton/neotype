@@ -265,33 +265,30 @@ object ExtraExpressionsSpec extends ZIOSpecDefault:
       //   mk(b = 2, a = 1)
       // } -> 12,
 
-      // TODO: `String | Boolean` return type cannot be lifted to Expr in strict comptime
-      // comptime {
-      //   val input = "   "
-      //   if input.isBlank then "Must not be empty" else true
-      // } -> "Must not be empty",
+      // Union types (String | Boolean) are now supported
+      comptime {
+        val input = "   "
+        if input.isBlank then "Must not be empty" else true
+      } -> "Must not be empty",
 
-      // TODO: `String | Boolean` return type cannot be lifted to Expr in strict comptime
-      // comptime {
-      //   val input = "ok"
-      //   if input.isBlank then "Must not be empty" else true
-      // } -> true,
+      comptime {
+        val input = "ok"
+        if input.isBlank then "Must not be empty" else true
+      } -> true,
 
-      // TODO: `String | Boolean` return type cannot be lifted to Expr in strict comptime
-      // comptime {
-      //   val input = "550e8400-e29b-41d4-a716-446655440000"
-      //   if !scala.util.Try(java.util.UUID.fromString(input).toString).toOption.contains(input.toLowerCase)
-      //   then "Must be a valid UUID"
-      //   else true
-      // } -> true,
+      comptime {
+        val input = "550e8400-e29b-41d4-a716-446655440000"
+        if !scala.util.Try(java.util.UUID.fromString(input).toString).toOption.contains(input.toLowerCase)
+        then "Must be a valid UUID"
+        else true
+      } -> true,
 
-      // TODO: `String | Boolean` return type cannot be lifted to Expr in strict comptime
-      // comptime {
-      //   val input = "not-a-uuid"
-      //   if !scala.util.Try(java.util.UUID.fromString(input).toString).toOption.contains(input.toLowerCase)
-      //   then "Must be a valid UUID"
-      //   else true
-      // } -> "Must be a valid UUID",
+      comptime {
+        val input = "not-a-uuid"
+        if !scala.util.Try(java.util.UUID.fromString(input).toString).toOption.contains(input.toLowerCase)
+        then "Must be a valid UUID"
+        else true
+      } -> "Must be a valid UUID",
 
       comptime {
         val xs = List.empty[Int]

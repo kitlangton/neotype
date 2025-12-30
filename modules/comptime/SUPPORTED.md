@@ -7,6 +7,7 @@ This is a concise, test-backed summary of what `comptime(...)` evaluates today. 
 
 ## Language constructs (supported)
 - Literals: Int/Long/Float/Double/Boolean/Char/Byte/Short/String/Unit, tuples, collections.
+- Union types: `A | B` (e.g., `String | Boolean` for validation patterns like `if cond then "error" else true`).
 - Arithmetic and comparisons on numeric primitives.
 - Boolean ops including short‑circuit `&&` / `||`.
 - `if/else` expressions.

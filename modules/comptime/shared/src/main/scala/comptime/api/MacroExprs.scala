@@ -33,4 +33,5 @@ object MacroExprs:
       .orElse(MacroExprsEnum.summonExprOpt[A])
       .orElse(MacroExprsOptionEither.summonExprOpt[A])
       .orElse(MacroExprsCollections.summonExprOpt[A])
+      .orElse(MacroExprsUnion.summonExprOpt[A]) // Before CaseClass to handle union types
       .orElse(MacroExprsCaseClass.summonExprOpt[A])
