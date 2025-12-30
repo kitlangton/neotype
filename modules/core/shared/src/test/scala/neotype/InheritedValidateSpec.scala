@@ -90,5 +90,28 @@ object InheritedValidateSpec extends ZIOSpecDefault:
         val msg    = errors.head.message
         assertTrue(msg.contains("DirectPositive"))
       }
+    ),
+    // Issue #208: IsValidatedType should work with inherited validation
+    suite("IsValidatedType/IsSimpleType summoning (issue #208)")(
+      test("IsValidatedType summons for inherited validation") {
+        val ev = summon[IsValidatedType[InheritedPositive.type]]
+        assertTrue(ev != null)
+      },
+      test("IsValidatedType summons for direct validation") {
+        val ev = summon[IsValidatedType[DirectPositive.type]]
+        assertTrue(ev != null)
+      },
+      test("IsSimpleType summons for no validation") {
+        val ev = summon[IsSimpleType[NoValidation.type]]
+        assertTrue(ev != null)
+      },
+      test("IsValidatedType fails for no validation") {
+        val errors = typeCheckErrors("""summon[IsValidatedType[NoValidation.type]]""")
+        assertTrue(errors.nonEmpty)
+      },
+      test("IsSimpleType fails for inherited validation") {
+        val errors = typeCheckErrors("""summon[IsSimpleType[InheritedPositive.type]]""")
+        assertTrue(errors.nonEmpty)
+      }
     )
   )
