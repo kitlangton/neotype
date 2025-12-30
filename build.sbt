@@ -15,6 +15,11 @@ inThisBuild(
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
+// CI memory optimization: fork tests to separate JVM, disable parallel execution
+ThisBuild / Test / fork := true
+ThisBuild / Test / javaOptions ++= Seq("-Xmx3g")
+ThisBuild / Test / parallelExecution := false
+
 ////////////////////////
 // sbt-github-actions //
 ////////////////////////
