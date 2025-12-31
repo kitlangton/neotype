@@ -5,17 +5,7 @@ import scala.quoted.*
 sealed abstract class TypeWrapper[A]:
   type Type
 
-  /** Validates the input and returns a boolean or an error message.
-    *
-    * TODO: Migrate to Either[String, A] API for validation:
-    *   - Either allows transformation/normalization (e.g., trimming,
-    *     lowercasing)
-    *   - Right(value) = valid (possibly transformed)
-    *   - Left(message) = invalid with error message
-    *   - Deprecation path: add validateE alongside validate, migrate, then
-    *     deprecate
-    *   - Example: Email.apply(" FOO@BAR.COM ") could normalize to "foo@bar.com"
-    */
+  /** Validates the input and returns a boolean or an error message. */
   def validate(input: A): Boolean | String = true
 
   /** Creates a new instance of the newtype.

@@ -1,20 +1,4 @@
 // Stdlib rules (hand-maintained).
-//
-// TODO: Add more collection operations:
-//   - reduce, reduceOption, reduceLeft, reduceRight (done)
-//   - fold (curried), foldRight (done)
-//   - partition, partitionMap (done)
-//   - groupBy, groupMap, groupMapReduce (done)
-//   - tapEach, scanLeft, scanRight (done)
-//   - span, splitAt (done)
-//   - sorted, sortBy, sortWith (needs Ordering) (done)
-//   - indexOf, indexWhere, lastIndexOf, lastIndexWhere (done)
-//   - patch, padTo (done)
-//   - flatten (for nested collections) (done)
-//   - transpose (for Iterable[Iterable]) (done)
-//   - distinct, distinctBy (done)
-//   - corresponds, sameElements (done)
-//
 package comptime
 
 // === Runtime type class dispatch ===

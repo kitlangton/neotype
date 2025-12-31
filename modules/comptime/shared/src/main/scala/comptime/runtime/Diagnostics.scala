@@ -12,13 +12,6 @@ private[comptime] final case class CallSiteInfo(
 /** Structured compile-time failure types.
   *
   * Each case carries relevant context for error reporting.
-  *
-  * TODO: Enhance error messages with source position highlighting:
-  *   - Carry source Position through ComptimeError cases
-  *   - Highlight/underline the specific failing subexpression in red
-  *   - For EvalException, show which part of the expression threw
-  *   - For UnsupportedCall, highlight the unsupported method call
-  *   - Use Quotes.reflect.Position to get source ranges
   */
 enum ComptimeError:
   // ═══════════════════════════════════════════════════════════════════════════
