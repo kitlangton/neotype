@@ -122,6 +122,10 @@ These are **not guaranteed** unless tests cover them. If you need any of these, 
 - General reflection or IO at compile time (explicitly out of scope).
 - `ArrayOps.map` / `ArrayOps.flatMap` (require ClassTag for return type).
 
+## Known limitations (var support)
+- **Functions stored in vars**: `var f = (x: Int) => x + 1; f(1)` is not supported. Lambdas work in stdlib ops but not as first-class values in mutable bindings.
+- **Unused val exceptions with var in scope**: When a `var` is in scope, an unused `val` whose initializer would throw may not throw (e.g., `var x = 0; val y = 1/0; x` returns `x` instead of failing). In practice this is unlikely since unused vals with exceptions are dead code.
+
 ## Where to look
 - Specs (exhaustive): `modules/comptime/shared/src/test/scala/comptime/*Spec.scala`
 - Rules: `modules/comptime/shared/src/main/scala/comptime/rules/RuleHelpersCore.scala` and

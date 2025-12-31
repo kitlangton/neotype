@@ -80,8 +80,8 @@ object VarSpec extends ZIOSpecDefault:
         test("swap values") {
           assertTrue(
             comptime {
-              var a = 1
-              var b = 2
+              var a   = 1
+              var b   = 2
               val tmp = a
               a = b
               b = tmp
@@ -125,7 +125,8 @@ object VarSpec extends ZIOSpecDefault:
           assertTrue(
             comptime {
               var x = 0
-              val f = () => { x = x + 1; x }
+              val f = () =>
+                x = x + 1; x
               val a = f()
               val b = f()
               (a, b, x)
@@ -150,10 +151,9 @@ object VarSpec extends ZIOSpecDefault:
           assertTrue(
             comptime {
               var x = 1
-              val y = {
+              val y =
                 x = x + 10
                 x
-              }
               (x, y)
             } == (11, 11)
           )
@@ -162,10 +162,9 @@ object VarSpec extends ZIOSpecDefault:
           assertTrue(
             comptime {
               var x = 1
-              val result = {
-                val x = 100  // shadows the var
+              val result =
+                val x = 100 // shadows the var
                 x
-              }
               (x, result)
             } == (1, 100)
           )

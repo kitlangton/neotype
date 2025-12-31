@@ -14,13 +14,13 @@ object Eval:
   final case class BuildList(elems: List[Eval], build: List[Any] => Any)                      extends Eval
   final case class If(cond: Eval, onTrue: Eval, onFalse: Eval)                                extends Eval
   // Sequence two evals - run first, then second, return second's result
-  final case class Seq(first: Eval, second: Eval)                                             extends Eval
+  final case class Seq(first: Eval, second: Eval) extends Eval
   // Read from a mutable ref
-  final case class ReadRef(ref: MutableRef)                                                   extends Eval
+  final case class ReadRef(ref: MutableRef) extends Eval
   // Write to a mutable ref, returns Unit
-  final case class WriteRef(ref: MutableRef, value: Eval)                                     extends Eval
+  final case class WriteRef(ref: MutableRef, value: Eval) extends Eval
   // Marker for var bindings in environment - holds the MutableRef
-  final case class VarBinding(ref: MutableRef)                                                extends Eval
+  final case class VarBinding(ref: MutableRef) extends Eval
 
   def run(eval: Eval): Any =
     eval match

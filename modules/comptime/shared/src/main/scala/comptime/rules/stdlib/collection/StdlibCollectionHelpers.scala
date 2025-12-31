@@ -1168,9 +1168,9 @@ private[comptime] object StdlibLazyListRules:
     )
 
 private[comptime] object StdlibCollectionRules:
-  private val listRecv           = Recv.module("scala.collection.immutable.List")
-  private val vectorRecv         = Recv.module("scala.collection.immutable.Vector")
-  private val tuple2Recv         = Recv.moduleOnly("scala.Tuple2")
+  private val listRecv   = Recv.module("scala.collection.immutable.List")
+  private val vectorRecv = Recv.module("scala.collection.immutable.Vector")
+  private val tuple2Recv = Recv.moduleOnly("scala.Tuple2")
 
   // ClassTag.apply rule - handles compiler-inserted ClassTag implicits
   // Uses call.targs to get the type parameter since classOf[T] isn't evaluated at runtime
@@ -1178,22 +1178,22 @@ private[comptime] object StdlibCollectionRules:
 
   // Map type names to ClassTags
   private val classTagsByName: Map[String, ClassTag[Any]] = Map(
-    "scala.Int"     -> ClassTag.Int.asInstanceOf[ClassTag[Any]],
-    "Int"           -> ClassTag.Int.asInstanceOf[ClassTag[Any]],
-    "scala.Long"    -> ClassTag.Long.asInstanceOf[ClassTag[Any]],
-    "Long"          -> ClassTag.Long.asInstanceOf[ClassTag[Any]],
-    "scala.Double"  -> ClassTag.Double.asInstanceOf[ClassTag[Any]],
-    "Double"        -> ClassTag.Double.asInstanceOf[ClassTag[Any]],
-    "scala.Float"   -> ClassTag.Float.asInstanceOf[ClassTag[Any]],
-    "Float"         -> ClassTag.Float.asInstanceOf[ClassTag[Any]],
-    "scala.Boolean" -> ClassTag.Boolean.asInstanceOf[ClassTag[Any]],
-    "Boolean"       -> ClassTag.Boolean.asInstanceOf[ClassTag[Any]],
-    "scala.Byte"    -> ClassTag.Byte.asInstanceOf[ClassTag[Any]],
-    "Byte"          -> ClassTag.Byte.asInstanceOf[ClassTag[Any]],
-    "scala.Short"   -> ClassTag.Short.asInstanceOf[ClassTag[Any]],
-    "Short"         -> ClassTag.Short.asInstanceOf[ClassTag[Any]],
-    "scala.Char"    -> ClassTag.Char.asInstanceOf[ClassTag[Any]],
-    "Char"          -> ClassTag.Char.asInstanceOf[ClassTag[Any]],
+    "scala.Int"           -> ClassTag.Int.asInstanceOf[ClassTag[Any]],
+    "Int"                 -> ClassTag.Int.asInstanceOf[ClassTag[Any]],
+    "scala.Long"          -> ClassTag.Long.asInstanceOf[ClassTag[Any]],
+    "Long"                -> ClassTag.Long.asInstanceOf[ClassTag[Any]],
+    "scala.Double"        -> ClassTag.Double.asInstanceOf[ClassTag[Any]],
+    "Double"              -> ClassTag.Double.asInstanceOf[ClassTag[Any]],
+    "scala.Float"         -> ClassTag.Float.asInstanceOf[ClassTag[Any]],
+    "Float"               -> ClassTag.Float.asInstanceOf[ClassTag[Any]],
+    "scala.Boolean"       -> ClassTag.Boolean.asInstanceOf[ClassTag[Any]],
+    "Boolean"             -> ClassTag.Boolean.asInstanceOf[ClassTag[Any]],
+    "scala.Byte"          -> ClassTag.Byte.asInstanceOf[ClassTag[Any]],
+    "Byte"                -> ClassTag.Byte.asInstanceOf[ClassTag[Any]],
+    "scala.Short"         -> ClassTag.Short.asInstanceOf[ClassTag[Any]],
+    "Short"               -> ClassTag.Short.asInstanceOf[ClassTag[Any]],
+    "scala.Char"          -> ClassTag.Char.asInstanceOf[ClassTag[Any]],
+    "Char"                -> ClassTag.Char.asInstanceOf[ClassTag[Any]],
     "java.lang.String"    -> ClassTag(classOf[String]).asInstanceOf[ClassTag[Any]],
     "scala.Predef.String" -> ClassTag(classOf[String]).asInstanceOf[ClassTag[Any]],
     "String"              -> ClassTag(classOf[String]).asInstanceOf[ClassTag[Any]]
