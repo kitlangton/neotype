@@ -62,6 +62,7 @@ This is a concise, test-backed summary of what `comptime(...)` evaluates today. 
 - Collection-like: `reverse`, `filter`, `filterNot`, `map`, `flatMap`, `collect`, `take`, `drop`, `takeRight`, `dropRight`, `mkString`, `forall`.
 - Regex construction via `.r`.
 - `repeat`, `format` (varargs).
+- `getBytes` (default charset and with explicit charset name).
 
 ### Regex
 - Find ops: `findFirstIn`, `findAllIn`, `findFirstMatchIn`, `findAllMatchIn`.
@@ -79,7 +80,7 @@ This is a concise, test-backed summary of what `comptime(...)` evaluates today. 
 
 ### Collections
 - Constructors: `List(...)`, `Vector(...)`, `Set(...)`, `Map(...)`, `Array(...)`, `LazyList(...)`, plus `.empty` variants.
-- Factory ops: `List.fill`, `List.tabulate`, `Vector.fill`, `Vector.tabulate`, `Seq.fill`, `Seq.tabulate`.
+- Factory ops: `List.fill`, `List.tabulate`, `Vector.fill`, `Vector.tabulate`, `Seq.fill`, `Seq.tabulate`, `Array.fill`, `Array.tabulate`.
 - Core ops: `size`, `length`, `isEmpty`, `nonEmpty`, `head`, `tail`, `last`, `contains`.
 - Seq ops: `take`, `drop`, `takeRight`, `dropRight`, `slice`, `++`, `:+` (appended), `+:` (prepended), `mkString`, `updated`, `reverse`, `distinct`, `distinctBy`, `headOption`, `lastOption`, `indices`, `corresponds`, `sameElements`, `indexOf`, `lastIndexOf` (including overloads with `from`/`end` index), `indexWhere`, `lastIndexWhere` (including overloads with `from`/`end` index), `patch`, `padTo`.
 - Predicate ops: `exists`, `forall`, `find`, `count`, `takeWhile`, `dropWhile`, `span`, `partition`.
@@ -99,7 +100,7 @@ This is a concise, test-backed summary of what `comptime(...)` evaluates today. 
 - LazyList ops: `force`, `LazyList.from(start)`, `LazyList.from(start, step)`, plus standard Seq ops (`head`, `tail`, `isEmpty`, `nonEmpty`, `size`, `take`, `drop`, `takeWhile`, `dropWhile`, `map`, `flatMap`, `filter`, `filterNot`, `foldLeft`, `foldRight`, `reduce`, `toList`, `toVector`, etc.).
 - `map`, `flatMap`, `filter`, `filterNot`, `withFilter` (where relevant). Note: `withFilter` is treated as `filter` for comptime purposes (eager evaluation).
 - For-comprehensions with guards: `for (x <- xs if pred) yield f(x)` works for both collections and Option.
-- Array ops (via Seq conversion): `toList`, `toSeq`, `size`, `length`, `head`, `tail`, `take`, `drop`, `filter`, `exists`, `forall`, `foldLeft`, `foldRight`. Note: `Array.map`/`flatMap` require ClassTag and are not supported.
+- Array ops (via Seq conversion): `toList`, `toSeq`, `size`, `length`, `head`, `tail`, `take`, `drop`, `filter`, `exists`, `forall`, `foldLeft`, `foldRight`.
 
 ### Java stdlib
 - `java.net.URI`, `java.net.URL`, `java.util.UUID` construction/validation where used in tests.
@@ -119,7 +120,6 @@ These are **not guaranteed** unless tests cover them. If you need any of these, 
 - Exotic `unapplySeq` patterns returning non‑Seq/Array, or custom extractors beyond the tested shapes.
 - Deeply nested alternative patterns with bindings in all branches (some are tested, not all).
 - General reflection or IO at compile time (explicitly out of scope).
-- `Array.fill` / `Array.tabulate` (requires `ClassTag` implicit support, not yet implemented).
 - `ArrayOps.map` / `ArrayOps.flatMap` (require ClassTag for return type).
 
 ## Where to look

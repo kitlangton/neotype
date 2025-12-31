@@ -65,7 +65,27 @@ object FillTestSpec extends ZIOSpecDefault:
           comptime(LazyList.from(0, 3).take(4).toList) == List(0, 3, 6, 9),
           comptime(LazyList.from(10, -2).take(3).toList) == List(10, 8, 6)
         )
+      },
+      test("Array.fill with Int") {
+        assertTrue(
+          comptime(Array.fill(3)(42).toList) == List(42, 42, 42),
+          comptime(Array.fill(0)(1).toList) == List.empty[Int]
+        )
+      },
+      test("Array.fill with String") {
+        assertTrue(
+          comptime(Array.fill(2)("hello").toList) == List("hello", "hello")
+        )
+      },
+      test("Array.tabulate with Int") {
+        assertTrue(
+          comptime(Array.tabulate(4)(i => i * 2).toList) == List(0, 2, 4, 6),
+          comptime(Array.tabulate(0)(i => i).toList) == List.empty[Int]
+        )
+      },
+      test("Array.tabulate with String") {
+        assertTrue(
+          comptime(Array.tabulate(3)(i => s"item$i").toList) == List("item0", "item1", "item2")
+        )
       }
-      // Note: Array.fill requires ClassTag support which is complex to implement
-      // in the compile-time evaluator. Skipping for now.
     )

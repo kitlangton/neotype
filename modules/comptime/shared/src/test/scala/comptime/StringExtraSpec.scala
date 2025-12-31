@@ -108,5 +108,19 @@ object StringExtraSpec extends ZIOSpecDefault:
             comptime("".repeat(5)) == ""
           )
         }
+      ),
+      suite("getBytes")(
+        test("getBytes default charset") {
+          assertTrue(
+            comptime("hello".getBytes.toList) == "hello".getBytes.toList,
+            comptime("".getBytes.toList) == List.empty[Byte]
+          )
+        },
+        test("getBytes with charset") {
+          assertTrue(
+            comptime("hello".getBytes("UTF-8").toList) == "hello".getBytes("UTF-8").toList,
+            comptime("café".getBytes("UTF-8").toList) == "café".getBytes("UTF-8").toList
+          )
+        }
       )
     )

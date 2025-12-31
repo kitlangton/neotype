@@ -1,6 +1,8 @@
 // Stdlib rules (hand-maintained).
 package comptime
 
+import scala.reflect.ClassTag
+
 // === Runtime type class dispatch ===
 // Maps from runtime Class to typeclass instances for Ordering/Numeric operations
 private[comptime] object TypeClassMaps:
@@ -51,6 +53,30 @@ private[comptime] object TypeClassMaps:
 
   def getNumeric(sample: Any, opName: String): Numeric[Any] =
     numerics.getOrElse(sample.getClass, throw new RuntimeException(s"Unsupported type for $opName: ${sample.getClass}"))
+
+  // ClassTag support for Array operations
+  val classTags: IMap[Class[?], ClassTag[Any]] = IMap(
+    classOf[Int]                 -> ClassTag.Int.asInstanceOf[ClassTag[Any]],
+    classOf[java.lang.Integer]   -> ClassTag.Int.asInstanceOf[ClassTag[Any]],
+    classOf[Long]                -> ClassTag.Long.asInstanceOf[ClassTag[Any]],
+    classOf[java.lang.Long]      -> ClassTag.Long.asInstanceOf[ClassTag[Any]],
+    classOf[Double]              -> ClassTag.Double.asInstanceOf[ClassTag[Any]],
+    classOf[java.lang.Double]    -> ClassTag.Double.asInstanceOf[ClassTag[Any]],
+    classOf[Float]               -> ClassTag.Float.asInstanceOf[ClassTag[Any]],
+    classOf[java.lang.Float]     -> ClassTag.Float.asInstanceOf[ClassTag[Any]],
+    classOf[Boolean]             -> ClassTag.Boolean.asInstanceOf[ClassTag[Any]],
+    classOf[java.lang.Boolean]   -> ClassTag.Boolean.asInstanceOf[ClassTag[Any]],
+    classOf[Byte]                -> ClassTag.Byte.asInstanceOf[ClassTag[Any]],
+    classOf[java.lang.Byte]      -> ClassTag.Byte.asInstanceOf[ClassTag[Any]],
+    classOf[Short]               -> ClassTag.Short.asInstanceOf[ClassTag[Any]],
+    classOf[java.lang.Short]     -> ClassTag.Short.asInstanceOf[ClassTag[Any]],
+    classOf[Char]                -> ClassTag.Char.asInstanceOf[ClassTag[Any]],
+    classOf[java.lang.Character] -> ClassTag.Char.asInstanceOf[ClassTag[Any]],
+    classOf[String]              -> ClassTag(classOf[String]).asInstanceOf[ClassTag[Any]]
+  )
+
+  def getClassTag(sample: Any): ClassTag[Any] =
+    classTags.getOrElse(sample.getClass, ClassTag.Any)
 
 // === Tables (data-only) ===
 private[comptime] object StdlibCollectionTables:
@@ -1145,6 +1171,48 @@ private[comptime] object StdlibCollectionRules:
   private val listRecv           = Recv.module("scala.collection.immutable.List")
   private val vectorRecv         = Recv.module("scala.collection.immutable.Vector")
   private val tuple2Recv         = Recv.moduleOnly("scala.Tuple2")
+
+  // ClassTag.apply rule - handles compiler-inserted ClassTag implicits
+  // Uses call.targs to get the type parameter since classOf[T] isn't evaluated at runtime
+  private val classTagRecv = Recv.module("scala.reflect.ClassTag")
+
+  // Map type names to ClassTags
+  private val classTagsByName: Map[String, ClassTag[Any]] = Map(
+    "scala.Int"     -> ClassTag.Int.asInstanceOf[ClassTag[Any]],
+    "Int"           -> ClassTag.Int.asInstanceOf[ClassTag[Any]],
+    "scala.Long"    -> ClassTag.Long.asInstanceOf[ClassTag[Any]],
+    "Long"          -> ClassTag.Long.asInstanceOf[ClassTag[Any]],
+    "scala.Double"  -> ClassTag.Double.asInstanceOf[ClassTag[Any]],
+    "Double"        -> ClassTag.Double.asInstanceOf[ClassTag[Any]],
+    "scala.Float"   -> ClassTag.Float.asInstanceOf[ClassTag[Any]],
+    "Float"         -> ClassTag.Float.asInstanceOf[ClassTag[Any]],
+    "scala.Boolean" -> ClassTag.Boolean.asInstanceOf[ClassTag[Any]],
+    "Boolean"       -> ClassTag.Boolean.asInstanceOf[ClassTag[Any]],
+    "scala.Byte"    -> ClassTag.Byte.asInstanceOf[ClassTag[Any]],
+    "Byte"          -> ClassTag.Byte.asInstanceOf[ClassTag[Any]],
+    "scala.Short"   -> ClassTag.Short.asInstanceOf[ClassTag[Any]],
+    "Short"         -> ClassTag.Short.asInstanceOf[ClassTag[Any]],
+    "scala.Char"    -> ClassTag.Char.asInstanceOf[ClassTag[Any]],
+    "Char"          -> ClassTag.Char.asInstanceOf[ClassTag[Any]],
+    "java.lang.String"    -> ClassTag(classOf[String]).asInstanceOf[ClassTag[Any]],
+    "scala.Predef.String" -> ClassTag(classOf[String]).asInstanceOf[ClassTag[Any]],
+    "String"              -> ClassTag(classOf[String]).asInstanceOf[ClassTag[Any]]
+  )
+
+  private val classTagApplyRule: CallRule =
+    RuleDsl
+      .rule("apply")
+      .recv(classTagRecv)
+      .anyArity
+      .compile("ClassTag.apply") { (call, _) =>
+        // Extract type from targs - ClassTag.apply[T] has T as the type argument
+        val classTag = call.targs.headOption match
+          case Some(TypeIR.Ref(typeName, _)) =>
+            classTagsByName.getOrElse(typeName, ClassTag.Any.asInstanceOf[ClassTag[Any]])
+          case _ =>
+            ClassTag.Any.asInstanceOf[ClassTag[Any]]
+        Right(Eval.Value(classTag))
+      }
   private val tuple3Recv         = Recv.moduleOnly("scala.Tuple3")
   private val tuple4Recv         = Recv.moduleOnly("scala.Tuple4")
   private val tuple5Recv         = Recv.moduleOnly("scala.Tuple5")
@@ -1267,19 +1335,25 @@ private[comptime] object StdlibCollectionRules:
 
   // Array.fill and Array.tabulate - special handling since Array requires ClassTag (implicit)
   // Array.fill has arity=(3): (n, elem, classTag) - we use byName_SLL to handle the 3-arg form
-  // But we ignore the ClassTag and use Array.fill[Any] since we'll box primitives anyway
+  // We always use ClassTag.Any to create Object[] arrays to avoid primitive array casting issues
+  // (primitive int[] can't be cast to Object[] which causes ClassCastException)
   private val arrayFactoryRule = RulesFor.any(arrayCompanionRecv)
 
   private val arrayFillRule: CallRule =
     arrayFactoryRule.byName_SLL[Int, Any, Any, Array[Any]]("fill")((_, n) =>
       if n == 0 then Some(Array.empty[Any]) else None
-    ) { (_, n, elemThunk, _) => // ignore the ClassTag argument
-      Array.fill(n)(elemThunk())
+    ) { (_, n, elemThunk, _) =>
+      val elem = elemThunk()
+      // Always use ClassTag.Any to create Object[] - avoids primitive array casting issues
+      Array.fill(n)(elem)(ClassTag.Any)
     }
 
   private val arrayTabulateRule: CallRule =
     arrayFactoryRule.rule3[Int, Int => Any, Any, Array[Any]]("tabulate") { (_, n, f, _) =>
-      Array.tabulate(n)(f)
+      if n == 0 then Array.empty[Any]
+      else
+        // Always use ClassTag.Any to create Object[] - avoids primitive array casting issues
+        Array.tabulate(n)(f)(ClassTag.Any)
     }
 
   private val arrayFactoryRules: List[CallRule] =
@@ -1389,6 +1463,7 @@ private[comptime] object StdlibCollectionRules:
 
   val rules: List[CallRule] =
     RuleHelpers.concat(
+      List(classTagApplyRule),
       listRules,
       vectorRules,
       iterableFactoryRules,

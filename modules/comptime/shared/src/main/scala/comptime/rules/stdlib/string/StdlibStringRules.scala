@@ -38,6 +38,14 @@ private[comptime] object StdlibStringTables:
     "toList" -> (_.toList)
   )
 
+  val getBytesOps: List[(String, String => Any)] = List(
+    "getBytes" -> (_.getBytes)
+  )
+
+  val getBytesCharset: List[(String, (String, String) => Any)] = List(
+    "getBytes" -> ((s, charset) => s.getBytes(charset))
+  )
+
   // StringOps conversion methods
   val conversionOps: List[(String, String => Any)] = List(
     "toInt"          -> (_.toInt),
@@ -140,7 +148,9 @@ private[comptime] object StdlibStringBasicRules:
       rule.opsList(StdlibStringTables.empties),
       rule.opsList(StdlibStringTables.heads),
       rule.opsList(StdlibStringTables.listOps),
-      rule.opsList(StdlibStringTables.regex)
+      rule.opsList(StdlibStringTables.regex),
+      rule.opsList(StdlibStringTables.getBytesOps),
+      rule.ops1List[String](StdlibStringTables.getBytesCharset)
     )
 
   def ops1(rule: RulesFor[String]): List[CallRule] =
