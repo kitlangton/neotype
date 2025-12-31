@@ -54,6 +54,11 @@ private[comptime] object ScalaAstBridgeTerms:
           TermIR.Lambda(paramIrs, termToIR0(body))
         case Closure(meth, _) =>
           termToIR0(meth)
+        case Assign(lhs, rhs) =>
+          lhs match
+            case id: Ident => TermIR.Assign(id.name, termToIR0(rhs))
+            case other =>
+              throw new NotImplementedError(s"ScalaAstBridge.termToIR (assign to non-ident): ${other.show}")
         case term =>
           val (base, targs, argss) = ScalaAstBridgeCall.peel(term)
           ScalaAstBridgeWrapper.unwrapTypeWrapperApply(base, argss, termToIR0).getOrElse {

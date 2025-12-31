@@ -16,8 +16,9 @@ private[comptime] object FunctionCallCompiler:
         case Eval.Value(_: Function3[?, ?, ?, ?]) => true
         case _                                    => false
 
+    // Handle both `f()` (call.name == name) and `f.apply()` (call.name == "apply") syntax
     call.recv match
-      case TermIR.Ref(name, _) if call.name == name && env.get(name).exists(isFunctionValue) =>
+      case TermIR.Ref(name, _) if (call.name == name || call.name == "apply") && env.get(name).exists(isFunctionValue) =>
         val fnEval       = env(name)
         val argTerms     = call.args.filter(_.nonEmpty).flatten
         val compiledArgs = CallArgsCompiler.compileArgs(argTerms, env, fold)(compileTerm)

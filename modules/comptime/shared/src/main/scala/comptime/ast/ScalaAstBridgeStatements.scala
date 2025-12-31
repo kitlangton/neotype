@@ -12,6 +12,8 @@ private[comptime] object ScalaAstBridgeStatements:
   ): TermIR =
     import quotes.reflect.*
     stmt match
+      case v @ ValDef(name, _, Some(rhs)) if v.symbol.flags.is(Flags.Mutable) =>
+        TermIR.Var(name, termToIR(rhs))
       case ValDef(name, _, Some(rhs)) =>
         TermIR.Val(name, termToIR(rhs))
       case DefDef(name, params, _, Some(rhs)) =>

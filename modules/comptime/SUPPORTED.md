@@ -3,7 +3,7 @@
 This is a concise, test-backed summary of what `comptime(...)` evaluates today. The authoritative source of truth is the test suite under
 `modules/comptime/shared/src/test/scala/comptime` (see `ComptimeSpec`, `ExtraExpressionsSpec`, `IterableSpec`, `SeqExtraSpec`, `SeqIndexSpec`, `MapExtraSpec`, `OptionSpec`,
 `EitherExtraSpec`, `TryExtraSpec`, `PatternMatchingSpec`, `RegexSpec`, `JavaTimeSpec`, `AdvancedCollectionSpec`, `FillTestSpec`, `ArrayOpsSpec`,
-`StringExtraSpec`, `CharOpsSpec`, `NumericAbsSpec`, `NumericExtrasSpec`, `BigNumSpec`, `SetSpec`, `TupleExtraSpec`, `TestEitherOps`, `TryCatchSpec`, `MixedNumericSpec`).
+`StringExtraSpec`, `CharOpsSpec`, `NumericAbsSpec`, `NumericExtrasSpec`, `BigNumSpec`, `SetSpec`, `TupleExtraSpec`, `TestEitherOps`, `TryCatchSpec`, `MixedNumericSpec`, `VarSpec`).
 
 ## Language constructs (supported)
 - Literals: Int/Long/Float/Double/Boolean/Char/Byte/Short/String/Unit, tuples, collections.
@@ -11,7 +11,7 @@ This is a concise, test-backed summary of what `comptime(...)` evaluates today. 
 - Arithmetic and comparisons on numeric primitives.
 - Boolean ops including short‑circuit `&&` / `||`.
 - `if/else` expressions.
-- Blocks with local `val`s.
+- Blocks with local `val`s and `var`s (mutable local variables with assignment).
 - `try/catch/finally` expressions (exception type matching, nested handlers, variable binding in catch clauses).
 - `throw` expressions (when the thrown value is an existing Throwable, not a constructor call).
 - Lambdas used in stdlib ops (e.g., `map`, `filter`, `foldLeft`).
@@ -114,7 +114,7 @@ This is a concise, test-backed summary of what `comptime(...)` evaluates today. 
 
 ## Not guaranteed / likely gaps
 These are **not guaranteed** unless tests cover them. If you need any of these, add tests first:
-- `while` loops, `lazy val`, `var` (mutable state not supported).
+- `while` loops, `lazy val`.
 - Exception constructors (`new RuntimeException("msg")`) - use naturally-occurring exceptions instead.
 - Arbitrary method calls outside the whitelist of stdlib rules.
 - Exotic `unapplySeq` patterns returning non‑Seq/Array, or custom extractors beyond the tested shapes.

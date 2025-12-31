@@ -26,9 +26,13 @@ private[comptime] object TermCompiler:
       compileCall: (CallIR, RuleContext) => Either[ComptimeError, Eval]
   ): Either[ComptimeError, Eval] =
     def loop(term: TermIR, env: Map[String, Eval], fold: Boolean): Either[ComptimeError, Eval] =
+      val canFold = fold && !env.values.exists {
+        case Eval.VarBinding(_) => true
+        case _                  => false
+      }
       val ctx = RuleContext(
-        foldConstants = fold,
-        compileTerm = t => loop(t, env, fold),
+        foldConstants = canFold,
+        compileTerm = t => loop(t, env, canFold),
         compileTermLazy = t => loop(t, env, fold = false)
       )
       term match
@@ -36,10 +40,10 @@ private[comptime] object TermCompiler:
         case TermIR.Ref(name, fullName) =>
           ReferenceResolver.resolveOrError(name, fullName, env)
         case TermIR.CaseClass(fullName, fields, repeatedIndex, args) =>
-          val compiledArgsE = CallArgsCompiler.compileArgs(args, env, fold)(loop)
+          val compiledArgsE = CallArgsCompiler.compileArgs(args, env, canFold)(loop)
           compiledArgsE.map { evals =>
             val values = evals.collect { case Eval.Value(v) => v }
-            if fold && values.size == evals.size then
+            if canFold && values.size == evals.size then
               Eval.Value(CaseClassBuilder.build(fullName, fields, repeatedIndex, values))
             else Eval.BuildList(evals, args => CaseClassBuilder.build(fullName, fields, repeatedIndex, args))
           }
@@ -49,11 +53,11 @@ private[comptime] object TermCompiler:
             (value, cases, env2, fold2) => MatchCompiler.compileMatch(value, cases, env2, fold2)(loop)
           )
         case TermIR.Call(call) =>
-          FunctionCallCompiler.compileFunctionCall(call, env, fold)(loop).getOrElse(compileCall(call, ctx))
+          FunctionCallCompiler.compileFunctionCall(call, env, canFold)(loop).getOrElse(compileCall(call, ctx))
         case TermIR.If(cond, onTrue, onFalse) =>
           ctx.compileTerm(cond).flatMap {
             case Eval.Value(value: Boolean) if ctx.foldConstants =>
-              if value then loop(onTrue, env, fold) else loop(onFalse, env, fold)
+              if value then loop(onTrue, env, canFold) else loop(onFalse, env, canFold)
             case condEval =>
               for
                 trueEval  <- ctx.compileTermLazy(onTrue)
@@ -75,6 +79,20 @@ private[comptime] object TermCompiler:
               case t: Throwable => throw t
               case other        => throw new RuntimeException(s"Throw requires Throwable, got: ${other.getClass}")
           }
+        case TermIR.Assign(name, value) =>
+          // Look up the var binding and create a WriteRef
+          env.get(name) match
+            case Some(Eval.VarBinding(ref)) =>
+              loop(value, env, fold).map { valueEval =>
+                Eval.WriteRef(ref, valueEval)
+              }
+            case Some(_) =>
+              Left(ComptimeError.UnsupportedTerm("Assign", s"Cannot assign to immutable binding: $name"))
+            case None =>
+              Left(ComptimeError.UnsupportedTerm("Assign", s"Unknown variable: $name"))
+        case TermIR.Var(name, value) =>
+          // Var should only appear in blocks, not as standalone term
+          Left(ComptimeError.UnsupportedTerm("Var", s"var declaration outside block: $name"))
         case TermIR.Try(expr, cases, finalizer) =>
           // Helper to convert exception to EvalException
           def toEvalException(e: Throwable): ComptimeError.EvalException =

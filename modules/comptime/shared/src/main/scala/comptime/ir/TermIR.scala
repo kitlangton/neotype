@@ -6,6 +6,8 @@ object TermIR:
   final case class Lit(value: Any)                                   extends TermIR
   final case class Ref(name: String, fullName: Option[String])       extends TermIR
   final case class Val(name: String, value: TermIR)                  extends TermIR
+  final case class Var(name: String, value: TermIR)                  extends TermIR
+  final case class Assign(name: String, value: TermIR)               extends TermIR
   final case class Block(stats: List[TermIR], expr: TermIR)          extends TermIR
   final case class Lambda(params: List[ParamIR], body: TermIR)       extends TermIR
   final case class If(cond: TermIR, onTrue: TermIR, onFalse: TermIR) extends TermIR
