@@ -2,8 +2,6 @@ package comptime
 
 import zio.test.*
 
-import scala.compiletime.testing.*
-
 object TryCatchSpec extends ZIOSpecDefault:
   val spec =
     suite("try/catch/finally")(
@@ -198,7 +196,8 @@ object TryCatchSpec extends ZIOSpecDefault:
               e.fold(
                 _ =>
                   try "never evaluated".toInt
-                  catch case _: Exception => -999, identity
+                  catch case _: Exception => -999,
+                identity
               )
             } == 1
           )
@@ -224,7 +223,7 @@ object TryCatchSpec extends ZIOSpecDefault:
             comptime(
               try 42
               finally
-                val x = 1 + 2 // result discarded
+                val _ = 1 + 2 // result discarded
             ) == 42
           )
         },
@@ -234,7 +233,7 @@ object TryCatchSpec extends ZIOSpecDefault:
               try "abc".toInt
               catch case _: Exception => 99
               finally
-                val x = 1 + 2 // result discarded
+                val _ = 1 + 2 // result discarded
             ) == 99
           )
         }
@@ -276,7 +275,7 @@ object TryCatchSpec extends ZIOSpecDefault:
                   inner
                 finally
                   // This finally should run even though catch threw
-                  val x = 1 + 1
+                  val _ = 1 + 1
               catch
                 case _: IndexOutOfBoundsException => 1 // catch's exception propagated through finally
                 case _: Exception                 => 2
@@ -295,7 +294,7 @@ object TryCatchSpec extends ZIOSpecDefault:
                     case _: NumberFormatException =>
                       List(1, 2, 3)(10) // throws IndexOutOfBoundsException
                   finally
-                    val x = 1 / 0 // throws ArithmeticException
+                    val _ = 1 / 0 // throws ArithmeticException
                 inner
               catch
                 case _: ArithmeticException       => 1 // finally's exception wins
@@ -311,7 +310,7 @@ object TryCatchSpec extends ZIOSpecDefault:
               try
                 try 42
                 finally
-                  val x = 1 / 0 // throws ArithmeticException
+                  val _ = 1 / 0 // throws ArithmeticException
               catch
                 case _: ArithmeticException => -1
                 case _: Exception           => -2

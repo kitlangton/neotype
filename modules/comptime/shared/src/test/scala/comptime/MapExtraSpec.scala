@@ -33,7 +33,7 @@ object MapExtraSpec extends ZIOSpecDefault:
           assertTrue(
             comptime(Map("a" -> 1, "b" -> 2).transform((k, v) => k + v.toString)) == Map("a" -> "a1", "b" -> "b2"),
             comptime(Map(1 -> 10, 2 -> 20).transform((k, v) => k + v)) == Map(1 -> 11, 2 -> 22),
-            comptime(Map.empty[String, Int].transform((k, v) => v * 2)) == Map.empty[String, Int]
+            comptime(Map.empty[String, Int].transform((_, v) => v * 2)) == Map.empty[String, Int]
           )
         }
       ),

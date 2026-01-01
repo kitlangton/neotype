@@ -10,6 +10,7 @@ object VarSpec extends ZIOSpecDefault:
           assertTrue(
             comptime {
               var x = 1
+              x = x
               x
             } == 1
           )
@@ -72,6 +73,7 @@ object VarSpec extends ZIOSpecDefault:
             comptime {
               var x = 1
               var y = 2
+              y = y
               x = x + y
               x
             } == 3
@@ -162,6 +164,7 @@ object VarSpec extends ZIOSpecDefault:
           assertTrue(
             comptime {
               var x = 1
+              x = x
               val result =
                 val x = 100 // shadows the var
                 x

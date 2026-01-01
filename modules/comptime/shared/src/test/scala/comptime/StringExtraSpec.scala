@@ -28,11 +28,13 @@ object StringExtraSpec extends ZIOSpecDefault:
           )
         },
         test("stripMargin") {
-          val s = """  |line1
-                      |  |line2""".stripMargin
           assertTrue(
             comptime("  |hello".stripMargin) == "hello",
-            comptime("  #hello".stripMargin('#')) == "hello"
+            comptime("  #hello".stripMargin('#')) == "hello",
+            comptime(
+              """  |line1
+                |  |line2""".stripMargin
+            ) == "line1\n  |line2"
           )
         }
       ),

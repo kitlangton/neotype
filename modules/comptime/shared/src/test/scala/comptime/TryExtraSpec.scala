@@ -85,7 +85,7 @@ object TryExtraSpec extends ZIOSpecDefault:
           )
         },
         test("transform can turn Success into Failure") {
-          val result = comptime(Success(10).transform(_ => Try(1 / 0), e => Success(-1)))
+          val result = comptime(Success(10).transform(_ => Try(1 / 0), _ => Success(-1)))
           assertTrue(result.isFailure)
         },
         test("transform can turn Failure into Failure") {
