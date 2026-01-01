@@ -4,6 +4,7 @@ package comptime
 private[comptime] object StdlibRules:
   val rules: List[RuleSpec] =
     RuleHelpers.concat(
+      StdlibComptimeRules.rules,
       StdlibPredefRules.rules,
       StdlibStringRules.rules,
       StdlibRegexRules.rules,

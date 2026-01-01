@@ -1,0 +1,9 @@
+—— Comptime Error ——————————————————————————————————————————————————————————
+  RuntimeException: comptime.readFile: unsupported encoding 'NOPE-ENCODING'
+
+  2 │           comptime {
+  3 │             readFile("modules/comptime/shared/src/test/scala/comptime/fixtures/readfile.txt", "NOPE-ENCODING")
+  4 │           }
+
+  in package.readFile
+————————————————————————————————————————————————————————————————————————————

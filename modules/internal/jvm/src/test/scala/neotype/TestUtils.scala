@@ -16,7 +16,7 @@ object TestUtils:
   def normalize(text: String): String =
     stripAnsi(text).replaceAll("\r\n", "\n").trim
 
-  private val snapshotDir: Path =
+  private val defaultSnapshotDir: Path =
     Paths.get("modules/core/jvm/src/test/scala/neotype/__snapshots__")
 
   private def shouldUpdateSnapshots: Boolean =
@@ -28,6 +28,10 @@ object TestUtils:
     * snapshots. Missing snapshots are auto-created on first run.
     */
   def assertSnapshot(actual: String, name: String): TestResult =
+    assertSnapshot(actual, name, defaultSnapshotDir)
+
+  /** Assert that actual content matches a snapshot file in a custom directory. */
+  def assertSnapshot(actual: String, name: String, snapshotDir: Path): TestResult =
     val snapshotPath = snapshotDir.resolve(s"$name.snap")
     val normalized   = normalize(actual)
 

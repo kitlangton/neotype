@@ -1,0 +1,9 @@
+—— Comptime Error ——————————————————————————————————————————————————————————
+  RuntimeException: comptime.readFile: file not found: <cwd>/modules/comptime/shared/src/test/scala/comptime/fixtures/missing.txt (requested: modules/comptime/shared/src/test/scala/comptime/fixtures/missing.txt; base: <cwd> (source file unavailable); paths are resolved relative to the source file)
+
+  2 │           comptime {
+  3 │             readFile("modules/comptime/shared/src/test/scala/comptime/fixtures/missing.txt")
+  4 │           }
+
+  in package.readFile
+————————————————————————————————————————————————————————————————————————————

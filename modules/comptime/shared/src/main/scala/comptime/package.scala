@@ -27,21 +27,17 @@ package object comptime:
   inline def comptimeError(message: String): Nothing =
     throw ComptimeAbort(message)
 
-  // TODO: Add compile-time file reading:
-  //
-  //   inline def readFile(inline path: String): String
-  //   inline def readFileBytes(inline path: String): IArray[Byte]
-  //   inline def readResource(inline path: String): String  // classpath resource
-  //
-  // Implementation notes:
-  //   - Resolve path relative to source file (use Position.sourceFile)
-  //   - Read file content during macro expansion
-  //   - Return as compile-time constant String
-  //   - The result can then be transformed with comptime-capable ops:
-  //       comptime { readFile("data.csv").split("\n").map(_.split(",")) }
-  //
-  // Dangers to document:
-  //   - Non-determinism: file changes don't trigger recompile
-  //   - Path resolution: relative to source file or project root?
-  //   - Security: limit to project directory, warn on absolute paths
-  //   - Prefer readResource for classpath resources (more portable)
+  /** Read a file as a String during compile-time evaluation.
+    *
+    * Paths are resolved relative to the source file containing the call.
+    * Uses UTF-8 by default.
+    */
+  def readFile(path: String, encoding: String = "UTF-8"): String =
+    throw new RuntimeException("comptime.readFile can only be used inside comptime(...)")
+
+  /** Read a file as bytes during compile-time evaluation.
+    *
+    * Paths are resolved relative to the source file containing the call.
+    */
+  def readFileBytes(path: String): Array[Byte] =
+    throw new RuntimeException("comptime.readFileBytes can only be used inside comptime(...)")

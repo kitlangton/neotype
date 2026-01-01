@@ -49,6 +49,16 @@ private[comptime] object MacroExprsCollections:
               '{ ${ Expr.ofList(xs.toList.map(Expr(_))) }.toVector }
         })
 
+      case '[Array[Byte]] =>
+        castToExprOpt(
+          Some(
+            new ToExpr[Array[Byte]]:
+              def apply(xs: Array[Byte])(using Quotes): Expr[Array[Byte]] =
+                val elems = xs.toIndexedSeq.map(Expr(_))
+                '{ Array[Byte](${ Varargs(elems) }*) }
+          )
+        )
+
       case '[Set[t]] =>
         castToExprOpt(MacroExprs.summonExprOpt[t].map { te =>
           given ToExpr[t] = te

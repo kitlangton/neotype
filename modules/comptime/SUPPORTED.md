@@ -31,6 +31,11 @@ This is a concise, test-backed summary of what `comptime(...)` evaluates today. 
 - `@` binders around alternatives and nested patterns (covered by tests).
 
 ## Standard library ops (supported)
+### Comptime helpers
+- `comptime.readFile(path: String, encoding: String = "UTF-8")` reads files at compile time; paths resolve relative to the call site.
+- `comptime.readFileBytes(path: String)` reads file bytes at compile time; paths resolve relative to the call site.
+- Note: file changes do not automatically trigger recompilation; treat these APIs like embedded constants.
+
 ### Numeric
 - `+ - * / % unary_-` for `Int`, `Long`, `Float`, `Double`.
 - Comparisons: `== != < <= > >=`.
@@ -119,7 +124,7 @@ These are **not guaranteed** unless tests cover them. If you need any of these, 
 - Arbitrary method calls outside the whitelist of stdlib rules.
 - Exotic `unapplySeq` patterns returning non‑Seq/Array, or custom extractors beyond the tested shapes.
 - Deeply nested alternative patterns with bindings in all branches (some are tested, not all).
-- General reflection or IO at compile time (explicitly out of scope).
+- General reflection or IO at compile time (beyond `comptime.readFile` / `readFileBytes`).
 - `ArrayOps.map` / `ArrayOps.flatMap` (require ClassTag for return type).
 
 ## Known limitations (var support)

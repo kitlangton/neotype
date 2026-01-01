@@ -354,3 +354,28 @@ object ManualParsingExample:
 
   // Runtime parsing for user input
   def fromUser(input: String) = ChessSquare.parse(input) // Either[String, ChessSquare]
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. FILE-BASED COMPTIME DATA
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Read files during compilation and turn them into constants.
+// Paths resolve relative to this source file.
+//
+object FileBackedData:
+  final case class StatusCode(code: Int, message: String)
+
+  val statusCodes: Map[Int, StatusCode] = comptime {
+    readFile("assets/status_codes.csv")
+      .split("\n")
+      .toList
+      .filter(_.nonEmpty)
+      .map { line =>
+        val parts = line.split(",", 2)
+        if parts.length != 2 then comptimeError(s"Invalid status line: $line")
+        else
+          val value = parts(0).toInt
+          value -> StatusCode(value, parts(1))
+      }
+      .toMap
+  }
