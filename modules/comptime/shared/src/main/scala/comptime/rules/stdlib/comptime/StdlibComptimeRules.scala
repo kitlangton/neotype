@@ -1,9 +1,12 @@
 // Stdlib rules for comptime.* helpers (hand-maintained).
 package comptime
 
-import java.nio.charset.{Charset, IllegalCharsetNameException, UnsupportedCharsetException}
-import java.nio.file.{Files, Path, Paths}
-
+import java.nio.charset.Charset
+import java.nio.charset.IllegalCharsetNameException
+import java.nio.charset.UnsupportedCharsetException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 private[comptime] object StdlibComptimeRules:
   private val comptimeRecv    = Recv.module("comptime.package")
@@ -21,8 +24,7 @@ private[comptime] object StdlibComptimeRules:
   private def resolvePath(path: String, base: Option[Path]): Path =
     val raw = Paths.get(path)
     if raw.isAbsolute then raw.normalize()
-    else
-      basePath(base).resolve(path).normalize()
+    else basePath(base).resolve(path).normalize()
 
   private def describeBase(base: Option[Path]): String =
     base.map(_.toString).getOrElse(s"${basePath(base)} (source file unavailable)")
@@ -35,10 +37,8 @@ private[comptime] object StdlibComptimeRules:
 
   private def readBytes(path: String, base: Option[Path], opName: String): Array[Byte] =
     val resolved = resolvePath(path, base)
-    if !Files.exists(resolved) then
-      throw new RuntimeException(fileNotFoundMessage(opName, path, resolved, base))
-    if !Files.isRegularFile(resolved) then
-      throw new RuntimeException(notAFileMessage(opName, path, resolved, base))
+    if !Files.exists(resolved) then throw new RuntimeException(fileNotFoundMessage(opName, path, resolved, base))
+    if !Files.isRegularFile(resolved) then throw new RuntimeException(notAFileMessage(opName, path, resolved, base))
     Files.readAllBytes(resolved)
 
   private def charsetFor(name: String): Charset =
@@ -68,8 +68,9 @@ private[comptime] object StdlibComptimeRules:
                 case Eval.Value(value) if ctx.foldConstants =>
                   Eval.Value(readString(value.asInstanceOf[String], defaultEncoding, base))
                 case _ =>
-                  Eval.BuildList(List(pathEval), values =>
-                    readString(values.head.asInstanceOf[String], defaultEncoding, base)
+                  Eval.BuildList(
+                    List(pathEval),
+                    values => readString(values.head.asInstanceOf[String], defaultEncoding, base)
                   )
             }
           case None =>
@@ -88,14 +89,14 @@ private[comptime] object StdlibComptimeRules:
             for
               pathEval     <- ctx.compileTerm(pathTerm)
               encodingEval <- ctx.compileTerm(encodingTerm)
-            yield
-              (pathEval, encodingEval) match
-                case (Eval.Value(path), Eval.Value(enc)) if ctx.foldConstants =>
-                  Eval.Value(readString(path.asInstanceOf[String], enc.asInstanceOf[String], base))
-                case _ =>
-                  Eval.BuildList(List(pathEval, encodingEval), values =>
-                    readString(values.head.asInstanceOf[String], values(1).asInstanceOf[String], base)
-                  )
+            yield (pathEval, encodingEval) match
+              case (Eval.Value(path), Eval.Value(enc)) if ctx.foldConstants =>
+                Eval.Value(readString(path.asInstanceOf[String], enc.asInstanceOf[String], base))
+              case _ =>
+                Eval.BuildList(
+                  List(pathEval, encodingEval),
+                  values => readString(values.head.asInstanceOf[String], values(1).asInstanceOf[String], base)
+                )
           case None =>
             Left(ComptimeError.UnsupportedArity("readFile", ""))
       }
@@ -114,8 +115,9 @@ private[comptime] object StdlibComptimeRules:
                 case Eval.Value(value) if ctx.foldConstants =>
                   Eval.Value(readBytes(value.asInstanceOf[String], base, "comptime.readFileBytes"))
                 case _ =>
-                  Eval.BuildList(List(pathEval), values =>
-                    readBytes(values.head.asInstanceOf[String], base, "comptime.readFileBytes")
+                  Eval.BuildList(
+                    List(pathEval),
+                    values => readBytes(values.head.asInstanceOf[String], base, "comptime.readFileBytes")
                   )
             }
           case None =>

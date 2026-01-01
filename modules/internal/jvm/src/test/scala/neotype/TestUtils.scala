@@ -30,7 +30,8 @@ object TestUtils:
   def assertSnapshot(actual: String, name: String): TestResult =
     assertSnapshot(actual, name, defaultSnapshotDir)
 
-  /** Assert that actual content matches a snapshot file in a custom directory. */
+  /** Assert that actual content matches a snapshot file in a custom directory.
+    */
   def assertSnapshot(actual: String, name: String, snapshotDir: Path): TestResult =
     val snapshotPath = snapshotDir.resolve(s"$name.snap")
     val normalized   = normalize(actual)

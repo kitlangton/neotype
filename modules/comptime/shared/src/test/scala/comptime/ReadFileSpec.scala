@@ -1,8 +1,8 @@
 package comptime
 
-import java.nio.charset.StandardCharsets
 import zio.test.*
 
+import java.nio.charset.StandardCharsets
 import scala.compiletime.testing.*
 
 object ReadFileSpec extends ZIOSpecDefault:

@@ -29,8 +29,8 @@ package object comptime:
 
   /** Read a file as a String during compile-time evaluation.
     *
-    * Paths are resolved relative to the source file containing the call.
-    * Uses UTF-8 by default.
+    * Paths are resolved relative to the source file containing the call. Uses
+    * UTF-8 by default.
     */
   def readFile(path: String, encoding: String = "UTF-8"): String =
     throw new RuntimeException("comptime.readFile can only be used inside comptime(...)")
