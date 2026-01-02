@@ -160,8 +160,7 @@ lazy val skipNativeTests = Seq(
 lazy val internal = (crossProject(JSPlatform, JVMPlatform, NativePlatform) in file("modules/internal"))
   .settings(
     name := "neotype-internal",
-    sharedSettings,
-    publish / skip := true
+    sharedSettings
   )
   .nativeSettings(skipNativeTests)
 
