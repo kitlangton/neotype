@@ -42,8 +42,7 @@ ThisBuild / githubWorkflowBuild := Seq(
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches :=
   Seq(
-    RefPredicate.StartsWith(Ref.Tag("v")),
-    RefPredicate.Equals(Ref.Branch("main"))
+    RefPredicate.StartsWith(Ref.Tag("v"))
   )
 
 ThisBuild / githubWorkflowPublish := Seq(
@@ -56,6 +55,11 @@ ThisBuild / githubWorkflowPublish := Seq(
       "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
       "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
     )
+  ),
+  WorkflowStep.Run(
+    commands = List("gh release create ${{ github.ref_name }} --generate-notes || true"),
+    name = Some("Create GitHub Release"),
+    env = Map("GH_TOKEN" -> "${{ secrets.GITHUB_TOKEN }}")
   )
 )
 

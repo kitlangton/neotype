@@ -1,12 +1,9 @@
 # neotype
 
-[![Release Artifacts][Badge-SonatypeReleases]][Link-SonatypeReleases]
-[![Snapshot Artifacts][Badge-SonatypeSnapshots]][Link-SonatypeSnapshots]
+[![Maven Central][Badge-MavenCentral]][Link-MavenCentral]
 
-[Badge-SonatypeReleases]: https://img.shields.io/nexus/r/https/oss.sonatype.org/io.github.kitlangton/neotype_3.svg "Sonatype Releases"
-[Badge-SonatypeSnapshots]: https://img.shields.io/nexus/s/https/oss.sonatype.org/io.github.kitlangton/neotype_3.svg "Sonatype Snapshots"
-[Link-SonatypeSnapshots]: https://oss.sonatype.org/content/repositories/snapshots/io/github/kitlangton/neotype_3/ "Sonatype Snapshots"
-[Link-SonatypeReleases]: https://oss.sonatype.org/content/repositories/releases/io/github/kitlangton/neotype_3/ "Sonatype Releases"
+[Badge-MavenCentral]: https://img.shields.io/maven-central/v/io.github.kitlangton/neotype_3.svg "Maven Central"
+[Link-MavenCentral]: https://central.sonatype.com/artifact/io.github.kitlangton/neotype_3 "Maven Central"
 
 A friendly newtype library for Scala 3.
 
@@ -15,7 +12,7 @@ A friendly newtype library for Scala 3.
 "io.github.kitlangton" %% "comptime" % "x.y.z" // optional
 ```
 
-Use the latest version shown in the Sonatype badge above.
+Use the latest version shown in the badge above.
 
 ## Features
 
