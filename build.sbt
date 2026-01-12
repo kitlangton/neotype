@@ -45,6 +45,8 @@ ThisBuild / githubWorkflowPublishTargetBranches :=
     RefPredicate.StartsWith(Ref.Tag("v"))
   )
 
+ThisBuild / githubWorkflowPermissions := Some(Permissions.WriteAll)
+
 ThisBuild / githubWorkflowPublish := Seq(
   WorkflowStep.Sbt(
     commands = List("ci-release"),
