@@ -63,7 +63,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 // Project Definitions //
 /////////////////////////
 
-lazy val jsoniterVersion       = "2.38.7"
+lazy val jsoniterVersion       = "2.38.8"
 lazy val circeVersion          = "0.14.15"
 lazy val tapirVersion          = "1.13.4"
 lazy val zioVersion            = "2.1.24"
@@ -211,7 +211,7 @@ lazy val playJson = (crossProject(JSPlatform, JVMPlatform) in file("modules/neot
     name := "neotype-play-json",
     sharedSettings,
     libraryDependencies ++= Seq(
-      "org.playframework" %%% "play-json" % "3.1.0-M4"
+      "org.playframework" %%% "play-json" % "3.1.0-M9"
     )
   )
   .dependsOn(core % "compile->compile;test->test")
