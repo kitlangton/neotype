@@ -7,8 +7,7 @@ import _root_.doobie.util.transactor.Transactor
 import cats.Show
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-import neotype.Newtype
-import neotype.Subtype
+import neotype.{Newtype, Subtype}
 import neotype.common.NonEmptyString
 import neotype.interop.doobie.given
 import neotype.test.definitions.*
@@ -16,6 +15,10 @@ import zio.*
 import zio.test.*
 
 object DoobieInstancesSpec extends ZIOSpecDefault:
+
+  type CompositeNewtype = CompositeNewtype.Type
+
+  object CompositeNewtype extends Newtype[Composite]
 
   val transactor = Transactor.fromDriverManager[IO](
     driver = "org.h2.Driver",                   // driver classname
@@ -90,18 +93,42 @@ object DoobieInstancesSpec extends ZIOSpecDefault:
     ),
     suite("Composite")(
       test("composite success") {
-        val result = sql"SELECT 'Hello', 42, 'Hello World!', 100"
-          .query[Composite]
-          .unique
-          .transact(transactor)
-          .unsafeRunSync()
-        assertTrue(
-          result == Composite(
+        val expectedValue =
+          Composite(
             ValidatedNewtype("Hello"),
             SimpleNewtype(42),
             ValidatedSubtype("Hello World!"),
             SimpleSubtype(100)
           )
+
+        val result = sql"SELECT $expectedValue"
+          .query[Composite]
+          .unique
+          .transact(transactor)
+          .unsafeRunSync()
+
+        assertTrue(
+          result == expectedValue
+        )
+      },
+      test("composite newtype success") {
+        val expectedValue: CompositeNewtype = CompositeNewtype(
+          Composite(
+            ValidatedNewtype("Hello"),
+            SimpleNewtype(42),
+            ValidatedSubtype("Hello World!"),
+            SimpleSubtype(100)
+          )
+        )
+
+        val result = sql"SELECT $expectedValue"
+          .query[CompositeNewtype]
+          .unique
+          .transact(transactor)
+          .unsafeRunSync()
+
+        assertTrue(
+          result == expectedValue
         )
       },
       test("composite fail") {

@@ -187,6 +187,7 @@ trait WrappedType[Underlying, Wrapped]:
   type Wrapper <: TypeWrapper[Underlying] { type Type = Wrapped }
   def unwrap(wrapped: Wrapped): Underlying
   def make(underlying: Underlying): Either[String, Wrapped]
+  def makeOrThrow(input: Underlying): Wrapped
   inline def unsafeMake(inline underlying: Underlying): Wrapped = underlying.asInstanceOf[Wrapped]
   inline def unsafeMakeF[F[_]](inline underlying: F[Underlying]): F[Wrapped] =
     underlying.asInstanceOf[F[Wrapped]]
@@ -198,11 +199,13 @@ object WrappedType:
     type Wrapper = nt.type
     inline def unwrap(wrapped: B): A                  = nt.unwrap(wrapped)
     inline def make(underlying: A): Either[String, B] = nt.make(underlying)
+    inline def makeOrThrow(underlying: A): B          = nt.makeOrThrow(underlying)
 
   given subtypeWrappedType[A, B <: A](using st: Subtype.WithType[A, B]): WrappedType[A, B] with
     type Wrapper = st.type
     inline def unwrap(wrapped: B): A                  = wrapped
     inline def make(underlying: A): Either[String, B] = st.make(underlying)
+    inline def makeOrThrow(underlying: A): B          = st.makeOrThrow(underlying)
 
 trait SimpleWrappedType[Underlying, Wrapped] extends WrappedType[Underlying, Wrapped]
 
@@ -213,12 +216,14 @@ object SimpleWrappedType:
     type Wrapper = nt.type
     inline def unwrap(wrapped: B): A                  = nt.unwrap(wrapped)
     inline def make(underlying: A): Either[String, B] = nt.make(underlying)
+    inline def makeOrThrow(underlying: A): B          = nt.makeOrThrow(underlying)
 
   given subtypeSimple[A, B <: A](using st: Subtype.WithType[A, B], ev: IsSimpleType[st.type]): SimpleWrappedType[A, B]
   with
     type Wrapper = st.type
     inline def unwrap(wrapped: B): A                  = wrapped
     inline def make(underlying: A): Either[String, B] = st.make(underlying)
+    inline def makeOrThrow(underlying: A): B          = st.makeOrThrow(underlying)
 
 trait ValidatedWrappedType[Underlying, Wrapped] extends WrappedType[Underlying, Wrapped]
 
@@ -232,6 +237,7 @@ object ValidatedWrappedType:
     type Wrapper = nt.type
     inline def unwrap(wrapped: B): A                  = nt.unwrap(wrapped)
     inline def make(underlying: A): Either[String, B] = nt.make(underlying)
+    inline def makeOrThrow(underlying: A): B          = nt.makeOrThrow(underlying)
 
   given subtypeValidated[A, B <: A](using
       st: Subtype.WithType[A, B],
@@ -240,6 +246,7 @@ object ValidatedWrappedType:
     type Wrapper = st.type
     inline def unwrap(wrapped: B): A                  = wrapped
     inline def make(underlying: A): Either[String, B] = st.make(underlying)
+    inline def makeOrThrow(underlying: A): B          = st.makeOrThrow(underlying)
 
 /** Typeclass for wrapping an underlying value with validation. */
 trait Wrappable[Underlying, Wrapped]:
