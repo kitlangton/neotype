@@ -300,6 +300,14 @@ object NewtypeSpec extends ZIOSpecDefault:
         assertTrue(res.message contains "Values of types neotype.PositiveIntNewtype.Type and Int cannot be compared with == or !=.")
       }
 
+      test("newtypes should not be able to be if their underlying type is not comparable") {
+        val uncomparableNewtype = UncomparableNewtype(Uncomparable(10))
+
+        val res = typeCheckErrors("""uncomparableNewtype == uncomparableNewtype""").head
+
+        assertTrue(res.message contains "Values of types neotype.UncomparableNewtype.Type and neotype.UncomparableNewtype.Type cannot be compared with == or !=.")
+      }
+
       test("subtypes should be able to be compared to their own types")(
         assertTrue(PositiveIntSubtype(10) == PositiveIntSubtype(10))
       )
@@ -307,5 +315,13 @@ object NewtypeSpec extends ZIOSpecDefault:
       test("subtypes should be able to be compared to their underlying types") (
         assertTrue(PositiveIntSubtype(10) == 10)
       )
+
+      test("subtypes should not be able to be if their underlying type is not comparable") {
+        val uncomparableSubtype = UncomparableSubtype(Uncomparable(10))
+
+        val res = typeCheckErrors("""uncomparableSubtype == Uncomparable(10)""").head
+
+        assertTrue(res.message contains "Values of types neotype.UncomparableSubtype.Type and neotype.Uncomparable cannot be compared with == or !=.")
+      }
     }
   }
