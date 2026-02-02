@@ -254,8 +254,10 @@ object NewtypeSpec extends ZIOSpecDefault:
     }
 
     test("comparison between types that don't have a CanEqual should be possible when strictEquality is not enabled"){
-      val comparison = NoCanEqualNewtype(NoCanEqual(10)) == NoCanEqualSubtype(NoCanEqual(10))
-      assertTrue(comparison)
+      val x: Right[Nothing, NoCanEqualNewtype] = Right(NoCanEqualNewtype(NoCanEqual(10)))
+      val y: Either[Throwable, NoCanEqualSubtype] = Right(NoCanEqualSubtype(NoCanEqual(10)))
+
+      assertTrue(x == y)
     }
 
     suiteAll("makeOrThrow") {
