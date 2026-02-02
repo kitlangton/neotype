@@ -253,6 +253,11 @@ object NewtypeSpec extends ZIOSpecDefault:
       assertTrue(res.message contains "Neotype Error")
     }
 
+    test("comparison between types that don't have a CanEqual should be possible when strictEquality is not enabled"){
+      val comparison = NoCanEqualNewtype(NoCanEqual(10)) == NoCanEqualSubtype(NoCanEqual(10))
+      assertTrue(comparison)
+    }
+
     suiteAll("makeOrThrow") {
       test("newtype success") {
         val res = PositiveIntNewtype.makeOrThrow(1)
@@ -302,9 +307,9 @@ object NewtypeSpec extends ZIOSpecDefault:
 
       test("newtypes should not be able to be if their underlying type is not comparable") {
 
-        val res = typeCheckErrors("""UncomparableNewtype(Uncomparable(10)) == UncomparableNewtype(Uncomparable(10))""").head
+        val res = typeCheckErrors("""NoCanEqualNewtype(NoCanEqual(10)) == NoCanEqualNewtype(NoCanEqual(10))""").head
 
-        assertTrue(res.message contains "Values of types neotype.UncomparableNewtype.Type and neotype.UncomparableNewtype.Type cannot be compared with == or !=.")
+        assertTrue(res.message contains "Values of types neotype.NoCanEqualNewtype.Type and neotype.NoCanEqualNewtype.Type cannot be compared with == or !=.")
       }
 
       test("subtypes should be able to be compared to their own types")(
@@ -317,9 +322,9 @@ object NewtypeSpec extends ZIOSpecDefault:
 
       test("subtypes should not be able to be if their underlying type is not comparable") {
 
-        val res = typeCheckErrors("""UncomparableSubtype(Uncomparable(10)) == Uncomparable(10)""").head
+        val res = typeCheckErrors("""NoCanEqualSubtype(NoCanEqual(10)) == NoCanEqual(10)""").head
 
-        assertTrue(res.message contains "Values of types neotype.UncomparableSubtype.Type and neotype.Uncomparable cannot be compared with == or !=.")
+        assertTrue(res.message contains "Values of types neotype.NoCanEqualSubtype.Type and neotype.NoCanEqual cannot be compared with == or !=.")
       }
     }
   }

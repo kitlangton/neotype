@@ -119,10 +119,10 @@ object NonNegativeCents extends Subtype[Cents]:
   override inline def validate(input: Cents): Boolean =
     input.unwrap >= 0
 
-case class Uncomparable(value: Int)
+case class NoCanEqual(value: Int)
 
-type UncomparableNewtype = UncomparableNewtype.Type
-object UncomparableNewtype extends Newtype[Uncomparable]
+type NoCanEqualNewtype = NoCanEqualNewtype.Type
+object NoCanEqualNewtype extends Newtype[NoCanEqual]
 
-type UncomparableSubtype = UncomparableSubtype.Type
-object UncomparableSubtype extends Subtype[Uncomparable]
+type NoCanEqualSubtype = NoCanEqualSubtype.Type
+object NoCanEqualSubtype extends Subtype[NoCanEqual]
