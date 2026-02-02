@@ -285,4 +285,27 @@ object NewtypeSpec extends ZIOSpecDefault:
         assertTrue(error.getMessage == "Must be the secret string!")
       }
     }
+
+    suiteAll("CanEqual") {
+      import scala.language.strictEquality
+
+      test("newtypes should be able to be compared to their own types")(
+        assertTrue(PositiveIntNewtype(10) == PositiveIntNewtype(10))
+      )
+
+      test("newtypes should not be able to be compared to their underlying types") {
+
+        val res = typeCheckErrors("""PositiveIntNewtype(10) == 10""").head
+
+        assertTrue(res.message contains "Values of types neotype.PositiveIntNewtype.Type and Int cannot be compared with == or !=.")
+      }
+
+      test("subtypes should be able to be compared to their own types")(
+        assertTrue(PositiveIntSubtype(10) == PositiveIntSubtype(10))
+      )
+
+      test("subtypes should be able to be compared to their underlying types") (
+        assertTrue(PositiveIntSubtype(10) == 10)
+      )
+    }
   }

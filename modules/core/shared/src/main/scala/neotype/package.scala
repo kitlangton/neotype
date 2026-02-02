@@ -143,6 +143,8 @@ abstract class Newtype[A] extends TypeWrapper[A]:
 object Newtype:
   type WithType[A, B] = Newtype[A] { type Type = B }
 
+  given canEqual[A, B](using Newtype.WithType[A, B], CanEqual[A, A]): CanEqual[B, B] = CanEqual.derived
+
 extension [A, B](value: B)(using
     newtype: Newtype.WithType[A, B]
 ) //
@@ -181,6 +183,8 @@ abstract class Subtype[A] extends TypeWrapper[A]:
 
 object Subtype:
   type WithType[A, B <: A] = Subtype[A] { type Type = B }
+
+  given canEqual[A, B <: A](using Subtype.WithType[A, B], CanEqual[A, A]): CanEqual[B, B] = CanEqual.derived
 
 /** Typeclass for both Newtype and Subtype wrappers. */
 trait WrappedType[Underlying, Wrapped]:
