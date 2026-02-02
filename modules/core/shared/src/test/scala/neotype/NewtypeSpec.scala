@@ -301,9 +301,8 @@ object NewtypeSpec extends ZIOSpecDefault:
       }
 
       test("newtypes should not be able to be if their underlying type is not comparable") {
-        val uncomparableNewtype = UncomparableNewtype(Uncomparable(10))
 
-        val res = typeCheckErrors("""uncomparableNewtype == uncomparableNewtype""").head
+        val res = typeCheckErrors("""UncomparableNewtype(Uncomparable(10)) == UncomparableNewtype(Uncomparable(10))""").head
 
         assertTrue(res.message contains "Values of types neotype.UncomparableNewtype.Type and neotype.UncomparableNewtype.Type cannot be compared with == or !=.")
       }
@@ -317,9 +316,8 @@ object NewtypeSpec extends ZIOSpecDefault:
       )
 
       test("subtypes should not be able to be if their underlying type is not comparable") {
-        val uncomparableSubtype = UncomparableSubtype(Uncomparable(10))
 
-        val res = typeCheckErrors("""uncomparableSubtype == Uncomparable(10)""").head
+        val res = typeCheckErrors("""UncomparableSubtype(Uncomparable(10)) == Uncomparable(10)""").head
 
         assertTrue(res.message contains "Values of types neotype.UncomparableSubtype.Type and neotype.Uncomparable cannot be compared with == or !=.")
       }
