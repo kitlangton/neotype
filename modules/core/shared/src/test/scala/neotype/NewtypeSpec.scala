@@ -326,7 +326,7 @@ object NewtypeSpec extends ZIOSpecDefault:
 
         val res = typeCheckErrors("""NoCanEqualSubtype(NoCanEqual(10)) == NoCanEqual(10)""").head
 
-        assertTrue(res.message contains "Values of types neotype.NoCanEqualSubtype.Type and neotype.NoCanEqual cannot be compared with == or !=.")
+        assertTrue(res.message contains "Values of types neotype.NoCanEqualSubtype.Type and neotype.NoCanEqual cannot be compared with == or !=")
       }
     }
   }
