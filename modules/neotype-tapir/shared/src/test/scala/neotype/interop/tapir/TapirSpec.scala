@@ -1,7 +1,5 @@
 package neotype.interop.tapir
 
-import neotype.Newtype
-import neotype.Subtype
 import neotype.interop.tapir.given_Codec_L_B_CF
 import neotype.interop.tapir.given_Pickler_B
 import neotype.interop.tapir.given_Schema_B

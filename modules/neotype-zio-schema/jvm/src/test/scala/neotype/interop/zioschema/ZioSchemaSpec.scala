@@ -1,7 +1,5 @@
 package neotype.interop.zioschema
 
-import neotype.Newtype
-import neotype.Subtype
 import neotype.interop.zioschema.given_Schema_B
 import neotype.test.definitions.*
 import zio.*
@@ -13,7 +11,6 @@ import zio.schema.codec.DecodeError.ReadError
 import zio.schema.codec.JsonCodec
 import zio.stream.ZStream
 import zio.test.*
-import zio.test.Assertion.*
 
 import java.nio.CharBuffer
 import java.nio.charset.StandardCharsets

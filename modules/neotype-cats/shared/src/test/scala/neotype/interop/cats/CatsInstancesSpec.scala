@@ -5,7 +5,6 @@ import cats.Order
 import cats.Show
 import cats.implicits.*
 import neotype.Newtype
-import neotype.Subtype
 import neotype.common.NonEmptyString
 import neotype.test.definitions.*
 import zio.test.*

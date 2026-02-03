@@ -31,7 +31,7 @@ object CalibanSpec extends ZIOSpecDefault:
       },
       test("ArgBuilder success") {
         val argBuilder = summonInline[ArgBuilder[ValidatedSubtype]]
-        assertTrue(argBuilder.build(StringValue("hello world")) == Right(ValidatedNewtype("hello world")))
+        assertTrue(argBuilder.build(StringValue("hello world")) == Right(ValidatedSubtype("hello world")))
       },
       test("ArgBuilder failure") {
         val argBuilder = summonInline[ArgBuilder[ValidatedSubtype]]
