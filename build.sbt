@@ -78,7 +78,6 @@ lazy val zioSchemaVersion      = "1.8.3"
 lazy val zioJsonVersion        = "0.8.0"
 lazy val chimneyVersion        = "1.8.2"
 lazy val calibanVersion        = "2.11.2"
-<<<<<<< HEAD
 lazy val doobieVersion         = "1.0.0-RC12"
 lazy val upickleVersion        = "4.4.3"
 lazy val cirisVersion          = "3.12.0"
