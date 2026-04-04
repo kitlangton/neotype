@@ -253,6 +253,13 @@ object NewtypeSpec extends ZIOSpecDefault:
       assertTrue(res.message contains "Neotype Error")
     }
 
+    test("comparison between types that don't have a CanEqual should be possible when strictEquality is not enabled"){
+      val x: Right[Nothing, NoCanEqualNewtype] = Right(NoCanEqualNewtype(NoCanEqual(10)))
+      val y: Either[Throwable, NoCanEqualSubtype] = Right(NoCanEqualSubtype(NoCanEqual(10)))
+
+      assertTrue(x == y)
+    }
+
     suiteAll("makeOrThrow") {
       test("newtype success") {
         val res = PositiveIntNewtype.makeOrThrow(1)
@@ -283,6 +290,43 @@ object NewtypeSpec extends ZIOSpecDefault:
       test("custom error message is preserved") {
         val error = scala.util.Try(CustomFailureNewtype.makeOrThrow("hello")).failed.get
         assertTrue(error.getMessage == "Must be the secret string!")
+      }
+    }
+
+    suiteAll("CanEqual") {
+      import scala.language.strictEquality
+
+      test("newtypes should be able to be compared to their own types")(
+        assertTrue(PositiveIntNewtype(10) == PositiveIntNewtype(10))
+      )
+
+      test("newtypes should not be able to be compared to their underlying types") {
+
+        val res = typeCheckErrors("""PositiveIntNewtype(10) == 10""").head
+
+        assertTrue(res.message contains "Values of types neotype.PositiveIntNewtype.Type and Int cannot be compared with == or !=.")
+      }
+
+      test("newtypes should not be able to be if their underlying type is not comparable") {
+
+        val res = typeCheckErrors("""NoCanEqualNewtype(NoCanEqual(10)) == NoCanEqualNewtype(NoCanEqual(10))""").head
+
+        assertTrue(res.message contains "Values of types neotype.NoCanEqualNewtype.Type and neotype.NoCanEqualNewtype.Type cannot be compared with == or !=.")
+      }
+
+      test("subtypes should be able to be compared to their own types")(
+        assertTrue(PositiveIntSubtype(10) == PositiveIntSubtype(10))
+      )
+
+      test("subtypes should be able to be compared to their underlying types") (
+        assertTrue(PositiveIntSubtype(10) == 10)
+      )
+
+      test("subtypes should not be able to be if their underlying type is not comparable") {
+
+        val res = typeCheckErrors("""NoCanEqualSubtype(NoCanEqual(10)) == NoCanEqual(10)""").head
+
+        assertTrue(res.message contains "Values of types neotype.NoCanEqualSubtype.Type and neotype.NoCanEqual cannot be compared with == or !=")
       }
     }
   }
