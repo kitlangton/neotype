@@ -40,3 +40,12 @@ case class CompositeUnderlying(
     subtype: String,
     simpleSubtype: Int
 )
+
+// Test types for stacked types
+type NewtypeValidatedSubtype = NewtypeValidatedSubtype.Type
+object NewtypeValidatedSubtype extends Newtype[ValidatedSubtype]
+
+type TwiceValidatedSubtype = TwiceValidatedSubtype.Type
+object TwiceValidatedSubtype extends Subtype[ValidatedSubtype]:
+  override inline def validate(input: ValidatedSubtype): Boolean | String =
+    if input.length > 15 then true else "String must be longer than 15 characters"
