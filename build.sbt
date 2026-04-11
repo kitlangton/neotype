@@ -1,10 +1,10 @@
 inThisBuild(
   List(
-    organization := "io.github.kitlangton",
-    scalaVersion := "3.3.7",
+    organization  := "io.github.kitlangton",
+    scalaVersion  := "3.3.7",
     versionScheme := Some("early-semver"),
-    homepage     := Some(url("https://github.com/kitlangton/neotype")),
-    licenses     := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
+    homepage      := Some(url("https://github.com/kitlangton/neotype")),
+    licenses      := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
     developers := List(
       Developer("kitlangton", "Kit Langton", "kit.langton@gmail.com", url("https://github.com/kitlangton"))
     ),
@@ -80,7 +80,7 @@ lazy val chimneyVersion        = "1.8.2"
 lazy val calibanVersion        = "2.11.2"
 lazy val doobieVersion         = "1.0.0-RC12"
 lazy val upickleVersion        = "4.4.3"
-lazy val cirisVersion          = "3.12.0"
+lazy val cirisVersion          = "3.13.0"
 lazy val zioInteropCatsVersion = "23.1.0.13"
 lazy val pureconfigVersion     = "0.17.10"
 lazy val scanamoVersion        = "6.0.0"
