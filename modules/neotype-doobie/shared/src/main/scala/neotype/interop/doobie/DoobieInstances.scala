@@ -17,7 +17,7 @@ given put[A, B](using nt: WrappedType[A, B], put: Put[A]): Put[B] =
   nt.unsafeMakeF(put)
 
 given read[A, B](using wrappedType: WrappedType[A, B], read: Read[A]): Read[B] =
-   read.map(value => wrappedType.makeOrThrow(value))
+  read.map(value => wrappedType.makeOrThrow(value))
 
 given write[A, B](using wrappedType: WrappedType[A, B], write: Write[A]): Write[B] =
   write.contramap(wrappedType.unwrap)

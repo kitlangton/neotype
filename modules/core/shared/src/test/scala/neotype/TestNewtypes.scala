@@ -118,3 +118,11 @@ type NonNegativeCents = NonNegativeCents.Type
 object NonNegativeCents extends Subtype[Cents]:
   override inline def validate(input: Cents): Boolean =
     input.unwrap >= 0
+
+case class NoCanEqual(value: Int)
+
+type NoCanEqualNewtype = NoCanEqualNewtype.Type
+object NoCanEqualNewtype extends Newtype[NoCanEqual]
+
+type NoCanEqualSubtype = NoCanEqualSubtype.Type
+object NoCanEqualSubtype extends Subtype[NoCanEqual]
