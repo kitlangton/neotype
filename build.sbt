@@ -83,7 +83,7 @@ lazy val upickleVersion        = "4.4.3"
 lazy val cirisVersion          = "3.12.0"
 lazy val zioInteropCatsVersion = "23.1.0.13"
 lazy val pureconfigVersion     = "0.17.10"
-lazy val scanamoVersion        = "6.0.0"
+lazy val scanamoVersion        = "7.0.0"
 lazy val tethysVersion         = "0.29.7"
 lazy val catsVersion           = "2.13.0"
 
