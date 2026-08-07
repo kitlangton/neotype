@@ -33,7 +33,7 @@ object ChimneySpec extends ZIOSpecDefault:
       test("partially transform success") {
         val string = "hello world"
         val result = string.transformIntoPartial[ValidatedSubtype]
-        assertTrue(result.asEither == Right(ValidatedNewtype("hello world")))
+        assertTrue(result.asEither == Right(ValidatedSubtype("hello world")))
       },
       test("partially transform failure") {
         val string = "hello"

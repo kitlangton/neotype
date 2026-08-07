@@ -3,7 +3,8 @@ package neotype.interop.doobie
 import cats.Show
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-import neotype.{Newtype, Subtype}
+import neotype.Newtype
+import neotype.Subtype
 import neotype.common.NonEmptyString
 import neotype.interop.doobie.given
 import neotype.test.definitions.*
