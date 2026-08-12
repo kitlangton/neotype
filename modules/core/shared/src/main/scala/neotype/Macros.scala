@@ -36,6 +36,12 @@ private[neotype] object Macros:
   )(using Quotes): Expr[T] =
     import quotes.reflect.*
 
+    // Scala 3.10+ checks nested inline macro expansions against the expected
+    // argument type more strictly. `asExprOf[T]` alone can leave the term typed
+    // as the underlying `Input` (e.g. String)
+    def wrapAsType(expr: Expr[Input]): Expr[T] =
+      Typed(expr.asTerm, TypeTree.of[T]).asExprOf[T]
+
     def isTypeWrapper(tpe: TypeRepr): Boolean =
       tpe.baseClasses.exists { sym =>
         sym.fullName == "neotype.TypeWrapper" ||
@@ -81,7 +87,7 @@ private[neotype] object Macros:
         .nextOption()
 
     val validateMethod = findValidateOverride(nt.typeSymbol) match
-      case None        => return inputExpr.asExprOf[T]
+      case None        => return wrapAsType(inputExpr)
       case Some(value) => value
 
     val isValidateInline = validateMethod.flags.is(Flags.Inline)
@@ -125,7 +131,7 @@ private[neotype] object Macros:
             )
 
           case Success(true) =>
-            inputExpr.asExprOf[T]
+            wrapAsType(inputExpr)
 
           case Success(false) =>
             lazy val expressionSource: Option[String] =
