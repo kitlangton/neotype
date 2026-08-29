@@ -3,6 +3,16 @@ package comptime
 import scala.quoted.*
 
 private[comptime] object ScalaAstBridgeCallBuild:
+  private val primitiveExtensions: Map[String, (String, String)] = Map(
+    "scala.Int"    -> ("intWrapper", "scala.runtime.RichInt"),
+    "scala.Long"   -> ("longWrapper", "scala.runtime.RichLong"),
+    "scala.Float"  -> ("floatWrapper", "scala.runtime.RichFloat"),
+    "scala.Double" -> ("doubleWrapper", "scala.runtime.RichDouble"),
+    "scala.Char"   -> ("charWrapper", "scala.runtime.RichChar"),
+    "scala.Byte"   -> ("byteWrapper", "scala.runtime.RichByte"),
+    "scala.Short"  -> ("shortWrapper", "scala.runtime.RichShort")
+  )
+
   def buildCall[Q <: Quotes](using
       quotes: Q
   )(
@@ -48,4 +58,18 @@ private[comptime] object ScalaAstBridgeCallBuild:
 
     val mappedArgs = argss.flatMap(args => mapArgs(args, paramNames))
     val pos        = ScalaAstBridgePos.extractPos(base)
-    TermIR.Call(CallIR(recv, owner, name, targsIR, List(mappedArgs), pos))
+
+    // Scala 3.10 uses Int.max(self)(that) instead of intWrapper(self).max(that).
+    // Normalize only primitive extensions so the existing wrapper rules work on both shapes.
+    val richWrapper =
+      if base.symbol.flags.is(Flags.ExtensionMethod) then primitiveExtensions.get(util.TypeNames.stripModule(owner))
+      else None
+
+    (richWrapper, mappedArgs) match
+      case (Some((wrapper, richOwner)), self :: args) =>
+        val predefOwner = "scala.Predef$"
+        val predefRef   = TermIR.Ref("Predef", Some(predefOwner))
+        val wrapped     = TermIR.Call(CallIR(predefRef, predefOwner, wrapper, Nil, List(List(self)), pos))
+        TermIR.Call(CallIR(wrapped, richOwner, name, targsIR, List(args), pos))
+      case _ =>
+        TermIR.Call(CallIR(recv, owner, name, targsIR, List(mappedArgs), pos))

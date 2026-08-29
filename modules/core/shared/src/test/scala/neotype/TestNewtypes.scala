@@ -118,3 +118,7 @@ type NonNegativeCents = NonNegativeCents.Type
 object NonNegativeCents extends Subtype[Cents]:
   override inline def validate(input: Cents): Boolean =
     input.unwrap >= 0
+
+object NestedStringNewtype       extends Newtype[NonEmptyStringNewtype]
+object SimpleStringNewtype       extends Newtype[String]
+object NestedSimpleStringNewtype extends Newtype[SimpleStringNewtype.Type]
