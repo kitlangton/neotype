@@ -188,6 +188,34 @@ object NewtypeSpec extends ZIOSpecDefault:
       assertTrue(res.map(PositiveIntNewtype.unwrap(_)) == List(1, 2))
     }
 
+    test("nested macro expansions retain validated opaque types after constant folding") {
+      val nested                               = NestedStringNewtype(NonEmptyStringNewtype("a" + "b"))
+      val strings: List[NonEmptyStringNewtype] = NonEmptyStringNewtype.applyAll("a" + "b", "c")
+      val numbers: List[PositiveIntNewtype]    = PositiveIntNewtype.applyAll(1 + 2, 4)
+      assertTrue(
+        nested.unwrap.unwrap == "ab",
+        strings.map(_.unwrap) == List("ab", "c"),
+        numbers.map(_.unwrap) == List(3, 4),
+        NonEmptyStringNewtype("a" + "b").unwrap == "ab"
+      )
+    }
+
+    test("nested macro expansions retain unvalidated and subtype opaque types") {
+      val nested                             = NestedSimpleStringNewtype(SimpleStringNewtype("a" + "b"))
+      val cents: List[Cents]                 = Cents.applyAll(1L + 2L, 4L)
+      val positive: List[PositiveIntSubtype] = PositiveIntSubtype.applyAll(1 + 2, 4)
+      assertTrue(nested.unwrap.unwrap == "ab", cents.map(_.unwrap) == List(3L, 4L), positive == List(3, 4))
+    }
+
+    test("unvalidated constructors evaluate runtime input once") {
+      var evaluations = 0
+      val cents: Cents = Cents {
+        evaluations += 1
+        3L
+      }
+      assertTrue(cents.unwrap == 3L, evaluations == 1)
+    }
+
     // custom failure message
     test("custom failure message") {
       val res = typeCheckErrors(""" CustomFailureNewtype("hello") """).head

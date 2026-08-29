@@ -1345,7 +1345,7 @@ private[comptime] object StdlibCollectionRules:
     ) { (_, n, elemThunk, _) =>
       val elem = elemThunk()
       // Always use ClassTag.Any to create Object[] - avoids primitive array casting issues
-      Array.fill(n)(elem)(ClassTag.Any)
+      Array.fill(n)(elem)(using ClassTag.Any)
     }
 
   private val arrayTabulateRule: CallRule =
@@ -1353,7 +1353,7 @@ private[comptime] object StdlibCollectionRules:
       if n == 0 then Array.empty[Any]
       else
         // Always use ClassTag.Any to create Object[] - avoids primitive array casting issues
-        Array.tabulate(n)(f)(ClassTag.Any)
+        Array.tabulate(n)(f)(using ClassTag.Any)
     }
 
   private val arrayFactoryRules: List[CallRule] =
