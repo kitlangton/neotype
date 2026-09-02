@@ -11,3 +11,9 @@ given [A, B](using nt: WrappedType[A, B], encoder: Encoder[A]): Encoder[B] =
 
 given [A, B](using nt: WrappedType[A, B], codec: Codec[A]): Codec[B] =
   codec.iemap(nt.make(_))(nt.unwrap)
+
+given [A, B](using nt: WrappedType[A, B], keyDecoder: KeyDecoder[A]): KeyDecoder[B] =
+  KeyDecoder.instance(s => keyDecoder(s).flatMap(a => nt.make(a).toOption))
+
+given [A, B](using nt: WrappedType[A, B], keyEncoder: KeyEncoder[A]): KeyEncoder[B] =
+  keyEncoder.contramap(nt.unwrap)
