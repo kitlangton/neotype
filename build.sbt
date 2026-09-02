@@ -36,6 +36,10 @@ ThisBuild / githubWorkflowBuild := Seq(
   WorkflowStep.Sbt(
     commands = List("coreJVM/test", "comptimeJVM/test"),
     name = Some("Test JVM core modules")
+  ),
+  WorkflowStep.Sbt(
+    commands = List("circeJVM/test", "zioConfig/test"),
+    name = Some("Test JVM map key integrations")
   )
 )
 
