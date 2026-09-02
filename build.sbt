@@ -106,7 +106,8 @@ val sharedSettings = Seq(
 
 lazy val root = (project in file("."))
   .settings(
-    name := "neotype"
+    name           := "neotype",
+    publish / skip := true
   )
   .aggregate(
     // JVM
