@@ -193,11 +193,16 @@ object TryCatchSpec extends ZIOSpecDefault:
           assertTrue(
             comptime {
               val e: Either[String, Int] = Right(1)
+              // Scalafmt 3.8.5 removes these braces and emits syntax it cannot parse.
+              // format: off
               e.fold(
-                _ =>
+                _ => {
                   try "never evaluated".toInt
-                  catch case _: Exception => -999, identity
+                  catch case _: Exception => -999
+                },
+                identity
               )
+              // format: on
             } == 1
           )
         }
