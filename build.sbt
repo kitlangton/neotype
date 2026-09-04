@@ -1,7 +1,7 @@
 inThisBuild(
   List(
     organization  := "io.github.kitlangton",
-    scalaVersion  := "3.3.8",
+    scalaVersion  := "3.9.0",
     versionScheme := Some("early-semver"),
     homepage      := Some(url("https://github.com/kitlangton/neotype")),
     licenses      := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
