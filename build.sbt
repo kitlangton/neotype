@@ -88,7 +88,7 @@ lazy val cirisVersion          = "3.15.0"
 lazy val zioInteropCatsVersion = "23.1.0.13"
 lazy val pureconfigVersion     = "0.17.10"
 lazy val scanamoVersion        = "7.0.0"
-lazy val scalaCheckVersion     = "1.19.0"
+lazy val scalaCheckVersion     = "1.20.0"
 lazy val tethysVersion         = "0.29.8"
 lazy val catsVersion           = "2.13.0"
 
