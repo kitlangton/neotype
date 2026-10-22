@@ -36,7 +36,7 @@ jobs:
 
       - name: Setup Java (temurin@17)
         if: matrix.java == 'temurin@17'
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 17
@@ -58,7 +58,7 @@ jobs:
         run: sbt '++ ${{ matrix.scala }}; circeJVM/test; zioConfig/test'
 
       - name: Compress target directories
-        run: tar cf targets.tar modules/neotype-zio-json/js/target modules/neotype-zio-schema/js/target examples/target modules/neotype-jsoniter/js/target modules/neotype-circe/jvm/target modules/neotype-caliban/jvm/target target modules/comptime/js/target modules/neotype-upickle/js/target modules/neotype-cats/native/target modules/neotype-zio-quill/target modules/neotype-zio-config/target modules/core/native/target modules/neotype-chimney/native/target modules/neotype-ciris/js/target modules/neotype-play-json/jvm/target modules/neotype-scalacheck/jvm/target modules/neotype-pureconfig/jvm/target modules/neotype-chimney/jvm/target modules/neotype-doobie/jvm/target modules/neotype-zio-test/js/target modules/neotype-jsoniter/jvm/target modules/core/js/target modules/neotype-ciris/jvm/target modules/internal/jvm/target modules/neotype-circe/js/target modules/neotype-zio-json/native/target modules/internal/js/target modules/neotype-chimney/js/target modules/core/jvm/target modules/neotype-upickle/jvm/target modules/neotype-zio-test/jvm/target modules/neotype-tethys/jvm/target modules/neotype-zio-json/jvm/target modules/neotype-zio-schema/native/target modules/neotype-circe/native/target modules/neotype-scanamo/jvm/target modules/comptime/native/target modules/comptime/jvm/target modules/neotype-play-json/js/target modules/internal/native/target modules/neotype-tapir/jvm/target modules/neotype-cats/js/target modules/neotype-scalacheck/js/target modules/neotype-upickle/native/target modules/neotype-cats/jvm/target modules/neotype-scalacheck/native/target modules/neotype-tapir/js/target modules/neotype-zio-schema/jvm/target project/target
+        run: tar chf targets.tar modules/neotype-zio-json/js/target modules/neotype-zio-schema/js/target examples/target modules/neotype-jsoniter/js/target modules/neotype-circe/jvm/target modules/neotype-caliban/jvm/target target modules/comptime/js/target modules/neotype-upickle/js/target modules/neotype-cats/native/target modules/neotype-zio-quill/target modules/neotype-zio-config/target modules/core/native/target modules/neotype-chimney/native/target modules/neotype-ciris/js/target modules/neotype-play-json/jvm/target modules/neotype-scalacheck/jvm/target modules/neotype-pureconfig/jvm/target modules/neotype-chimney/jvm/target modules/neotype-doobie/jvm/target modules/neotype-zio-test/js/target modules/neotype-jsoniter/jvm/target modules/core/js/target modules/neotype-ciris/jvm/target modules/internal/jvm/target modules/neotype-circe/js/target modules/neotype-zio-json/native/target modules/internal/js/target modules/neotype-chimney/js/target modules/core/jvm/target modules/neotype-upickle/jvm/target modules/neotype-zio-test/jvm/target modules/neotype-tethys/jvm/target modules/neotype-zio-json/jvm/target modules/neotype-zio-schema/native/target modules/neotype-circe/native/target modules/neotype-scanamo/jvm/target modules/comptime/native/target modules/comptime/jvm/target modules/neotype-play-json/js/target modules/internal/native/target modules/neotype-tapir/jvm/target modules/neotype-cats/js/target modules/neotype-scalacheck/js/target modules/neotype-upickle/native/target modules/neotype-cats/jvm/target modules/neotype-scalacheck/native/target modules/neotype-tapir/js/target modules/neotype-zio-schema/jvm/target project/target
 
       - name: Upload target directories
         uses: actions/upload-artifact@v7
@@ -84,7 +84,7 @@ jobs:
 
       - name: Setup Java (temurin@17)
         if: matrix.java == 'temurin@17'
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 17
